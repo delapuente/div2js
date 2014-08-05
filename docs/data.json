@@ -1,0 +1,49 @@
+{
+    "project": {
+        "name": "div2js",
+        "description": "A DIV2 Game Studio compiler to JavaScript",
+        "version": "0.0.1",
+        "url": "https://github.com/lodr/div2js"
+    },
+    "files": {
+        "src/runtime.js": {
+            "name": "src/runtime.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {
+                "div2js.runtime": 1
+            }
+        }
+    },
+    "modules": {},
+    "classes": {},
+    "classitems": [
+        {
+            "file": "src/runtime.js",
+            "line": 5,
+            "description": "runtime namespace is the core component of DIV2js. It handles the game loop\nand process management.",
+            "class": "",
+            "namespace": "div2js.runtime"
+        },
+        {
+            "file": "src/runtime.js",
+            "line": 13,
+            "description": "Start a new DIV2js environment by creating the root process.\nThe root process has `id` set to `0` and no parent.\nTODO: Provide a deeper description of the root process.",
+            "itemtype": "method",
+            "name": "startProgram",
+            "return": {
+                "description": "the program process",
+                "type": "Process"
+            },
+            "class": "",
+            "namespace": "div2js.runtime"
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Missing item type\nruntime namespace is the core component of DIV2js. It handles the game loop\nand process management.",
+            "line": " src/runtime.js:5"
+        }
+    ]
+}

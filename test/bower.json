@@ -1,0 +1,11 @@
+{
+  "name": "div2.js",
+  "private": true,
+  "dependencies": {
+    "chai": "~1.8.0",
+    "mocha": "~1.14.0",
+    "sinonjs": "~1.9.1",
+    "requirejs": "~2.1.11"
+  },
+  "devDependencies": {}
+}

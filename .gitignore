@@ -1,0 +1,17 @@
+bower_components/
+testing_lib/
+node_modules/
+temp/
+tmp/
+.tmp/
+logs/
+log/
+results/
+
+*.seed
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.gz
