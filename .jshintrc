@@ -4,6 +4,7 @@
     "bitwise": false,
     "browser": true,
     "curly": true,
+    "camelcase": true,
     "eqeqeq": true,
     "eqnull": true,
     "expr": true,

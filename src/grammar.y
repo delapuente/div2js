@@ -1,4 +1,3 @@
-
 /*
  * DIV 2 Parser
  */
@@ -9,15 +8,25 @@
 SYMBOL "#ªº$þƒ£¥¢_"
 ALPHA  "a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ"
 DIGIT  "0-9"
+NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][0-9a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_]*
 %%
+
+/* TODO: This makes to ignore even break-lines. Check! */
 \s+                                        { /* ignore */ }
 
 "IF"                                       { return 'IF'; }
+"ELSE"                                     { return 'ELSE'; }
 "SWITCH"                                   { return 'SWITCH'; }
+"CASE"                                     { return 'CASE'; }
+"DEFAULT"                                  { return 'DEFAULT'; }
 "LOOP"                                     { return 'LOOP'; }
 "FROM"                                     { return 'FROM'; }
 "REPEAT"                                   { return 'REPEAT'; }
+"UNTIL"                                    { return 'UNTIL'; }
 "WHILE"                                    { return 'WHILE'; }
+"FROM"                                     { return 'FROM'; }
+"TO"                                       { return 'TO'; }
+"STEP"                                     { return 'STEP'; }
 "FOR"                                      { return 'FOR'; }
 "BREAK"                                    { return 'BREAK'; }
 "CONTINUE"                                 { return 'CONTINUE'; }
@@ -41,7 +50,6 @@ DIGIT  "0-9"
 ","                                        { return ','; }
 
 /* priority 9 */
-"="                                        { return '='; }
 ":="                                       { return '='; }
 "+="                                       { return '+='; }
 "-="                                       { return '-='; }
@@ -55,13 +63,14 @@ DIGIT  "0-9"
 ">>="                                      { return '>>='; }
 
 /* priority 8 */
+"=="                                       { return '=='; }
+">="                                       { return '>='; }
+"=>"                                       { return '=>'; }
+"<="                                       { return '<='; }
 "<>"                                       { return '!='; }
 "!="                                       { return '!='; }
 "<"                                        { return '<'; }
 ">"                                        { return '>'; }
-">="                                       { return '>='; }
-"=>"                                       { return '=>'; }
-"<="                                       { return '<='; }
 
 /* priority 7 */
 "AND"                                      { return '&&'; }
@@ -85,6 +94,9 @@ DIGIT  "0-9"
 "+"                                        { return '+'; }
 "-"                                        { return '-'; }
 
+/* priority 9 */
+"="                                        { return '='; }
+
 /* priority 4 */
 "/"                                        { return '/'; }
 "*"                                        { return '*'; }
@@ -97,7 +109,8 @@ DIGIT  "0-9"
 "OFFSET"                                   { return '&'; }
 "POINTER"                                  { return '*'; }
 
-/* missing operators are already recognized by the lexer (^ & * and []) */
+".."                                       { return '..'; }
+":"                                        { return ':'; }
 
 /* priority 1 */
 "."                                        { return '.'; }
@@ -106,7 +119,7 @@ DIGIT  "0-9"
 (\"\")|(\".*?([^\\]\"))                    { return 'STRING_LITERAL'; }
 [0-9]+                                     { return 'NUMBER'; }
 
-[{SYMBOL}{ALPHA}][{SYMBOL}{ALPHA}{DIGIT}]* { return 'NAME'; }
+{NAME}                                     { return 'NAME'; }
 <<EOF>>                                    { return 'EOF'; }
 
 /lex
@@ -124,42 +137,153 @@ program_definition
   ;
 
 body
-  : BEGIN END
-  | BEGIN statement_list END
+  : BEGIN group_of_sentences
   ;
 
-statement_list
-  : statement
-  | statement_list statement
+group_of_sentences
+  : END
+  | sentence_list END
   ;
 
-statement
-  : frame_statement
-  | expression_statement
+group_of_sentences_for_if_else
+  : ELSE
+  | sentence_list ELSE
   ;
 
-frame_statement
-  : FRAME
-  | FRAME '(' ')'
+sentence
+  : if_sentence
+  | switch_sentence
+  | while_sentence
+  | repeat_sentence
+  | loop_sentence
+  | from_sentence
+  | for_sentence
+  | BREAK opt_end
+  | CONTINUE opt_end
+  | return_sentence opt_end
+  | frame_sentence opt_end
+  | clone_sentence
+  | DEBUG opt_end
+  | assignment_sentence ';'
   ;
 
-expression_statement
+/* It exists to relax the rules for ; in sentences. */
+/* TODO: Check the cases! */
+opt_end
+  : /* empty */
+  | ';'
+  ;
+
+if_sentence
+  : IF '(' expression ')' group_of_sentences
+  | IF '(' expression ')' group_of_sentences_for_if_else group_of_sentences
+  ;
+
+switch_sentence
+  : SWITCH '(' expression ')' group_of_cases
+  ;
+
+sentence_list
+  : sentence
+  | sentence_list sentence
+  ;
+
+group_of_cases
+  : END
+  | default END
+  | case_list END
+  | case_list default END
+  ;
+
+case_list
+  : case
+  | case_list case
+  ;
+
+case
+  : CASE range ':' group_of_sentences
+  ;
+
+default
+  : DEFAULT ':' group_of_sentences
+  ;
+
+range
+  : expression
+  | expression '..' expression
+  ;
+
+while_sentence
+  : WHILE '(' expression ')' group_of_sentences
+  ;
+
+repeat_sentence
+  : REPEAT group_of_sentences_for_repeat
+  ;
+
+group_of_sentences_for_repeat
+  : until_condition
+  | sentence_list until_condition 
+  ;
+
+until_condition
+  : UNTIL '(' expression ')'
+  ;
+
+loop_sentence
+  : LOOP group_of_sentences
+  ;
+
+from_sentence
+  : FROM assignment_sentence TO expression ';' group_of_sentences
+  | FROM assignment_sentence TO expression STEP expression ';' group_of_sentences
+  ;
+
+for_sentence
+  : FOR for_params group_of_sentences
+  ;
+
+/* The closing bracket is included in increment */
+for_params
+  : '(' initialization condition increment
+  ;
+
+initialization
+  : ';'
+  | list_of_assignments ';'
+  ;
+
+condition
   : ';'
   | expression ';'
   ;
 
-expression
-  : assignment_expression
-  | expression ',' assignment_expression
+increment
+  : ')'
+  | list_of_assignments ')'
   ;
 
-assignment_expression
-  : comparison_expression
-  | assignment_left_side assignment_expression
+list_of_assignments
+  : assignment_sentence
+  | list_of_assignments ',' assignment_sentence
   ;
 
-assignment_left_side
-  : NAME assignment_operator
+return_sentence
+  : RETURN
+  | RETURN '(' expression ')'
+  ;
+
+frame_sentence
+  : FRAME
+  | FRAME '(' expression ')'
+  ;
+
+clone_sentence
+  : CLONE group_of_sentences
+  ;
+
+assignment_sentence
+  : NAME assignment_operator expression
   ;
 
 assignment_operator
@@ -176,11 +300,10 @@ assignment_operator
   | '>>='
   ;
 
-comparison_expression
+expression
   : boolean_expression
-  | comparison_expression comparison_operator boolean_expression
+  | expression comparison_operator boolean_expression
   ;
-
 
 comparison_operator
   : '=='
