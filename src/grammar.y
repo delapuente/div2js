@@ -11,7 +11,6 @@ DIGIT  "0-9"
 NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][0-9a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_]*
 %%
 
-/* TODO: This makes to ignore even break-lines. Check! */
 \s+                                        { /* ignore */ }
 
 "IF"                                       { return 'IF'; }
@@ -154,7 +153,7 @@ sentence
   : if_sentence
   | switch_sentence
   | while_sentence
-  | repeat_sentence
+  | repeat_sentence opt_end
   | loop_sentence
   | from_sentence
   | for_sentence
@@ -295,6 +294,8 @@ expression_list
 
 assignment_sentence
   : NAME assignment_operator expression
+  | NAME '++'
+  | NAME '--'
   ;
 
 assignment_operator
