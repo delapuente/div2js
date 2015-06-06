@@ -293,9 +293,9 @@ expression_list
   ;
 
 assignment_sentence
-  : NAME assignment_operator expression
-  | NAME '++'
-  | NAME '--'
+  : access_expression assignment_operator expression
+  | access_expression increment_operator
+  | increment_operator access_expression
   ;
 
 assignment_operator
@@ -374,6 +374,7 @@ multiplicative_operator
 unary_expression
   : postfix_expression
   | unary_operator unary_expression
+  | increment_operator access_expression
   ;
 
 unary_operator
@@ -385,20 +386,28 @@ unary_operator
 
 postfix_expression
   : access_expression
-  | postfix_expression '[' expression ']'
-  | postfix_expression '++'
-  | postfix_expression '--'
+  | primary_expression
+  | access_expression increment_operator
   | call
   ;
 
+increment_operator
+  : '++'
+  | '--'
+  ;
+
 access_expression
-  : primary_expression
+  : NAME
   | access_expression '.' NAME
+  | access_expression '[' expression ']'
   ;
 
 primary_expression
-  : NAME
-  | NUMBER
-  | STRING_LITERAL
+  : const
   | '(' expression ')'
+  ;
+
+const
+  : NUMBER
+  | STRING_LITERAL
   ;
