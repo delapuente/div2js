@@ -164,6 +164,7 @@ sentence
   | frame_sentence opt_end
   | clone_sentence
   | DEBUG opt_end
+  | call ';'
   | assignment_sentence ';'
   ;
 
@@ -282,6 +283,16 @@ clone_sentence
   : CLONE group_of_sentences
   ;
 
+call
+  : NAME '(' ')'
+  | NAME '(' expression_list ')'
+  ;
+
+expression_list
+  : expression
+  | expression_list ',' expression
+  ;
+
 assignment_sentence
   : NAME assignment_operator expression
   ;
@@ -376,6 +387,7 @@ postfix_expression
   | postfix_expression '[' expression ']'
   | postfix_expression '++'
   | postfix_expression '--'
+  | call
   ;
 
 access_expression
