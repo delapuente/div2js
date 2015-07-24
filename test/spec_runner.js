@@ -4,8 +4,7 @@ var should = chai.should();
 mocha.setup('bdd');
 
 requirejs([
-  'spec/DIV2Runtime',
-  'spec/DIV2ProcessManager'
+  'spec/grammar.spec.js'
 ], function () {
   mocha.run();
 });

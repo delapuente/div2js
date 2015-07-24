@@ -36,10 +36,24 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "FRAME"                                    { return 'FRAME'; }
 
 "PROGRAM"                                  { return 'PROGRAM'; }
+"CONST"                                    { return 'CONST'; }
+"GLOBAL"                                   { return 'GLOBAL'; }
+"LOCAL"                                    { return 'LOCAL'; }
+"PRIVATE"                                  { return 'PRIVATE'; }
 "PROCESS"                                  { return 'PROCESS'; }
 "FUNCTION"                                 { return 'FUNCTION'; }
 "BEGIN"                                    { return 'BEGIN'; }
 "END"                                      { return 'END'; }
+
+"INT POINTER"                              { return 'INT_POINTER'; }
+"INT"                                      { return 'INT'; }
+"WORD POINTER"                             { return 'WORD_POINTER'; }
+"WORD"                                     { return 'WORD'; }
+"BYTE POINTER"                             { return 'BYTE_POINTER'; }
+"BYTE"                                     { return 'BYTE'; }
+"STRING POINTER"                           { return 'STRING_POINTER'; }
+"STRING"                                   { return 'STRING'; }
+"STRUCT POINTER"                           { return 'STRUCT_POINTER'; }
 
 ";"                                        { return ';'; }
 "("                                        { return '('; }
@@ -131,8 +145,67 @@ translation_unit
   : program_definition EOF
   ;
 
+/* TODO: We should try to simplify this rule */
 program_definition
-  : PROGRAM NAME ';' body
+  : PROGRAM NAME ';' const_block global_block local_block private_block body process_list
+  | PROGRAM NAME ';' const_block global_block local_block private_block body
+  ;
+
+const_block
+  : CONST declaration_list
+  | /* empty */
+  ;
+
+global_block
+  : GLOBAL declaration_list
+  | /* empty */
+  ;
+
+local_block
+  : LOCAL declaration_list
+  | /* empty */
+  ;
+
+private_block
+  : PRIVATE declaration_list
+  | PRIVATE
+  | /* empty */
+  ;
+
+declaration_list
+  : declaration
+  | declaration_list declaration
+  ;
+
+declaration
+  : variable_declaration
+  ;
+
+variable_declaration
+  : tipo NAME '=' expression ';'
+  | tipo NAME ';'
+  ;
+
+tipo
+  : INT_POINTER
+  | INT
+  | WORD_POINTER
+  | WORD
+  | BYTE_POINTER
+  | BYTE
+  | STRING_POINTER
+  | STRING
+  | STRUCT_POINTER
+  ;
+
+process_list
+  : process
+  | process_list process
+  ;
+
+process
+  : PROCESS NAME ';' private body
+  | PROCESS NAME ';' body
   ;
 
 body

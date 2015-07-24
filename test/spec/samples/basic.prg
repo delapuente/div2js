@@ -1,0 +1,3 @@
+PROGRAM basic;
+BEGIN
+END

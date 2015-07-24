@@ -60,6 +60,13 @@ module.exports = function(grunt) {
 
     pkg: grunt.file.readJSON('package.json'),
 
+    jison: {
+      target: {
+        options: { moduleType: 'amd' },
+        files: { '<%= dirs.src %>/div2lang.js' : '<%= dirs.src %>/grammar.y' }
+      }
+    },
+
     clean: {
       docs: {
         src: ['docs/*']
@@ -239,6 +246,7 @@ module.exports = function(grunt) {
   grunt.registerTask('pack', [
     'clean:dist',
     'clean:temp',
+    'jison',
     'requirejs:pack',
     'concat:pack',
     'copy:pack',
