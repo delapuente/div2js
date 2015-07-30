@@ -5,7 +5,8 @@
     "chai": "~2.1.0",
     "mocha": "~2.2.5",
     "sinonjs": "~1.14.1",
-    "requirejs": "~2.1.19"
+    "requirejs": "~2.1.19",
+    "esprima": "~2.0.0"
   },
   "devDependencies": {}
 }

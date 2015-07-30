@@ -11,12 +11,18 @@ module.exports = function(grunt) {
     '<%= dirs.src %>/**/*.js'
   ];
 
+  var grammarFile = [
+    '<%= dirs.src %>/grammar.y'
+  ];
+
   var demoSrcFiles = [
     '<%= dirs.demo %>/scripts/**/*.js'
   ];
 
   var specFiles = [
-    '<%= dirs.spec %>/**/*.js'
+    '<%= dirs.spec %>/**/*.js',
+    '<%= dirs.spec %>/**/*.json',
+    '<%= dirs.spec %>/**/*.prg'
   ];
 
   var banner = [
@@ -119,6 +125,7 @@ module.exports = function(grunt) {
           middleware: function(connect) {
             return [
               connect().use('/src', connect.static('src')),
+              connect().use('/test/spec/samples', connect.static('test/spec/samples')),
               connect.static('test')
             ];
           }
@@ -213,6 +220,10 @@ module.exports = function(grunt) {
         files: srcFiles.concat(specFiles).concat('<%= files.testRunner %>'),
         tasks: ['connect:test', 'mocha']
       },
+      grammar: {
+        files: grammarFile,
+        tasks: ['jison']
+      },
       debug: {
         files: srcFiles.concat(specFiles).concat('<%= files.testRunner %>'),
         tasks: [],
@@ -254,6 +265,7 @@ module.exports = function(grunt) {
   ]);
   grunt.registerTask('min', ['uglify:pack']);
   grunt.registerTask('dev', ['watch']);
+  grunt.registerTask('grammar', ['watch:grammar']);
   grunt.registerTask('debug', ['connect:debug', 'watch:debug']);
 
   grunt.registerTask('hookmeup', ['shell:hooks']);

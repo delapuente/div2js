@@ -141,40 +141,90 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 
 %%
 
+// TODO: rewrite process_list to be optional
 translation_unit
-  : program_definition EOF
+  : program EOF
+    { 
+      $$ = {
+        type: "Unit",
+        program: $1,
+        process: []
+      };
+      return $$;
+    }
+  | program process_list EOF
+    {
+      $$ = {
+        type: "Unit",
+        program: $1,
+        process: $2
+      };
+      return $$;
+    }
   ;
 
-/* TODO: We should try to simplify this rule */
-program_definition
-  : PROGRAM NAME ';' const_block global_block local_block private_block body process_list
-  | PROGRAM NAME ';' const_block global_block local_block private_block body
+program
+  : PROGRAM id ';' const_block global_block local_block private_block body
+    {
+      $$ = {
+        type: "Program",
+        name: $2,
+        consts: $4,
+        globals: $5,
+        locals: $6,
+        privates: $7,
+        body: $8
+      };
+    }
+  ;
+
+id
+  : NAME
+    { $$ = { type: "Identifier", name: $1 }; }
   ;
 
 const_block
   : CONST declaration_list
   | /* empty */
+    { $$ = null; }
   ;
 
 global_block
   : GLOBAL declaration_list
   | /* empty */
+    { $$ = null; }
   ;
 
 local_block
   : LOCAL declaration_list
   | /* empty */
+    { $$ = null; }
   ;
 
 private_block
   : PRIVATE declaration_list
+    {
+      $$ = {
+        type: "PrivateDeclarations",
+        declarations: $2
+      };
+    }
   | PRIVATE
+    {
+      $$ = {
+        type: "PrivateDeclarations",
+        declarations: []
+      };
+    }
   | /* empty */
+    { $$ = null; }
   ;
 
 declaration_list
   : declaration
+    { $$ = [$1]; }
   | declaration_list declaration
+    { $$ = $1.push($2); }
   ;
 
 declaration
@@ -182,20 +232,45 @@ declaration
   ;
 
 variable_declaration
-  : tipo NAME '=' expression ';'
-  | tipo NAME ';'
+  : type id '=' expression ';'
+    {
+      $$ = {
+        type: "VariableDeclarator",
+        varType: $1,
+        varName: $2,
+        varInit: $4
+      };
+    }
+  | type id ';'
+    {
+      $$ = {
+        type: "VariableDeclarator",
+        varType: $1,
+        varName: $2,
+        varInit: null
+      };
+    }
   ;
 
-tipo
-  : INT_POINTER
+type
+  : INT_POINTER 
+    { $$ = "int_pointer"; }
   | INT
+    { $$ = "int"; }
   | WORD_POINTER
+    { $$ = "word_pointer"; }
   | WORD
+    { $$ = "word"; }
   | BYTE_POINTER
+    { $$ = "byte_pointer"; }
   | BYTE
+    { $$ = "byte"; }
   | STRING_POINTER
+    { $$ = "string_pointer"; }
   | STRING
+    { $$ = "string"; }
   | STRUCT_POINTER
+    { $$ = "struct_pointer"; }
   ;
 
 process_list
@@ -204,22 +279,32 @@ process_list
   ;
 
 process
-  : PROCESS NAME ';' private body
-  | PROCESS NAME ';' body
+  : PROCESS id ';' private body
+  | PROCESS id ';' body
   ;
 
 body
   : BEGIN group_of_sentences
+    {
+      $$ = {
+        type: "SentenceBlock",
+        sentences: $2
+      };
+    }
   ;
 
 group_of_sentences
   : END
+    { $$ = []; }
   | sentence_list END
+    { $$ = $1; }
   ;
 
 group_of_sentences_for_if_else
   : ELSE
+    { $$ = []; }
   | sentence_list ELSE
+    { $$ = $1; }
   ;
 
 sentence
@@ -249,41 +334,114 @@ opt_end
 
 if_sentence
   : IF '(' expression ')' group_of_sentences
+    {
+      $$ = {
+        type: "IfSentence",
+        test: $3,
+        consequent: {
+          type: "SentenceBlock",
+          sentences: $5
+        },
+        alternate: null
+      };
+    }
   | IF '(' expression ')' group_of_sentences_for_if_else group_of_sentences
+    {
+      $$ = {
+        type: "IfSentence",
+        test: $3,
+        consequent: {
+          type: "SentenceBlock",
+          sentences: $5
+        },
+        alternate: {
+          type: "SentenceBlock",
+          sentences: $6
+        },
+      };
+    }
   ;
 
 switch_sentence
   : SWITCH '(' expression ')' group_of_cases
+    {
+      $$ = {
+        type: "SwitchSentence",
+        discriminant: $3,
+        cases: $5
+      };
+    }
   ;
 
 sentence_list
   : sentence
+    { $$ = [$1]; }
   | sentence_list sentence
+    { $$ = $1.push(sentence); }
   ;
 
 group_of_cases
   : END
+    { $$ = []; }
   | default END
+    { $$ = [$1]; }
   | case_list END
   | case_list default END
+    { $1.push($2); }
   ;
 
 case_list
   : case
+    { $$ = [$1]; }
   | case_list case
+    { $1.push($2); }
   ;
 
 case
-  : CASE range ':' group_of_sentences
+  : CASE list_of_ranges ':' group_of_sentences
+    {
+      $$ = {
+        type: "SwitchCase",
+        tests: $2,
+        consequent: {
+          type: "SentenceBlock",
+          sentences: $4
+        }
+      };
+    }
   ;
 
 default
   : DEFAULT ':' group_of_sentences
+    {
+      $$ = {
+        type: "SwitchCase",
+        tests: null,
+        consequent: {
+          type: "SentenceBlock",
+          sentences: $3
+        }
+      };
+    }
+  ;
+
+list_of_ranges
+  : range
+    { $$ = [$1]; }
+  | list_of_ranges ',' range
+    { $1.push($3); }
   ;
 
 range
   : expression
   | expression '..' expression
+    {
+      $$ = {
+        type: "Range",
+        min: $1,
+        max: $3
+      };
+    }
   ;
 
 while_sentence
@@ -356,8 +514,10 @@ clone_sentence
   ;
 
 call
-  : NAME '(' ')'
-  | NAME '(' expression_list ')'
+  : id '(' ')'
+    { $$ = $1 + '()'; }
+  | id '(' expression_list ')'
+    { $$ = $1 + '(' + $3 + ')'; } 
   ;
 
 expression_list
@@ -367,8 +527,32 @@ expression_list
 
 assignment_sentence
   : access_expression assignment_operator expression
+    {
+      $$ = {
+        type: "AssignmentSentence",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
   | access_expression increment_operator
+    {
+      $$ = {
+        type: "UpdateSentence",
+        operator: $2,
+        argument: $1,
+        prefix: false
+      };
+    }
   | increment_operator access_expression
+    {
+      $$ = {
+        type: "UpdateSentence",
+        operator: $2,
+        argument: $1,
+        prefix: true
+      };
+    }
   ;
 
 assignment_operator
@@ -470,8 +654,8 @@ increment_operator
   ;
 
 access_expression
-  : NAME
-  | access_expression '.' NAME
+  : id
+  | access_expression '.' id
   | access_expression '[' expression ']'
   ;
 
@@ -482,5 +666,19 @@ primary_expression
 
 const
   : NUMBER
+    {
+      $$ = {
+        type: "Literal",
+        value: parseInt($1),
+        raw: $1
+      };
+    }
   | STRING_LITERAL
+    {
+      $$ = {
+        type: "Literal",
+        value: JSON.parse($1),
+        raw: $1
+      };
+    }
   ;

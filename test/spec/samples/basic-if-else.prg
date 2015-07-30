@@ -1,0 +1,6 @@
+PROGRAM basic;
+BEGIN
+  IF (x)
+  ELSE
+  END
+END
