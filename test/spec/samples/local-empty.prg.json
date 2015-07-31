@@ -1,0 +1,22 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": {
+      "type": "LocalDeclarations",
+      "declarations": []
+    },
+    "privates": null,
+    "body": {
+      "type": "SentenceBlock",
+      "sentences": []
+    }
+  },
+  "process": [] 
+}

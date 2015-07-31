@@ -14,16 +14,25 @@
       "type": "SentenceBlock",
       "sentences": [
         {
-          "type": "AssignmentExpression",
-          "operator": "=",
-          "left": {
+          "type": "FromSentence",
+          "identifier": {
             "type": "Identifier",
-            "name": "x"
+            "name": "a"
           },
-          "right": {
+          "init": {
             "type": "Literal",
             "value": 1,
             "raw": "1"
+          },
+          "limit": {
+            "type": "Literal",
+            "value": 10,
+            "raw": "10"
+          },
+          "step": null,
+          "body": {
+            "type": "SentenceBlock",
+            "sentences": []
           }
         }
       ]

@@ -14,17 +14,12 @@
       "type": "SentenceBlock",
       "sentences": [
         {
-          "type": "AssignmentExpression",
-          "operator": "=",
-          "left": {
+          "type": "CallExpression",
+          "callee": {
             "type": "Identifier",
-            "name": "x"
+            "name": "a"
           },
-          "right": {
-            "type": "Literal",
-            "value": 1,
-            "raw": "1"
-          }
+          "arguments": []
         }
       ]
     }

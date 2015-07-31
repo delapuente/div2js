@@ -1,0 +1,36 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": {
+      "type": "LocalDeclarations",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "varInit": {
+            "type": "Literal",
+            "value": 5,
+            "raw": "5"
+          }
+        }
+      ]
+    },
+    "privates": null,
+    "body": {
+      "type": "SentenceBlock",
+      "sentences": []
+    }
+  },
+  "process": [] 
+}

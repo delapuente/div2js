@@ -1,0 +1,6 @@
+PROGRAM basic;
+BEGIN
+  REPEAT
+    FRAME;
+  UNTIL (1);
+END

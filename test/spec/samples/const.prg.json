@@ -1,0 +1,36 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": {
+      "type": "ConstDeclarations",
+      "declarations": [
+        {
+          "type": "ConstDeclarator",
+          "constType": "int",
+          "constName": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "constInit": {
+            "type": "Literal",
+            "value": 5,
+            "raw": "5"
+          }
+        }
+      ]
+    },
+    "globals": null,
+    "locals": null,
+    "privates": null,
+    "body": {
+      "type": "SentenceBlock",
+      "sentences": []
+    }
+  },
+  "process": [] 
+}

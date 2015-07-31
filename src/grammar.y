@@ -184,19 +184,58 @@ id
   ;
 
 const_block
-  : CONST declaration_list
+  : CONST const_declaration_list
+    {
+      $$ = {
+        type: "ConstDeclarations",
+        declarations: $2
+      };
+    }
+  | CONST
+    {
+      $$ = {
+        type: "ConstDeclarations",
+        declarations: []
+      };
+    }
   | /* empty */
     { $$ = null; }
   ;
 
 global_block
   : GLOBAL declaration_list
+    {
+      $$ = {
+        type: "GlobalDeclarations",
+        declarations: $2
+      };
+    }
+  | GLOBAL
+    {
+      $$ = {
+        type: "GlobalDeclarations",
+        declarations: []
+      };
+    }
   | /* empty */
     { $$ = null; }
   ;
 
 local_block
   : LOCAL declaration_list
+    {
+      $$ = {
+        type: "LocalDeclarations",
+        declarations: $2
+      };
+    }
+  | LOCAL
+    {
+      $$ = {
+        type: "LocalDeclarations",
+        declarations: []
+      };
+    }
   | /* empty */
     { $$ = null; }
   ;
@@ -220,6 +259,26 @@ private_block
     { $$ = null; }
   ;
 
+const_declaration_list
+  : const_declaration
+    { $$ = [$1]; }
+  | const_declaration_list declaration_list
+    { $1.push($2); }
+  ;
+
+const_declaration
+  : id '=' expression ';'
+    {
+      // TODO: I think consts are actually MACROS
+      $$ = {
+        type: "ConstDeclarator",
+        constType: "int",
+        constName: $1,
+        constInit: $3
+      };
+    }
+  ;
+
 declaration_list
   : declaration
     { $$ = [$1]; }
@@ -228,10 +287,6 @@ declaration_list
   ;
 
 declaration
-  : variable_declaration
-  ;
-
-variable_declaration
   : type id '=' expression ';'
     {
       $$ = {
@@ -300,6 +355,13 @@ group_of_sentences
     { $$ = $1; }
   ;
 
+group_of_sentences_for_loops
+  : END
+    { $$ = []; }
+  | sentence_list_for_loops END
+    { $$ = $1; }
+  ;
+
 group_of_sentences_for_if_else
   : ELSE
     { $$ = []; }
@@ -315,15 +377,19 @@ sentence
   | loop_sentence
   | from_sentence
   | for_sentence
-  | BREAK opt_end
-  | CONTINUE opt_end
   | return_sentence opt_end
   | frame_sentence opt_end
   | clone_sentence
   | DEBUG opt_end
   | call ';'
-  | assignment_sentence ';'
+  | assignment_expression ';'
   ;
+
+sentence_for_loops
+ : sentence
+ | BREAK opt_end
+ | CONTINUE opt_end
+ ;
 
 /* It exists to relax the rules for ; in sentences. */
 /* TODO: Check the cases! */
@@ -377,6 +443,13 @@ sentence_list
   : sentence
     { $$ = [$1]; }
   | sentence_list sentence
+    { $$ = $1.push(sentence); }
+  ;
+
+sentence_list_for_loops
+  : sentence_for_loops
+    { $$ = [$1]; }
+  | sentence_list_for_loops sentence
     { $$ = $1.push(sentence); }
   ;
 
@@ -445,68 +518,185 @@ range
   ;
 
 while_sentence
-  : WHILE '(' expression ')' group_of_sentences
+  : WHILE '(' expression ')' group_of_sentences_for_loops
+    {
+      $$ = {
+        type: "WhileSentence",
+        test: $3,
+        body: {
+          type: "SentenceBlock",
+          sentences: $5
+        }
+      };
+    }
   ;
 
 repeat_sentence
   : REPEAT group_of_sentences_for_repeat
+    {
+      $$ = {
+        type: "RepeatSentence",
+        test: $2.test,
+        body: {
+          type: "SentenceBlock",
+          sentences: $2.body
+        }
+      };
+    }
   ;
 
 group_of_sentences_for_repeat
   : until_condition
-  | sentence_list until_condition 
+    {
+      $$ = {
+        test: $1,
+        body: []
+      };
+    }
+  | sentence_list_for_loops until_condition 
+    {
+      $$ = {
+        test: $2,
+        body: $1
+      };
+    }
   ;
 
 until_condition
   : UNTIL '(' expression ')'
+    { $$ = $3; }
   ;
 
 loop_sentence
-  : LOOP group_of_sentences
+  : LOOP group_of_sentences_for_loops
+    {
+      $$ = {
+        type: "LoopSentence",
+        body: {
+          type: "SentenceBlock",
+          sentences: []
+        }
+      };
+    }
   ;
 
 from_sentence
-  : FROM assignment_sentence TO expression ';' group_of_sentences
-  | FROM assignment_sentence TO expression STEP expression ';' group_of_sentences
+  : FROM id '=' expression TO expression ';' group_of_sentences_for_loops
+    {
+      $$ = {
+        type: "FromSentence",
+        identifier: $2,
+        init: $4,
+        limit: $6,
+        step: null,
+        body: {
+          type: "SentenceBlock",
+          sentences: $8
+        }
+      };
+    }
+  | FROM id '=' expression TO expression STEP expression ';' group_of_sentences_for_loops
+    {
+      $$ = {
+        type: "FromSentence",
+        identifier: $2,
+        init: $4,
+        limit: $6,
+        step: $8,
+        body: {
+          type: "SentenceBlock",
+          sentences: $10
+        }
+      };
+    }
   ;
 
 for_sentence
-  : FOR for_params group_of_sentences
+  : FOR for_params group_of_sentences_for_loops
+    {
+      $$ = {
+        type: "ForSentence",
+        inits: $2.inits,
+        tests: $2.tests,
+        updates: $2.updates,
+        body: {
+          type: "SentenceBlock",
+          sentences: $3
+        }
+      };
+    }
   ;
 
 /* The closing bracket is included in increment */
 for_params
   : '(' initialization condition increment
+    {
+      $$ = {
+        inits: $2,
+        tests: $3,
+        updates: $4
+      };
+    }
   ;
 
 initialization
   : ';'
-  | list_of_assignments ';'
+    { $$ = []; }
+  | expression_list ';'
   ;
 
 condition
   : ';'
-  | expression ';'
+    { $$ = []; }
+  | expression_list ';'
   ;
 
 increment
   : ')'
-  | list_of_assignments ')'
-  ;
-
-list_of_assignments
-  : assignment_sentence
-  | list_of_assignments ',' assignment_sentence
+    { $$ = []; }
+  | expression_list ')'
   ;
 
 return_sentence
   : RETURN
+    {
+      $$ = {
+        type: "ReturnSentence",
+        argument: {
+          type: "Literal",
+          value: 100,
+          raw: "100"
+        }
+      };
+    }
   | RETURN '(' expression ')'
+    {
+      $$ = {
+        type: "ReturnSentence",
+        argument: $3
+      };
+    }
   ;
 
 frame_sentence
   : FRAME
+    {
+      $$ = {
+        type: "FrameSentence",
+        argument: {
+          type: "Literal",
+          value: 100,
+          raw: "100"
+        }
+      };
+    }
   | FRAME '(' expression ')'
+    {
+      $$ = {
+        type: "FrameSentence",
+        argument: $3
+      };
+    }
   ;
 
 clone_sentence
@@ -515,21 +705,36 @@ clone_sentence
 
 call
   : id '(' ')'
-    { $$ = $1 + '()'; }
+    {
+      $$ = {
+        type: "CallExpression",
+        callee: $1,
+        arguments: []
+      };
+    }
   | id '(' expression_list ')'
-    { $$ = $1 + '(' + $3 + ')'; } 
+    {
+      $$ = {
+        type: "CallExpression",
+        callee: $1,
+        arguments: $3
+      };
+    }
   ;
 
 expression_list
   : expression
+    { $$ = [$1]; }
   | expression_list ',' expression
+    { $1.push($3); }
   ;
 
-assignment_sentence
-  : access_expression assignment_operator expression
+assignment_expression
+  : boolean_expression
+  | access_expression assignment_operator assignment_expression
     {
       $$ = {
-        type: "AssignmentSentence",
+        type: "AssignmentExpression",
         operator: $2,
         left: $1,
         right: $3
@@ -570,8 +775,7 @@ assignment_operator
   ;
 
 expression
-  : boolean_expression
-  | expression comparison_operator boolean_expression
+  : assignment_expression
   ;
 
 comparison_operator

@@ -1,0 +1,4 @@
+PROGRAM basic;
+CONST
+BEGIN
+END

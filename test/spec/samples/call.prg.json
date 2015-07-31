@@ -1,0 +1,44 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": null,
+    "body": {
+      "type": "SentenceBlock",
+      "sentences": [
+        {
+          "type": "CallExpression",
+          "callee": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "arguments": [
+            {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            },
+            {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            },
+            {
+              "type": "Literal",
+              "value": 3,
+              "raw": "3"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "process": [] 
+}

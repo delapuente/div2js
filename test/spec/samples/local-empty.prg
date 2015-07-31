@@ -1,0 +1,4 @@
+PROGRAM basic;
+LOCAL
+BEGIN
+END

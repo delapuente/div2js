@@ -14,16 +14,11 @@
       "type": "SentenceBlock",
       "sentences": [
         {
-          "type": "AssignmentExpression",
-          "operator": "=",
-          "left": {
-            "type": "Identifier",
-            "name": "x"
-          },
-          "right": {
+          "type": "ReturnSentence",
+          "argument": {
             "type": "Literal",
-            "value": 1,
-            "raw": "1"
+            "value": 100,
+            "raw": "100"
           }
         }
       ]

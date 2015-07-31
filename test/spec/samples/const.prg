@@ -1,0 +1,5 @@
+PROGRAM basic;
+CONST
+  a = 5;
+BEGIN
+END

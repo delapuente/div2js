@@ -23,13 +23,30 @@ define(['/src/div2lang.js', '/src/scope.js'], function (div2lang, scope) {
 
     var programs = [
       'basic.prg',
+      'const.prg',
+      'const-empty.prg',
+      'global.prg',
+      'global-empty.prg',
+      'local.prg',
+      'local-empty.prg',
+      'private.prg',
+      'private-empty.prg',
       'basic-if.prg',
       'basic-if-else.prg',
       'basic-if-else-if.prg',
       'basic-switch.prg',
       'basic-assignment.prg',
-      'private.prg',
-      'private-empty.prg'
+      'basic-while.prg',
+      'basic-loop.prg',
+      'basic-repeat.prg',
+      'repeat.prg',
+      'return.prg',
+      'call.prg',
+      'call-empty.prg',
+      'basic-from.prg',
+      'basic-from-step.prg',
+      'basic-for.prg',
+      'complete-for.prg'
     ];
 
     programs.forEach(function (programName) {

@@ -1,0 +1,5 @@
+PROGRAM basic;
+BEGIN
+  WHILE (1)
+  END
+END

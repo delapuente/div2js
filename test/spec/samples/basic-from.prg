@@ -1,0 +1,5 @@
+PROGRAM basic;
+BEGIN
+  FROM a = 1 TO 10;
+  END
+END
