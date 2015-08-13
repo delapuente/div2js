@@ -191,13 +191,6 @@ const_block
         declarations: $2
       };
     }
-  | CONST
-    {
-      $$ = {
-        type: "ConstDeclarations",
-        declarations: []
-      };
-    }
   | /* empty */
     { $$ = null; }
   ;
@@ -208,13 +201,6 @@ global_block
       $$ = {
         type: "GlobalDeclarations",
         declarations: $2
-      };
-    }
-  | GLOBAL
-    {
-      $$ = {
-        type: "GlobalDeclarations",
-        declarations: []
       };
     }
   | /* empty */
@@ -229,13 +215,6 @@ local_block
         declarations: $2
       };
     }
-  | LOCAL
-    {
-      $$ = {
-        type: "LocalDeclarations",
-        declarations: []
-      };
-    }
   | /* empty */
     { $$ = null; }
   ;
@@ -248,22 +227,15 @@ private_block
         declarations: $2
       };
     }
-  | PRIVATE
-    {
-      $$ = {
-        type: "PrivateDeclarations",
-        declarations: []
-      };
-    }
   | /* empty */
     { $$ = null; }
   ;
 
 const_declaration_list
-  : const_declaration
-    { $$ = [$1]; }
-  | const_declaration_list declaration_list
-    { $1.push($2); }
+  : /* empty */
+    { $$ = []; }
+  | const_declaration_list const_declaration
+    { $$ = $1.concat([$2]); }
   ;
 
 const_declaration
@@ -280,10 +252,10 @@ const_declaration
   ;
 
 declaration_list
-  : declaration
-    { $$ = [$1]; }
+  : /* empty */
+    { $$ = []; }
   | declaration_list declaration
-    { $$ = $1.push($2); }
+    { $$ = $1.concat([$2]); }
   ;
 
 declaration
@@ -377,11 +349,10 @@ sentence
   | loop_sentence
   | from_sentence
   | for_sentence
-  | return_sentence opt_end
-  | frame_sentence opt_end
+  | return_sentence ';'
+  | frame_sentence ';'
   | clone_sentence
-  | DEBUG opt_end
-  | call ';'
+  | DEBUG ';'
   | assignment_expression ';'
   ;
 
@@ -703,8 +674,53 @@ clone_sentence
   : CLONE group_of_sentences
   ;
 
-call
-  : id '(' ')'
+expression_list
+  : expression
+    { $$ = [$1]; }
+  | expression_list ',' expression
+    { $1.push($3); }
+  ;
+
+primary_expression
+	: id
+	| STRING_LITERAL
+    {
+      $$ = {
+        type: "Literal",
+        value: JSON.parse($1),
+        raw: $1
+      };
+    }
+  | NUMBER
+    {
+      $$ = {
+        type: "Literal",
+        value: parseInt($1),
+        raw: $1
+      };
+    }
+	| '(' expression ')'
+    { $$ = $2; }
+	;
+
+postfix_expression
+	: primary_expression
+	| postfix_expression '[' expression ']'
+	| call_expression
+	| postfix_expression '.' id
+	| postfix_expression update_operator
+    {
+      $$ = {
+        type: "UpdateSentence",
+        operator: $2,
+        argument: $1,
+        prefix: false
+      };
+    }
+	;
+
+call_expression
+  : postfix_expression '(' ')'
     {
       $$ = {
         type: "CallExpression",
@@ -712,7 +728,7 @@ call
         arguments: []
       };
     }
-  | id '(' expression_list ')'
+  | postfix_expression '(' expression_list ')'
     {
       $$ = {
         type: "CallExpression",
@@ -722,16 +738,88 @@ call
     }
   ;
 
-expression_list
-  : expression
-    { $$ = [$1]; }
-  | expression_list ',' expression
-    { $1.push($3); }
+unary_expression
+	: postfix_expression
+	| update_operator unary_expression
+    {
+      $$ = {
+        type: "UpdateExpression",
+        operator: $2,
+        argument: $1,
+        prefix: true
+      };
+    }
+	| unary_operator unary_expression
+	;
+
+update_operator
+  : '++'
+  | '--'
   ;
 
+unary_operator
+	: '&'
+	| '*'
+	| '+'
+	| '-'
+	| '!'
+	;
+
+multiplicative_expression
+	: unary_expression
+  | multiplicative_expression '*' unary_expression
+	| multiplicative_expression '/' unary_expression
+	| multiplicative_expression '%' unary_expression
+	;
+
+additive_expression
+	: multiplicative_expression
+	| additive_expression '+' multiplicative_expression
+	| additive_expression '-' multiplicative_expression
+	;
+
+shift_expression
+	: additive_expression
+	| shift_expression '<<' additive_expression
+	| shift_expression '>>' additive_expression
+	;
+
+relational_expression
+	: shift_expression
+	| relational_expression '<' shift_expression
+	| relational_expression '>' shift_expression
+	| relational_expression '<=' shift_expression
+	| relational_expression '>=' shift_expression
+	;
+
+equality_expression
+	: relational_expression
+	| equality_expression '==' relational_expression
+	| equality_expression '!=' relational_expression
+	;
+
+and_expression
+	: equality_expression
+	| and_expression '&&' equality_expression
+	;
+
+exclusive_or_expression
+	: and_expression
+	| exclusive_or_expression '^' and_expression
+	;
+
+inclusive_or_expression
+	: exclusive_or_expression
+	| inclusive_or_expression '||' exclusive_or_expression
+	;
+
+conditional_expression
+	: inclusive_or_expression
+	;
+
 assignment_expression
-  : boolean_expression
-  | access_expression assignment_operator assignment_expression
+	: conditional_expression
+	| unary_expression assignment_operator assignment_expression
     {
       $$ = {
         type: "AssignmentExpression",
@@ -740,149 +828,22 @@ assignment_expression
         right: $3
       };
     }
-  | access_expression increment_operator
-    {
-      $$ = {
-        type: "UpdateSentence",
-        operator: $2,
-        argument: $1,
-        prefix: false
-      };
-    }
-  | increment_operator access_expression
-    {
-      $$ = {
-        type: "UpdateSentence",
-        operator: $2,
-        argument: $1,
-        prefix: true
-      };
-    }
-  ;
+	;
 
 assignment_operator
-  : '='
-  | '*='
-  | '/='
-  | '%='
-  | '+='
-  | '-='
-  | '&='
-  | '|='
-  | '^='
-  | '<<='
-  | '>>='
-  ;
+	: '='
+	| '*='
+	| '/='
+	| '%='
+	| '+='
+	| '-='
+	| '<<='
+	| '>>='
+	| '&='
+	| '^='
+	| '|='
+	;
 
 expression
-  : assignment_expression
-  ;
-
-comparison_operator
-  : '=='
-  | '!='
-  | '>='
-  | '<='
-  | '<'
-  | '>'
-  ;
-
-boolean_expression
-  : shift_expression
-  | boolean_expression boolean_operator shift_expression
-  ;
-
-boolean_operator
-  : '&&'
-  | '&'
-  | '||'
-  | '|'
-  | '^^'
-  | '^'
-  ;
-
-shift_expression
-  : additive_expression
-  | shift_expression shift_operator additive_expression
-  ;
-
-shift_operator
-  : '<<'
-  | '>>'
-  ;
-
-additive_expression
-  : multiplicative_expression
-  | additive_expression additive_operator multiplicative_expression
-  ;
-
-additive_operator
-  : '+'
-  | '-'
-  ;
-
-multiplicative_expression
-  : unary_expression
-  | multiplicative_expression multiplicative_operator unary_expression
-  ;
-
-multiplicative_operator
-  : '/'
-  | '*'
-  | '%'
-  ;
-
-unary_expression
-  : postfix_expression
-  | unary_operator unary_expression
-  | increment_operator access_expression
-  ;
-
-unary_operator
-  : '-'
-  | '!'
-  | '&'
-  | '*'
-  ;
-
-postfix_expression
-  : access_expression
-  | primary_expression
-  | access_expression increment_operator
-  | call
-  ;
-
-increment_operator
-  : '++'
-  | '--'
-  ;
-
-access_expression
-  : id
-  | access_expression '.' id
-  | access_expression '[' expression ']'
-  ;
-
-primary_expression
-  : const
-  | '(' expression ')'
-  ;
-
-const
-  : NUMBER
-    {
-      $$ = {
-        type: "Literal",
-        value: parseInt($1),
-        raw: $1
-      };
-    }
-  | STRING_LITERAL
-    {
-      $$ = {
-        type: "Literal",
-        value: JSON.parse($1),
-        raw: $1
-      };
-    }
-  ;
+	: assignment_expression
+	;
