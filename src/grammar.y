@@ -353,17 +353,19 @@ sentence
   | frame_sentence ';'
   | clone_sentence
   | DEBUG ';'
+    { $$ = { type: "DebuggerSentence" }; }
   | assignment_expression ';'
   ;
 
 sentence_for_loops
  : sentence
- | BREAK opt_end
- | CONTINUE opt_end
+ | BREAK ';'
+    { $$ = { type: "BreakSentence" }; }
+ | CONTINUE ';'
+    { $$ = { type: "ContinueSentence" }; }
  ;
 
 /* It exists to relax the rules for ; in sentences. */
-/* TODO: Check the cases! */
 opt_end
   : /* empty */
   | ';'
@@ -414,14 +416,14 @@ sentence_list
   : sentence
     { $$ = [$1]; }
   | sentence_list sentence
-    { $$ = $1.push(sentence); }
+    { $1.push(sentence); }
   ;
 
 sentence_list_for_loops
   : sentence_for_loops
     { $$ = [$1]; }
   | sentence_list_for_loops sentence
-    { $$ = $1.push(sentence); }
+    { $1.push(sentence); }
   ;
 
 group_of_cases
