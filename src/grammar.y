@@ -552,34 +552,27 @@ loop_sentence
   ;
 
 from_sentence
-  : FROM id '=' expression TO expression ';' group_of_sentences_for_loops
+  : FROM id '=' expression TO expression step ';' group_of_sentences_for_loops
     {
       $$ = {
         type: "FromSentence",
         identifier: $2,
         init: $4,
         limit: $6,
-        step: null,
+        step: $7,
         body: {
           type: "SentenceBlock",
-          sentences: $8
+          sentences: $9
         }
       };
     }
-  | FROM id '=' expression TO expression STEP expression ';' group_of_sentences_for_loops
-    {
-      $$ = {
-        type: "FromSentence",
-        identifier: $2,
-        init: $4,
-        limit: $6,
-        step: $8,
-        body: {
-          type: "SentenceBlock",
-          sentences: $10
-        }
-      };
-    }
+  ;
+
+step
+  : /* empty */
+    { $$ = null }
+  | STEP expression
+    { $$ = $2; }
   ;
 
 for_sentence
