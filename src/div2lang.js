@@ -208,17 +208,14 @@ break;
 case 60: case 62: case 68: case 72: case 98:
  this.$ = [$$[$0]]; 
 break;
-case 61: case 63:
- $$[$0-1].push(sentence); 
+case 61: case 63: case 69:
+ $$[$0-1].push($$[$0]); 
 break;
 case 65:
  this.$ = [$$[$0-1]]; 
 break;
 case 67:
  $$[$0-2].push($$[$0-1]); 
-break;
-case 69:
- $$[$0-1].push($$[$0]); 
 break;
 case 70:
 

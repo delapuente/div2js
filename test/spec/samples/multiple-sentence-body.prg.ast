@@ -1,0 +1,36 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": null,
+    "body": {
+      "type": "SentenceBlock",
+      "sentences": [
+        {
+          "type": "CallExpression",
+          "callee": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "arguments": []
+        },
+        {
+          "type": "CallExpression",
+          "callee": {
+            "type": "Identifier",
+            "name": "b"
+          },
+          "arguments": []
+        }
+      ]
+    }
+  },
+  "process": [] 
+}

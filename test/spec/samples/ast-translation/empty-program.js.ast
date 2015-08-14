@@ -1,0 +1,63 @@
+{
+    "type": "Program",
+    "body": [
+        {
+            "type": "FunctionDeclaration",
+            "id": {
+                "type": "Identifier",
+                "name": "program_test"
+            },
+            "params": [
+                {
+                    "type": "Identifier",
+                    "name": "mem"
+                },
+                {
+                    "type": "Identifier",
+                    "name": "exec"
+                },
+                {
+                    "type": "Identifier",
+                    "name": "args"
+                }
+            ],
+            "defaults": [],
+            "body": {
+                "type": "BlockStatement",
+                "body": [
+                    {
+                        "type": "WhileStatement",
+                        "test": {
+                            "type": "Literal",
+                            "value": true,
+                            "raw": "true"
+                        },
+                        "body": {
+                            "type": "BlockStatement",
+                            "body": [
+                                {
+                                    "type": "SwitchStatement",
+                                    "discriminant": {
+                                        "type": "MemberExpression",
+                                        "computed": false,
+                                        "object": {
+                                            "type": "Identifier",
+                                            "name": "exec"
+                                        },
+                                        "property": {
+                                            "type": "Identifier",
+                                            "name": "pc"
+                                        }
+                                    },
+                                    "cases": []
+                                }
+                            ]
+                        }
+                    }
+                ]
+            },
+            "generator": false,
+            "expression": false
+        }
+    ]
+}

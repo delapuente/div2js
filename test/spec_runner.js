@@ -3,7 +3,7 @@ mocha.setup('bdd');
 
 requirejs([
   'spec/grammar.spec.js',
-  'spec/generator.spec.js'
+  'spec/translation.spec.js'
 ], function () {
   mocha.run();
 });

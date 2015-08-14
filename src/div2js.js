@@ -1,11 +1,15 @@
 
-define(['div2lang', 'scope'], function (parser, scope) {
+define([
+  'div2lang',
+  'div2trans'
+], function (parser, translator) {
 
-  parser.yy = scope;
+  parser.yy = {};
   parser.yy.parseError = parser.parseError;
 
   return {
-    parser: parser
+    parser: parser,
+    translator: translator
   };
 
 });

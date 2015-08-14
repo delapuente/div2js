@@ -1,9 +1,11 @@
-define(['/src/div2lang.js', '/src/scope.js'], function (div2lang, scope) {
+define([
+  '/src/div2lang.js'
+], function (div2lang) {
   'use strict';
 
   var context = newContext({
     'div2lang': div2lang,
-    'scope': scope
+    'div2trans': {}
   });
 
   describe('DIV2 parser', function () {
@@ -23,6 +25,7 @@ define(['/src/div2lang.js', '/src/scope.js'], function (div2lang, scope) {
 
     var programs = [
       'basic.prg',
+      'multiple-sentence-body.prg',
       'const.prg',
       'const-empty.prg',
       'global.prg',
@@ -56,7 +59,7 @@ define(['/src/div2lang.js', '/src/scope.js'], function (div2lang, scope) {
         var ast, expectedAst;
         return Promise.all([
           fetch(path),
-          fetch(samplePath(programName + '.json'))
+          fetch(samplePath(programName + '.ast'))
         ])
         .then(function (responses) {
           return Promise.all(responses.map(function (response) {
