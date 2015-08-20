@@ -11,7 +11,7 @@
     "locals": null,
     "privates": null,
     "body": {
-      "type": "SentenceBlock",
+      "type": "ProcessBody",
       "sentences": [
         {
           "type": "SwitchSentence",
@@ -96,5 +96,5 @@
       ]
     }
   },
-  "process": [] 
+  "processes": [] 
 }

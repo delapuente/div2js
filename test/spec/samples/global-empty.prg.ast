@@ -14,9 +14,9 @@
     "locals": null,
     "privates": null,
     "body": {
-      "type": "SentenceBlock",
+      "type": "ProcessBody",
       "sentences": []
     }
   },
-  "process": [] 
+  "processes": [] 
 }

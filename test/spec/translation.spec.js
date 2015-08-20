@@ -47,9 +47,9 @@ define([
           get(targetAst)
         ])
         .then(function (abstractSyntaxTrees) {
-          ast = abstractSyntaxTrees[0];
+          ast = translator.translate(abstractSyntaxTrees[0]);
           expectedAst = abstractSyntaxTrees[1];
-          expect(translator.translate(ast)).to.be.deep.equal(expectedAst);
+          expect(ast).to.be.deep.equal(expectedAst);
         })
         .catch(function (error) {
           console.error('Failed!');

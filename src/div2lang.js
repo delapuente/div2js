@@ -17,7 +17,7 @@ case 1:
       this.$ = {
         type: "Unit",
         program: $$[$0-1],
-        process: []
+        processes: []
       };
       return this.$;
     
@@ -27,7 +27,7 @@ case 2:
       this.$ = {
         type: "Unit",
         program: $$[$0-2],
-        process: $$[$0-1]
+        processes: $$[$0-1]
       };
       return this.$;
     
@@ -150,7 +150,7 @@ break;
 case 33:
 
       this.$ = {
-        type: "SentenceBlock",
+        type: "ProcessBody",
         sentences: $$[$0]
       };
     

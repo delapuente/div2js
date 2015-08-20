@@ -148,7 +148,7 @@ translation_unit
       $$ = {
         type: "Unit",
         program: $1,
-        process: []
+        processes: []
       };
       return $$;
     }
@@ -157,7 +157,7 @@ translation_unit
       $$ = {
         type: "Unit",
         program: $1,
-        process: $2
+        processes: $2
       };
       return $$;
     }
@@ -314,7 +314,7 @@ body
   : BEGIN group_of_sentences
     {
       $$ = {
-        type: "SentenceBlock",
+        type: "ProcessBody",
         sentences: $2
       };
     }

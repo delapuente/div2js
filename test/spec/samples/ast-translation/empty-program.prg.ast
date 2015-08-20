@@ -4,16 +4,16 @@
     "type": "Program",
     "name": {
       "type": "Identifier",
-      "name": "basic"
+      "name": "test"
     },
     "consts": null,
     "globals": null,
     "locals": null,
     "privates": null,
     "body": {
-      "type": "SentenceBlock",
+      "type": "ProcessBody",
       "sentences": []
     }
   },
-  "process": [] 
+  "processes": [] 
 }

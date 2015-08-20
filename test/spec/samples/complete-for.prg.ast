@@ -11,7 +11,7 @@
     "locals": null,
     "privates": null,
     "body": {
-      "type": "SentenceBlock",
+      "type": "ProcessBody",
       "sentences": [
         {
           "type": "ForSentence",
@@ -89,5 +89,5 @@
       ]
     }
   },
-  "process": [] 
+  "processes": [] 
 }
