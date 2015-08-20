@@ -4,7 +4,7 @@ define([
   'div2trans'
 ], function (parser, translator) {
 
-  parser.yy = {};
+  parser.yy = parser.yy || {};
   parser.yy.parseError = parser.parseError;
 
   return {
