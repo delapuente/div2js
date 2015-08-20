@@ -2,70 +2,143 @@
 define([], function () {
   'use strict';
 
-  function BlockBuilder(level) {
-    this._source = '';
-    this._indentationLevel = level || 0;
-  }
+  var templates = {
+    get processParameters() {
+      return clone([
+        {
+          type: "Identifier",
+          name: "mem"
+        },
+        {
+          type: "Identifier",
+          name: "exec"
+        },
+        {
+          type: "Identifier",
+          name: "args"
+        }
+      ]);
+    },
 
-  BlockBuilder.prototype.indent = function (text) {
-    var indentation = new Array(this._indentationLevel + 1).join('  ');
-    return text
-      .split('\n')
-      .map(function (line) { return indentation + line; })
-      .join('\n');
+    get processBodyWrapper() {
+      return clone({
+        type: "WhileStatement",
+        test: {
+          type: "Literal",
+          value: true,
+          raw: "true"
+        },
+        body: {
+          type: "BlockStatement",
+          body: []
+        }
+      });
+    },
+
+    get processBodySkeleton() {
+      return clone({
+        type: "SwitchStatement",
+        discriminant: {
+          type: "MemberExpression",
+          computed: false,
+          object: {
+            type: "Identifier",
+            name: "exec"
+          },
+          property: {
+            type: "Identifier",
+            name: "pc"
+          }
+        },
+        cases: []
+      });
+    },
+
+    get blockStatement() {
+      return clone({
+        type: 'BlockStatement',
+        body: []
+      });
+    }
   };
 
-  BlockBuilder.prototype.block = function (text) {
-    this._source += this.indent(text) + '\n';
-    this._indentationLevel++;
-    return this;
-  };
-
-  BlockBuilder.prototype.end = function (text) {
-    this._indentationLevel--;
-    this._source += this.indent(text) + '\n';
-    return this;
-  };
-
-  BlockBuilder.prototype.use = function (text) {
-    text = text || '';
-    var newLineTerminated = text[text.length - 1] === '\n';
-    this._source += this.indent(text) + newLineTerminated ? '' : '\n';
-    return this;
-  };
-
-  BlockBuilder.prototype.toString = function () {
-    return this._source;
-  };
-
-  function newCoroutine(name, body) {
-    return new BlockBuilder()
-    .block('function ' + name + '(mem, exec, args) {')
-      .block('while (true) {')
-        .block('switch (exec.pc) {')
-          .use(body)
-        .end('}')
-      .end('}')
-    .end('}')
-    .toString();
-  }
-
-  var programCounter = 1;
-  var instructions = '';
-
-  function startLinearization(instructions) {
-    programCounter = 1;
-
+  function clone(obj) {
+    return JSON.parse(JSON.stringify(obj));
   }
 
   var translators = Object.create(null);
+
+  translators.Unit = function (divUnit) {
+    var program = {
+      type: "Program",
+      body: []
+    };
+    var programFunction = translate(divUnit.program);
+    var processesFunctions = divUnit.processes.map(translate);
+    program.body = [programFunction].concat(processesFunctions);
+    return program;
+  };
+
+  translators.Program = function (divProgram) {
+    var functionDeclaration = {
+      type: 'FunctionDeclaration',
+      id: getProgramId(divProgram.name),
+      params: templates.processParameters,
+      defaults: [],
+      body: {
+        type: 'BlockStatement',
+        body: [getProcessBody(divProgram.body)]
+      },
+      generator: false,
+      expression: false
+    };
+    return functionDeclaration;
+  };
+
+  translators.ProcessBody = function (divBody) {
+    var labeledBody = templates.processBodySkeleton;
+    labeledBody.cases = linearize(divBody);
+    return labeledBody;
+  };
+
+  translators.Identifier = function (divIdentifier) {
+    return clone(divIdentifier);
+  };
+
+  function getProgramId(divIdentifier) {
+    return getPrefixedId('program_', divIdentifier);
+  }
+
+  function getProcessId(divIdentifier) {
+    return getPrefixedId('process_', divIdentifier);
+  }
+
+  function getPrefixedId(prefix, divIdentifier) {
+    var jsIdentifier = translate(divIdentifier);
+    jsIdentifier.name = prefix + jsIdentifier.name;
+    return jsIdentifier;
+  }
+
+  function getProcessBody(divProcessBody) {
+    var processBody = templates.processBodyWrapper;
+    processBody.body.body = [translate(divProcessBody)];
+    return processBody;
+  }
+
+  function linearize(divBody, linearization) {
+    linearization = linearization || {
+      pc: 1,
+      cases: {}
+    };
+    return [];
+  }
 
   function translate(divAst) {
     if (!divAst || !divAst.type) { throw new Error('Invalid DIV2 AST'); }
     if (!(divAst.type in translators)) {
       throw new Error('Translation unavailable for ' + divAst.type + ' AST');
     }
-    return translators[divAst.type].translate();
+    return translators[divAst.type](divAst);
   }
 
   return {
