@@ -1,144 +1,57 @@
 
-define([], function () {
+define(['context', 'ast', 'templates'], function (ctx, ast, t) {
   'use strict';
 
-  var templates = {
-    get processParameters() {
-      return clone([
-        {
-          type: "Identifier",
-          name: "mem"
-        },
-        {
-          type: "Identifier",
-          name: "exec"
-        },
-        {
-          type: "Identifier",
-          name: "args"
-        }
-      ]);
-    },
+  var translators = Object.create(null);
 
-    get processBodyWrapper() {
-      return clone({
-        type: "WhileStatement",
-        test: {
-          type: "Literal",
-          value: true,
-          raw: "true"
-        },
-        body: {
-          type: "BlockStatement",
-          body: []
-        }
-      });
-    },
+  translators.Unit = function (divUnit, context) {
+    var programFunction = translate(divUnit.program, context);
+    var processesFunctions = divUnit.processes.map(function (divProcess) {
+      return translate(divProcess, context);
+    });
+    return new ast.Program([programFunction].concat(processesFunctions));
+  };
 
-    get processBodySkeleton() {
-      return clone({
-        type: "SwitchStatement",
-        discriminant: {
-          type: "MemberExpression",
-          computed: false,
-          object: {
-            type: "Identifier",
-            name: "exec"
-          },
-          property: {
-            type: "Identifier",
-            name: "pc"
-          }
-        },
-        cases: []
-      });
-    },
+  translators.Program = function (divProgram, context) {
+    var name = divProgram.name.name;
+    var body = translate(divProgram.body, context);
+    return t.processFunction(name, body);
+  };
 
-    get blockStatement() {
-      return clone({
-        type: 'BlockStatement',
-        body: []
-      });
-    }
+  translators.ProcessBody = function (divBody, context) {
+    context.startLinearization();
+
+    divBody.sentences.map(function (sentence) {
+      translate(sentence, context);
+    });
+
+    // Add implicit return
+    context.verbatim(t.processEndReturn);
+
+    var bodyCases = context.getLinearizationCases();
+    return t.concurrentBody(bodyCases);
+  };
+
+  translators.Identifier = function (divIdentifier) {
+    return new ast.Identifier(divIdentifier.name);
+  };
+
+  translators.ExpressionSentence = function (divExpression) {
+    // TODO: translate this to jsast
+    return clone(divExpression);
   };
 
   function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
   }
 
-  var translators = Object.create(null);
-
-  translators.Unit = function (divUnit) {
-    var program = {
-      type: "Program",
-      body: []
-    };
-    var programFunction = translate(divUnit.program);
-    var processesFunctions = divUnit.processes.map(translate);
-    program.body = [programFunction].concat(processesFunctions);
-    return program;
-  };
-
-  translators.Program = function (divProgram) {
-    var functionDeclaration = {
-      type: 'FunctionDeclaration',
-      id: getProgramId(divProgram.name),
-      params: templates.processParameters,
-      defaults: [],
-      body: {
-        type: 'BlockStatement',
-        body: [getProcessBody(divProgram.body)]
-      },
-      generator: false,
-      expression: false
-    };
-    return functionDeclaration;
-  };
-
-  translators.ProcessBody = function (divBody) {
-    var labeledBody = templates.processBodySkeleton;
-    labeledBody.cases = linearize(divBody);
-    return labeledBody;
-  };
-
-  translators.Identifier = function (divIdentifier) {
-    return clone(divIdentifier);
-  };
-
-  function getProgramId(divIdentifier) {
-    return getPrefixedId('program_', divIdentifier);
-  }
-
-  function getProcessId(divIdentifier) {
-    return getPrefixedId('process_', divIdentifier);
-  }
-
-  function getPrefixedId(prefix, divIdentifier) {
-    var jsIdentifier = translate(divIdentifier);
-    jsIdentifier.name = prefix + jsIdentifier.name;
-    return jsIdentifier;
-  }
-
-  function getProcessBody(divProcessBody) {
-    var processBody = templates.processBodyWrapper;
-    processBody.body.body = [translate(divProcessBody)];
-    return processBody;
-  }
-
-  function linearize(divBody, linearization) {
-    linearization = linearization || {
-      pc: 1,
-      cases: {}
-    };
-    return [];
-  }
-
-  function translate(divAst) {
+  function translate(divAst, context) {
+    context = context || new ctx.Context();
     if (!divAst || !divAst.type) { throw new Error('Invalid DIV2 AST'); }
     if (!(divAst.type in translators)) {
       throw new Error('Translation unavailable for ' + divAst.type + ' AST');
     }
-    return translators[divAst.type](divAst);
+    return translators[divAst.type](divAst, context);
   }
 
   return {
