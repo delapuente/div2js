@@ -16,8 +16,8 @@ define(['ast'], function (ast) {
 
     get endToken() {
       return {
-        type: "Identifier",
-        name: "__PROCESS_END"
+        type: 'Identifier',
+        name: '__PROCESS_END'
       };
     },
 
@@ -44,40 +44,40 @@ define(['ast'], function (ast) {
     get processParameters() {
       return [
         {
-          type: "Identifier",
-          name: "mem"
+          type: 'Identifier',
+          name: 'mem'
         },
         {
-          type: "Identifier",
-          name: "exec"
+          type: 'Identifier',
+          name: 'exec'
         },
         {
-          type: "Identifier",
-          name: "args"
+          type: 'Identifier',
+          name: 'args'
         }
       ];
     },
 
     get programCounter() {
       return {
-        type: "MemberExpression",
+        type: 'MemberExpression',
         computed: false,
         object: {
-          type: "Identifier",
-          name: "exec"
+          type: 'Identifier',
+          name: 'exec'
         },
         property: {
-          type: "Identifier",
-          name: "pc"
+          type: 'Identifier',
+          name: 'pc'
         }
       };
     },
 
     get trueLiteral() {
       return {
-        type: "Literal",
+        type: 'Literal',
         value: true,
-        raw: "true"
+        raw: 'true'
       };
     }
 

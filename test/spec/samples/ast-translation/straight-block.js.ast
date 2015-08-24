@@ -49,7 +49,10 @@
               },
               {
                 "type": "ReturnStatement",
-                "argument": null
+                "argument": {
+                  "type": "Identifier",
+                  "name": "__PROCESS_END"
+                }
               }
             ]
           }

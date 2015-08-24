@@ -1,0 +1,42 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      }
+    },
+    {
+      "type": "WhileSentence",
+      "test": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      },
+      "body": {
+        "type": "SentenceBlock",
+        "sentences": [
+          {
+            "type": "ExpressionSentence",
+            "expression": {
+              "type": "Literal",
+              "value": 3,
+              "raw": "3"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 5,
+        "raw": "5"
+      }
+    }
+  ]
+}

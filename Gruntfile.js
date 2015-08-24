@@ -129,7 +129,10 @@ module.exports = function(grunt) {
           middleware: function(connect) {
             return [
               connect().use('/src', connect.static('src')),
-              connect().use('/test/spec/samples', connect.static('test/spec/samples')),
+              connect().use(
+                '/test/spec/samples',
+                connect.static('test/spec/samples')
+              ),
               connect.static('test')
             ];
           }
@@ -158,6 +161,7 @@ module.exports = function(grunt) {
       files: srcFiles
              .concat(demoSrcFiles)
              .concat(specJsFiles)
+             .concat('!<%= dirs.src %>/div2lang.js')
              .concat('Gruntfile.js'),
       options: {
         globals: {
@@ -252,7 +256,7 @@ module.exports = function(grunt) {
 
   });
 
-  grunt.registerTask('default', ['docs', 'lint', 'test', 'pack', 'min']);
+  grunt.registerTask('default', ['docs', 'lint', 'pack', 'min', 'test']);
   grunt.registerTask('dist', ['docs', 'pack', 'min']);
   grunt.registerTask('docs', ['clean:docs', 'yuidoc']);
   grunt.registerTask('lint', ['jshint']);

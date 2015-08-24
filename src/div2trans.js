@@ -36,9 +36,29 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     return new ast.Identifier(divIdentifier.name);
   };
 
-  translators.ExpressionSentence = function (divExpression) {
-    // TODO: translate this to jsast
-    return clone(divExpression);
+  translators.ExpressionSentence = function (divExpression, context) {
+    var expression = translate(divExpression.expression);
+    context.verbatim(new ast.ExpressionStatement(expression));
+  };
+
+  translators.Literal = function (divLiteral) {
+    return new ast.Literal(divLiteral.value);
+  };
+
+  translators.WhileSentence = function (divWhile, context) {
+
+    var loopStartLabel = context.newPlaceholderLabel();
+    var afterLoopLabel = context.newPlaceholderLabel();
+
+    var testLabel = context.getNextInstructionLabel();
+    context.goToIf(translate(divWhile.test), loopStartLabel, afterLoopLabel)
+
+    loopStartLabel.resolveToNextInstructionLabel();
+    divWhile.body.sentences.map(function (loopSentence) {
+      translate(loopSentence, context);
+    });
+    context.goTo(testLabel);
+    afterLoopLabel.resolveToNextInstructionLabel();
   };
 
   function clone(obj) {

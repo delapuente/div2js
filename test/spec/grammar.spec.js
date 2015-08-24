@@ -1,3 +1,5 @@
+/* global fetch */
+
 define([
   '/src/div2lang.js'
 ], function (div2lang) {

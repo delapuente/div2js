@@ -1,3 +1,5 @@
+/* global fetch */
+
 define([
   '/src/context.js',
   '/src/ast.js',
@@ -35,7 +37,8 @@ define([
 
     var programs = [
       'empty-program.prg',
-      'straight-block.prg'
+      'straight-block.prg',
+      'while-block.prg'
     ];
 
     programs.forEach(function (programName) {
