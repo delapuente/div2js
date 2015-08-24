@@ -1,16 +1,19 @@
 define([
-  '/src/div2trans.js'
-], function (div2trans) {
+  '/src/context.js',
+  '/src/ast.js',
+  '/src/templates.js'
+], function (ctx, ast, templates) {
   'use strict';
 
   var context = newContext({
-    'div2lang': {},
-    'div2trans': div2trans
+    'context': ctx,
+    'ast': ast,
+    'templates': templates
   });
 
   describe('AST translation from DIV2 to JavaScript', function () {
 
-    var translator;
+    var translate;
 
     function samplePath(name) {
       return '/test/spec/samples/ast-translation/' + name + '.ast';
@@ -24,8 +27,8 @@ define([
     }
 
     beforeEach(function (done) {
-      context(['/src/div2js.js'], function (div2js) {
-        translator = div2js.translator;
+      context(['/src/div2trans.js'], function (trans) {
+        translate = trans.translate;
         done();
       });
     });
@@ -47,9 +50,9 @@ define([
           get(targetAst)
         ])
         .then(function (abstractSyntaxTrees) {
-          ast = translator.translate(abstractSyntaxTrees[0]);
+          ast = translate(abstractSyntaxTrees[0]);
           expectedAst = abstractSyntaxTrees[1];
-          expect(ast).to.be.deep.equal(expectedAst);
+          expect(ast.pojo()).to.be.deep.equal(expectedAst);
         })
         .catch(function (error) {
           console.error('Failed!');

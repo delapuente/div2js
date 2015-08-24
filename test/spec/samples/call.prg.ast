@@ -14,28 +14,31 @@
       "type": "ProcessBody",
       "sentences": [
         {
-          "type": "CallExpression",
-          "callee": {
-            "type": "Identifier",
-            "name": "a"
-          },
-          "arguments": [
-            {
-              "type": "Literal",
-              "value": 1,
-              "raw": "1"
+          "type": "ExpressionSentence",
+          "expression": {
+            "type": "CallExpression",
+            "callee": {
+              "type": "Identifier",
+              "name": "a"
             },
-            {
-              "type": "Literal",
-              "value": 2,
-              "raw": "2"
-            },
-            {
-              "type": "Literal",
-              "value": 3,
-              "raw": "3"
-            }
-          ]
+            "arguments": [
+              {
+                "type": "Literal",
+                "value": 1,
+                "raw": "1"
+              },
+              {
+                "type": "Literal",
+                "value": 2,
+                "raw": "2"
+              },
+              {
+                "type": "Literal",
+                "value": 3,
+                "raw": "3"
+              }
+            ]
+          }
         }
       ]
     }

@@ -14,12 +14,15 @@
       "type": "ProcessBody",
       "sentences": [
         {
-          "type": "CallExpression",
-          "callee": {
-            "type": "Identifier",
-            "name": "a"
-          },
-          "arguments": []
+          "type": "ExpressionSentence",
+          "expression": {
+            "type": "CallExpression",
+            "callee": {
+              "type": "Identifier",
+              "name": "a"
+            },
+            "arguments": []
+          }
         }
       ]
     }

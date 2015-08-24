@@ -49,7 +49,25 @@
                       "name": "pc"
                     }
                   },
-                  "cases": []
+                  "cases": [
+                    {
+                      "type": "SwitchCase",
+                      "test": {
+                        "type": "Literal",
+                        "value": 1,
+                        "raw": "1"
+                      },
+                      "consequent": [
+                        {
+                          "type": "ReturnStatement",
+                          "argument": {
+                            "type": "Identifier",
+                            "name": "__PROCESS_END"
+                          }
+                        }
+                      ]
+                    }
+                  ]
                 }
               ]
             }
