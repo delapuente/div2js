@@ -42,6 +42,7 @@ define([
       'basic-while.prg',
       'basic-loop.prg',
       'basic-repeat.prg',
+      'basic-expression.prg',
       'repeat.prg',
       'return.prg',
       'call.prg',

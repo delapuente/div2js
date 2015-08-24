@@ -354,7 +354,13 @@ sentence
   | clone_sentence
   | DEBUG ';'
     { $$ = { type: "DebuggerSentence" }; }
-  | assignment_expression ';'
+  | expression ';'
+    {
+      $$ = {
+        type: "ExpressionSentence",
+        expression: $1
+      };
+    }
   ;
 
 sentence_for_loops
