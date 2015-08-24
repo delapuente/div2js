@@ -19,6 +19,10 @@ module.exports = function(grunt) {
     '<%= dirs.demo %>/scripts/**/*.js'
   ];
 
+  var specJsFiles = [
+    '<%= dirs.spec %>/**/*.js'
+  ];
+
   var specFiles = [
     '<%= dirs.spec %>/**/*.js',
     '<%= dirs.spec %>/**/*.json',
@@ -153,7 +157,7 @@ module.exports = function(grunt) {
     jshint: {
       files: srcFiles
              .concat(demoSrcFiles)
-             .concat(specFiles)
+             .concat(specJsFiles)
              .concat('Gruntfile.js'),
       options: {
         globals: {
