@@ -47,18 +47,20 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
   translators.WhileSentence = function (divWhile, context) {
 
-    var loopStartLabel = context.newPlaceholderLabel();
-    var afterLoopLabel = context.newPlaceholderLabel();
+    var loopStartLabel = context.newLabel();
+    var afterLoopLabel = context.newLabel();
+    var testLabel = context.newLabel();
 
-    var testLabel = context.getNextInstructionLabel();
+    context.label(testLabel);
     context.goToIf(translate(divWhile.test), loopStartLabel, afterLoopLabel)
 
-    loopStartLabel.resolveToNextInstructionLabel();
+    context.label(loopStartLabel);
     divWhile.body.sentences.map(function (loopSentence) {
       translate(loopSentence, context);
     });
     context.goTo(testLabel);
-    afterLoopLabel.resolveToNextInstructionLabel();
+
+    context.label(afterLoopLabel);
   };
 
   function clone(obj) {

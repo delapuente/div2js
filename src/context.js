@@ -23,6 +23,14 @@ define(['ast', 'templates'], function (ast, t) {
       return this._currentLinearization.newPlaceholderLabel();
     },
 
+    newLabel: function () {
+      return this._currentLinearization.newLabel();
+    },
+
+    label: function (label) {
+      return this._currentLinearization.label(label);
+    },
+
     verbatim: function (ast) {
       return this._currentLinearization.verbatim(ast);
     },
@@ -39,7 +47,6 @@ define(['ast', 'templates'], function (ast, t) {
 
   function Linearization() {
     this._pc = -1;
-    this._labels = [];
     this._sentences = [];
   }
 
@@ -48,19 +55,14 @@ define(['ast', 'templates'], function (ast, t) {
 
     getCases: function () {
       var cases = [];
-      var labels = this._extractLabels();
       var sentences = this._sentences;
       var currentCase = null;
-      var label, consequent;
+      var consequent;
 
-      // TODO: refactor
-      // This is like a merge sort with preference on cases over instructions
       for (var i = 0, wrapper; (wrapper = sentences[i]); i++) {
-        label = labels[0];
-        if (i === label) {
-          currentCase = t.concurrentLabel(label + 1);
+        if (wrapper instanceof Label) {
+          currentCase = t.concurrentLabel(wrapper.label + 1);
           cases.push(currentCase);
-          labels.shift();
         }
         consequent = currentCase.consequent;
         consequent.push.apply(consequent, wrapper.sentences);
@@ -68,27 +70,19 @@ define(['ast', 'templates'], function (ast, t) {
       return cases;
     },
 
-    _extractLabels: function () {
-      var set = Object.keys(this._labels.reduce(function (set, label) {
-        if (typeof label.label === 'undefined') {
-          throw new Error('Linearization impossible. Unresolved labels found.');
-        }
-        set[label.label] = true;
-        return set;
-      }, {}));
-      return set.map(function (n) { return parseInt(n, 10); }).sort();
+    newLabel: function () {
+      return new Label();
     },
 
-    getNextInstructionLabel: function () {
-      return new Label(this._pc + 1, this);
-    },
-
-    newPlaceholderLabel: function () {
-      return new Label(undefined, this);
-    },
-
-    _addLabel: function (label) {
-      this._labels.push(label);
+    label: function (label) {
+      var lastSentence = this._sentences[this._sentences.length - 1];
+      if (lastSentence instanceof Label) {
+        label.proxy(lastSentence);
+      }
+      else {
+        label.label = this._pc + 1;
+        this._sentences.push(label);
+      }
     },
 
     verbatim: function (sentence) {
@@ -97,13 +91,10 @@ define(['ast', 'templates'], function (ast, t) {
 
     goToIf: function (testAst, labelIfTrue, labelIfFalse) {
       this._addSentence(this._goToIf(testAst, labelIfTrue, labelIfFalse));
-      this._addLabel(labelIfTrue);
-      this._addLabel(labelIfFalse);
     },
 
     goTo: function (label) {
       this._addSentence(this._goTo(label));
-      this._addLabel(label);
     },
 
     _verbatim: function (sentence) {
@@ -164,20 +155,28 @@ define(['ast', 'templates'], function (ast, t) {
 
     _addSentence: function (ast) {
       if (!this._sentences.length) {
-        this._labels.push(new Label(0, this));
+        this._sentences.push(new Label(0));
       }
-      this._pc += 1;
       this._sentences.push(ast);
+      this._pc += 1;
     }
   };
 
-  function Label(n, linearization) {
-    this.label = n;
-    this._linearization = linearization;
-  }
+  function Label(n) { this.label = n; }
 
-  Label.prototype.resolveToNextInstructionLabel = function () {
-    this.label = this._linearization._pc + 1;
+  Label.prototype = {
+    constructor: Label,
+
+    proxy: function (anotherLabel) {
+      this._proxifiedLabel = anotherLabel;
+      Object.defineProperty(this, 'label', { get: function () {
+        return this._proxifiedLabel.label;
+      }});
+    },
+
+    get sentences() {
+      return [];
+    }
   };
 
   return {
