@@ -38,7 +38,9 @@ define([
     var programs = [
       'empty-program.prg',
       'straight-block.prg',
-      'while-block.prg'
+      'while-block.prg',
+      'while-empty-block.prg',
+      'while-nested-block.prg'
     ];
 
     programs.forEach(function (programName) {

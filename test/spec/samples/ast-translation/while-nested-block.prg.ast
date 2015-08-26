@@ -1,0 +1,63 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      }
+    },
+    {
+      "type": "WhileSentence",
+      "test": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      },
+      "body": {
+        "type": "SentenceBlock",
+        "sentences": [
+          {
+            "type": "WhileSentence",
+            "test": {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            },
+            "body": {
+              "type": "SentenceBlock",
+              "sentences": [
+                {
+                  "type": "ExpressionSentence",
+                  "expression": {
+                    "type": "Literal",
+                    "value": 4,
+                    "raw": "4"
+                  }
+                },
+                {
+                  "type": "ExpressionSentence",
+                  "expression": {
+                    "type": "Literal",
+                    "value": 5,
+                    "raw": "5"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 8,
+        "raw": "8"
+      }
+    }
+  ]
+}
