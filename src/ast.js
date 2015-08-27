@@ -99,6 +99,14 @@ define([], function () {
     return new Literal(value);
   };
 
+  function LogicalExpression(left, right, operator) {
+    this.type = 'LogicalExpression';
+    this.operator = operator;
+    this.left = left;
+    this.right = right;
+  }
+  inherits(LogicalExpression, Node);
+
   function MemberExpression(object, property, computed) {
     this.type = 'MemberExpression',
     this.computed = computed || false;
@@ -164,6 +172,7 @@ define([], function () {
     FunctionDeclaration: FunctionDeclaration,
     Identifier: Identifier,
     Literal: Literal,
+    LogicalExpression: LogicalExpression,
     MemberExpression: MemberExpression,
     Program: Program,
     ReturnStatement: ReturnStatement,

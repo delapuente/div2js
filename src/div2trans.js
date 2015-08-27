@@ -4,6 +4,16 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
   var translators = Object.create(null);
 
+  translators.AssignmentExpression = function (divAssignment, context) {
+    return new ast.AssignmentExpression(
+      translate(divAssignment.left),
+      translate(divAssignment.right),
+
+      // XXX: This is good luck. All assignment operators are equal!
+      divAssignment.operator
+    );
+  };
+
   translators.Unit = function (divUnit, context) {
     var programFunction = translate(divUnit.program, context);
     var processesFunctions = divUnit.processes.map(function (divProcess) {
@@ -29,7 +39,7 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
   };
 
   translators.Identifier = function (divIdentifier) {
-    return new ast.Identifier(divIdentifier.name);
+    return t.memory(divIdentifier.name);
   };
 
   translators.ExpressionSentence = function (divExpression, context) {
@@ -114,7 +124,9 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
   };
 
   function translateForLikeLoop(loop, inits, tests, updates, context) {
-    var test = t.forLoopTest(tests);
+    var test = t.forLoopTest(tests.map(function (test) {
+      return translate(test, context);
+    }));
 
     var testLabel = context.newLabel();
     var loopStartLabel = context.newLabel();
@@ -125,14 +137,18 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
     context.label(testLabel);
     context.goToIf(test, loopStartLabel, afterLoopLabel);
+
+    context.label(loopStartLabel);
     translateBody(loop, context);
+
     context.label(updatesLabel);
     updates.forEach(verbatim);
+    context.goTo(testLabel);
 
     context.label(afterLoopLabel);
 
-    function verbatim(expression) {
-      context.verbatim(new ast.ExpressionStatement(expression));
+    function verbatim(divExpression) {
+      context.verbatim(new ast.ExpressionStatement(translate(divExpression)));
     }
   }
 

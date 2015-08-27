@@ -34,7 +34,7 @@ define(['ast'], function (ast) {
         var wrapped = _this.callWith('__isTrue', test);
         return chain === null ?
                wrapped :
-               new ast.BinaryExpression(chain, wrapped, '&&');
+               new ast.LogicalExpression(chain, wrapped, '&&');
       }, null);
     },
 
