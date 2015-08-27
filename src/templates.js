@@ -4,6 +4,13 @@ define(['ast'], function (ast) {
 
   return {
 
+    callWith: function (name) {
+      return new ast.CallExpression(
+        new ast.Identifier(name),
+        Array.prototype.slice.call(arguments, 1)
+      );
+    },
+
     concurrentBody: function (cases) {
       var programCounter = this.programCounter;
       var switchStatement = new ast.SwitchStatement(programCounter, cases);
@@ -11,7 +18,7 @@ define(['ast'], function (ast) {
     },
 
     concurrentLabel: function (label) {
-      return new ast.SwitchCase(new ast.Literal(label));
+      return new ast.SwitchCase(ast.Literal.for(label));
     },
 
     get endToken() {
@@ -21,12 +28,57 @@ define(['ast'], function (ast) {
       };
     },
 
+    forLoopTest: function (tests) {
+      var _this = this;
+      return tests.reduce(function (chain, test) {
+        var wrapped = _this.callWith('__isTrue', test);
+        return chain === null ?
+               wrapped :
+               new ast.BinaryExpression(chain, wrapped, '&&');
+      }, null);
+    },
+
+    fromIncrement: function (name, constant) {
+      return new ast.ExpressionStatement(
+        new ast.AssignmentExpression(
+          this.memory(name),
+          ast.Literal.for(constant),
+          '+='
+        )
+      );
+    },
+
+    fromInitilizator: function (name, constant) {
+      return new ast.ExpressionStatement(
+        new ast.AssignmentExpression(
+          this.memory(name),
+          ast.Literal.for(constant)
+        )
+      );
+    },
+
+    fromTest: function (name, constant, isLowerThan) {
+      return new ast.BinaryExpression(
+        this.memory(name),
+        ast.Literal.for(constant),
+        isLowerThan ? '<=' : '>='
+      );
+    },
+
     infiniteLoop: function (body) {
       return new ast.WhileStatement(this.trueLiteral, body);
     },
 
     labeledBlock: function (label) {
-      return new ast.SwitchCase(new ast.Literal(label));
+      return new ast.SwitchCase(ast.Literal.for(label));
+    },
+
+    memory: function (name) {
+      return new ast.MemberExpression(
+        new ast.Identifier('mem'),
+        new ast.Identifier(name),
+        true
+      );
     },
 
     get processEndReturn() {
@@ -41,44 +93,24 @@ define(['ast'], function (ast) {
       );
     },
 
+    // TODO: Maybe mem, exec & args should be supplied by div2trans
     get processParameters() {
       return [
-        {
-          type: 'Identifier',
-          name: 'mem'
-        },
-        {
-          type: 'Identifier',
-          name: 'exec'
-        },
-        {
-          type: 'Identifier',
-          name: 'args'
-        }
+        new ast.Identifier('mem'),
+        new ast.Identifier('exec'),
+        new ast.Identifier('args')
       ];
     },
 
     get programCounter() {
-      return {
-        type: 'MemberExpression',
-        computed: false,
-        object: {
-          type: 'Identifier',
-          name: 'exec'
-        },
-        property: {
-          type: 'Identifier',
-          name: 'pc'
-        }
-      };
+      return new ast.MemberExpression(
+        new ast.Identifier('exec'),
+        new ast.Identifier('pc')
+      );
     },
 
     get trueLiteral() {
-      return {
-        type: 'Literal',
-        value: true,
-        raw: 'true'
-      };
+      return ast.Literal.for(true);
     }
 
   };

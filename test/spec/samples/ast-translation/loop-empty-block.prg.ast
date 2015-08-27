@@ -1,0 +1,28 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      }
+    },
+    {
+      "type": "LoopSentence",
+      "body": {
+        "type": "SentenceBlock",
+        "sentences": []
+      }
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 3,
+        "raw": "3"
+      }
+    }
+  ]
+}

@@ -40,7 +40,19 @@ define([
       'straight-block.prg',
       'while-block.prg',
       'while-empty-block.prg',
-      'while-nested-block.prg'
+      'while-nested-block.prg',
+      'loop-block.prg',
+      'loop-empty-block.prg',
+      'loop-nested-block.prg',
+      'repeat-block.prg',
+      'repeat-empty-block.prg',
+      'repeat-nested-block.prg',
+      'from-block.prg',
+      'from-empty-block.prg',
+      'from-nested-block.prg',
+      'for-block.prg',
+      'for-empty-block.prg',
+      'for-nested-block.prg'
     ];
 
     programs.forEach(function (programName) {

@@ -1,0 +1,183 @@
+{
+  "type": "WhileStatement",
+  "test": {
+    "type": "Literal",
+    "value": true,
+    "raw": "true"
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "SwitchStatement",
+        "discriminant": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+            "type": "Identifier",
+            "name": "exec"
+          },
+          "property": {
+            "type": "Identifier",
+            "name": "pc"
+          }
+        },
+        "cases": [
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "Literal",
+                  "value": 1,
+                  "raw": "1"
+                }
+              }
+            ]
+          },
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "Literal",
+                  "value": 2,
+                  "raw": "2"
+                }
+              },
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "exec"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "pc"
+                    }
+                  },
+                  "right": {
+                    "type": "ConditionalExpression",
+                    "test": {
+                      "type": "Literal",
+                      "value": 1,
+                      "raw": "1"
+                    },
+                    "consequent": {
+                      "type": "Literal",
+                      "value": 4,
+                      "raw": "4"
+                    },
+                    "alternate": {
+                      "type": "Literal",
+                      "value": 2,
+                      "raw": "2"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "BreakStatement",
+                "label": null
+              }
+            ]
+          },
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 4,
+              "raw": "4"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "exec"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "pc"
+                    }
+                  },
+                  "right": {
+                    "type": "ConditionalExpression",
+                    "test": {
+                      "type": "Literal",
+                      "value": 1,
+                      "raw": "1"
+                    },
+                    "consequent": {
+                      "type": "Literal",
+                      "value": 5,
+                      "raw": "5"
+                    },
+                    "alternate": {
+                      "type": "Literal",
+                      "value": 2,
+                      "raw": "2"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "BreakStatement",
+                "label": null
+              }
+            ]
+          },
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 5,
+              "raw": "5"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "Literal",
+                  "value": 5,
+                  "raw": "5"
+                }
+              },
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Identifier",
+                  "name": "__PROCESS_END"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

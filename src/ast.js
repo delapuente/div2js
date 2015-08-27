@@ -17,6 +17,14 @@ define([], function () {
   }
   inherits(AssignmentExpression, Node);
 
+  function BinaryExpression(left, right, operator) {
+    this.type = 'BinaryExpression';
+    this.operator = operator;
+    this.left = left;
+    this.right = right;
+  }
+  inherits(BinaryExpression, Node);
+
   function BlockStatement(statements) {
     if (!Array.isArray(statements)) { statements = [statements]; }
     this.type = 'BlockStatement';
@@ -29,6 +37,13 @@ define([], function () {
     this.label = label || null;
   }
   inherits(BreakStatement, Node);
+
+  function CallExpression(callee, args) {
+    this.type = 'CallExpression';
+    this.callee = callee;
+    this.arguments = args;
+  }
+  inherits(CallExpression, Node);
 
   function ConditionalExpression(test, consequent, alternate) {
     this.type = 'ConditionalExpression';
@@ -63,12 +78,34 @@ define([], function () {
   }
   inherits(Identifier, Node);
 
-  function Literal(value, raw) {
+  function Literal(value) {
+    if (typeof value === 'number' && value < 0) {
+      throw new Error(
+        'Can not construct negative literals. Negative literals are ' +
+        'formed by negating a positive literal. Use `Literal.for()` which ' +
+        'return either a literal or an expression for a negative literal.'
+      );
+    }
     this.type = 'Literal';
     this.value = value;
-    this.raw = raw || JSON.stringify(value);
+    this.raw = JSON.stringify(value);
   }
   inherits(Literal, Node);
+
+  Literal.for = function (value, raw) {
+    if (typeof value === 'number' && value < 0) {
+      return new UnaryExpression(new Literal(Math.abs(value)), '-');
+    }
+    return new Literal(value);
+  };
+
+  function MemberExpression(object, property, computed) {
+    this.type = 'MemberExpression',
+    this.computed = computed || false;
+    this.object = object;
+    this.property = property;
+  }
+  inherits(MemberExpression, Node);
 
   function Program(body) {
     this.type = 'Program';
@@ -96,6 +133,14 @@ define([], function () {
   }
   inherits(SwitchStatement, Node);
 
+  function UnaryExpression(argument, operator, prefix) {
+    this.type = 'UnaryExpression';
+    this.operator = operator;
+    this.argument = argument;
+    this.prefix = typeof prefix === 'undefined' ? true : prefix;
+  };
+  inherits(UnaryExpression, Node);
+
   function WhileStatement(condition, statements) {
     this.type = 'WhileStatement';
     this.test = condition;
@@ -110,17 +155,21 @@ define([], function () {
 
   return {
     AssignmentExpression: AssignmentExpression,
+    BinaryExpression: BinaryExpression,
     BlockStatement: BlockStatement,
     BreakStatement: BreakStatement,
+    CallExpression: CallExpression,
     ConditionalExpression: ConditionalExpression,
     ExpressionStatement: ExpressionStatement,
     FunctionDeclaration: FunctionDeclaration,
     Identifier: Identifier,
     Literal: Literal,
+    MemberExpression: MemberExpression,
     Program: Program,
     ReturnStatement: ReturnStatement,
     SwitchCase: SwitchCase,
     SwitchStatement: SwitchStatement,
+    UnaryExpression: UnaryExpression,
     WhileStatement: WhileStatement
   };
 });

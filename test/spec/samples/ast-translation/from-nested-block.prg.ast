@@ -1,0 +1,63 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "FromSentence",
+      "identifier": {
+        "type": "Identifier",
+        "name": "x"
+      },
+      "init": {
+        "type": "Literal",
+        "value": 0,
+        "raw": "0"
+      },
+      "limit": {
+        "type": "Literal",
+        "value": 10,
+        "raw": "10"
+      },
+      "step": {
+        "type": "Literal",
+        "value": 2,
+        "raw": "2"
+      },
+      "body": {
+        "type": "SentenceBlock",
+        "sentences": [
+          {
+            "type": "FromSentence",
+            "identifier": {
+              "type": "Identifier",
+              "name": "y"
+            },
+            "init": {
+              "type": "Literal",
+              "value": 0,
+              "raw": "0"
+            },
+            "limit": {
+              "type": "Literal",
+              "value": -10,
+              "raw": "-10"
+            },
+            "step": null,
+            "body": {
+              "type": "SentenceBlock",
+              "sentences": [
+                {
+                  "type": "ExpressionSentence",
+                  "expression": {
+                    "type": "Literal",
+                    "value": 5,
+                    "raw": "5"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -15,12 +15,8 @@ define(['ast', 'templates'], function (ast, t) {
       return this._currentLinearization.getCases();
     },
 
-    getNextInstructionLabel: function () {
-      return this._currentLinearization.getNextInstructionLabel();
-    },
-
-    newPlaceholderLabel: function () {
-      return this._currentLinearization.newPlaceholderLabel();
+    end: function () {
+      return this._currentLinearization.end();
     },
 
     newLabel: function () {
@@ -97,6 +93,10 @@ define(['ast', 'templates'], function (ast, t) {
       this._addSentence(this._goTo(label));
     },
 
+    end: function () {
+      this._addSentence(this._end());
+    },
+
     _verbatim: function (sentence) {
       return {
         type: 'Verbatim',
@@ -127,6 +127,16 @@ define(['ast', 'templates'], function (ast, t) {
             _this._programCounterSet(label.label),
             new ast.BreakStatement()
           ];
+        }
+      };
+    },
+
+    _end: function () {
+      return {
+        type: 'End',
+        get sentences() {
+          // TODO: Maybe the endToken should be injected from div2trans.js
+          return [new ast.ReturnStatement(t.endToken)];
         }
       };
     },
