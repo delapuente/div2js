@@ -85,25 +85,34 @@
                   "right": {
                     "type": "ConditionalExpression",
                     "test": {
-                      "type": "BinaryExpression",
-                      "operator": "<=",
-                      "left": {
-                        "type": "MemberExpression",
-                        "computed": true,
-                        "object": {
-                          "type": "Identifier",
-                          "name": "mem"
-                        },
-                        "property": {
-                          "type": "Identifier",
-                          "name": "x"
-                        }
+                      "type": "CallExpression",
+                      "callee": {
+                        "type": "Identifier",
+                        "name": "__bool"
                       },
-                      "right": {
-                        "type": "Literal",
-                        "value": 10,
-                        "raw": "10"
-                      }
+                      "arguments": [
+                        {
+                          "type": "BinaryExpression",
+                          "operator": "<=",
+                          "left": {
+                            "type": "MemberExpression",
+                            "computed": true,
+                            "object": {
+                              "type": "Identifier",
+                              "name": "mem"
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "x"
+                            }
+                          },
+                          "right": {
+                            "type": "Literal",
+                            "value": 10,
+                            "raw": "10"
+                          }
+                        }
+                      ]
                     },
                     "consequent": {
                       "type": "Literal",

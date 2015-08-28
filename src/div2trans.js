@@ -14,6 +14,14 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     );
   };
 
+  translators.BinaryExpression = function (divBinary, context) {
+    return new ast.BinaryExpression(
+      translate(divBinary.left),
+      translate(divBinary.right),
+      divBinary.operator
+    );
+  };
+
   translators.Unit = function (divUnit, context) {
     var programFunction = translate(divUnit.program, context);
     var processesFunctions = divUnit.processes.map(function (divProcess) {
@@ -98,22 +106,9 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
     var init = t.fromInitilizator(identifier, initValue);
     var test = t.fromTest(identifier, limitValue, isAscendant);
-    var increment = t.fromIncrement(identifier, step);
+    var update = t.fromIncrement(identifier, step);
 
-    var testLabel = context.newLabel();
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
-
-    context.verbatim(init);
-    context.label(testLabel);
-    context.goToIf(test, loopStartLabel, afterLoopLabel);
-
-    context.label(loopStartLabel);
-    translateBody(divFrom, context);
-    context.verbatim(increment);
-    context.goTo(testLabel);
-
-    context.label(afterLoopLabel);
+    translateForLikeLoop(divFrom, [init], [test], [update], context);
   };
 
   translators.ForSentence = function (divFor, context) {
@@ -123,9 +118,12 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     translateForLikeLoop(divFor, inits, tests, updates, context);
   };
 
+  /**
+   * All parameters here must be DIV2 AST.
+   */
   function translateForLikeLoop(loop, inits, tests, updates, context) {
-    var test = t.forLoopTest(tests.map(function (test) {
-      return translate(test, context);
+    var test = t.every(tests.map(function (test) {
+      return t.callWith('__bool', translate(test, context));
     }));
 
     var testLabel = context.newLabel();
@@ -136,7 +134,9 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     inits.forEach(verbatim);
 
     context.label(testLabel);
-    context.goToIf(test, loopStartLabel, afterLoopLabel);
+    if (test) {
+      context.goToIf(test, loopStartLabel, afterLoopLabel);
+    }
 
     context.label(loopStartLabel);
     translateBody(loop, context);
@@ -150,6 +150,15 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     function verbatim(divExpression) {
       context.verbatim(new ast.ExpressionStatement(translate(divExpression)));
     }
+  }
+
+  function buildForLikeLoop(loop, inits, tests, updates, context) {
+    var verbatim = context.verbatim.bind(context);
+    var testLabel = context.newLabel();
+    var loopStartLabel = context.newLabel();
+    var afterLoopLabel = context.newLabel();
+    var updatesLabel = context.newLabel();
+
   }
 
   function translate(divAst, context) {

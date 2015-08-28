@@ -161,8 +161,8 @@
                     },
                     "alternate": {
                       "type": "Literal",
-                      "value": 8,
-                      "raw": "8"
+                      "value": 9,
+                      "raw": "9"
                     }
                   }
                 }
@@ -197,6 +197,44 @@
               "type": "Literal",
               "value": 5,
               "raw": "5"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "exec"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "pc"
+                    }
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 4,
+                    "raw": "4"
+                  }
+                }
+              },
+              {
+                "type": "BreakStatement",
+                "label": null
+              }
+            ]
+          },
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 6,
+              "raw": "6"
             },
             "consequent": [
               {
@@ -281,16 +319,16 @@
             "type": "SwitchCase",
             "test": {
               "type": "Literal",
-              "value": 8,
-              "raw": "8"
+              "value": 9,
+              "raw": "9"
             },
             "consequent": [
               {
                 "type": "ExpressionStatement",
                 "expression": {
                   "type": "Literal",
-                  "value": 8,
-                  "raw": "8"
+                  "value": 9,
+                  "raw": "9"
                 }
               },
               {

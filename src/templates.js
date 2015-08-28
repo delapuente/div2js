@@ -28,41 +28,78 @@ define(['ast'], function (ast) {
       };
     },
 
-    forLoopTest: function (tests) {
+    every: function (tests) {
       var _this = this;
       return tests.reduce(function (chain, test) {
-        var wrapped = _this.callWith('__isTrue', test);
-        return chain === null ?
-               wrapped :
-               new ast.LogicalExpression(chain, wrapped, '&&');
+        return chain === null ? test :
+               new ast.LogicalExpression(chain, test, '&&');
       }, null);
     },
 
+    /**
+     * Builds a DIV2 AST for a FROM update.
+     *
+     * @return a DIV2 increment expression.
+     * TODO: Maybe a set of DIV2 constructors is actually needed.
+     */
     fromIncrement: function (name, constant) {
-      return new ast.ExpressionStatement(
-        new ast.AssignmentExpression(
-          this.memory(name),
-          ast.Literal.for(constant),
-          '+='
-        )
-      );
+      return {
+        type: 'AssignmentExpression',
+        operator: '+=',
+        left: {
+          type: 'Identifier',
+          name: name
+        },
+        right: {
+          type: 'Literal',
+          value: constant,
+          raw: JSON.stringify(constant)
+        }
+      };
     },
 
+    /**
+     * Builds a DIV2 AST for a FROM initializator.
+     *
+     * @return a DIV2 assignment expression.
+     * TODO: Maybe a set of DIV2 constructors is actually needed.
+     */
     fromInitilizator: function (name, constant) {
-      return new ast.ExpressionStatement(
-        new ast.AssignmentExpression(
-          this.memory(name),
-          ast.Literal.for(constant)
-        )
-      );
+      return {
+        type: 'AssignmentExpression',
+        operator: '=',
+        left: {
+          type: 'Identifier',
+          name: name
+        },
+        right: {
+          type: 'Literal',
+          value: constant,
+          raw: JSON.stringify(constant)
+        }
+      };
     },
 
+    /**
+     * Builds a DIV2 AST for FROM test.
+     *
+     * @return a DIV2 comparison expression.
+     * TODO: Maybe a set of DIV2 constructors is actually needed.
+     */
     fromTest: function (name, constant, isLowerThan) {
-      return new ast.BinaryExpression(
-        this.memory(name),
-        ast.Literal.for(constant),
-        isLowerThan ? '<=' : '>='
-      );
+      return {
+        type: 'BinaryExpression',
+        operator: isLowerThan ? '<=' : '>=',
+        left: {
+          type: 'Identifier',
+          name: name
+        },
+        right: {
+          type: 'Literal',
+          value: constant,
+          raw: JSON.stringify(constant)
+        }
+      };
     },
 
     infiniteLoop: function (body) {
