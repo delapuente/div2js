@@ -146,6 +146,10 @@ define(['ast'], function (ast) {
       );
     },
 
+    toBool: function (ast) {
+      return this.callWith('__bool', ast);
+    },
+
     get trueLiteral() {
       return ast.Literal.for(true);
     }

@@ -52,7 +52,9 @@ define([
       'from-nested-block.prg',
       'for-block.prg',
       'for-empty-block.prg',
-      'for-nested-block.prg'
+      'for-nested-block.prg',
+      'if-block.prg',
+      'if-else-block.prg'
     ];
 
     programs.forEach(function (programName) {

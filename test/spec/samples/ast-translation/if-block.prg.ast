@@ -1,0 +1,26 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "IfSentence",
+      "test": {
+        "type": "Identifier",
+        "name": "x"
+      },
+      "consequent": {
+        "type": "SentenceBlock",
+        "sentences": [
+          {
+            "type": "ExpressionSentence",
+            "expression": {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            }
+          }
+        ]
+      },
+      "alternate": null
+    }
+  ]
+}

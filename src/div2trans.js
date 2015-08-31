@@ -46,8 +46,22 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     return t.concurrentBody(bodyCases);
   };
 
-  translators.Identifier = function (divIdentifier) {
+  translators.Identifier = function (divIdentifier, context) {
     return t.memory(divIdentifier.name);
+  };
+
+  translators.IfSentence = function (divIf, context) {
+    var consequentLabel = context.newLabel();
+    var alternateLabel = context.newLabel();
+
+    var test = t.toBool(translate(divIf.test));
+    context.goToIf(test, consequentLabel, alternateLabel);
+    context.label(consequentLabel);
+    translateBody(divIf, context, 'consequent');
+    context.label(alternateLabel);
+    if (divIf.alternate) {
+      translateBody(divIf, context, 'alternate');
+    }
   };
 
   translators.ExpressionSentence = function (divExpression, context) {
@@ -123,7 +137,7 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
    */
   function translateForLikeLoop(loop, inits, tests, updates, context) {
     var test = t.every(tests.map(function (test) {
-      return t.callWith('__bool', translate(test, context));
+      return t.toBool(translate(test, context));
     }));
 
     var testLabel = context.newLabel();
@@ -170,8 +184,9 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     return translators[divAst.type](divAst, context);
   }
 
-  function translateBody(divBodySentence, context) {
-    return divBodySentence.body.sentences.map(function (sentence) {
+  function translateBody(divBodySentence, context, bodyProperty) {
+    bodyProperty = bodyProperty || 'body';
+    return divBodySentence[bodyProperty].sentences.map(function (sentence) {
       return translate(sentence, context);
     });
   }
