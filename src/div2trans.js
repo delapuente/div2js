@@ -110,6 +110,52 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     context.label(afterLoopLabel);
   };
 
+  translators.SwitchSentence = function (divSwitch, context) {
+    var afterSwitchLabel = context.newLabel();
+    var defaultCaseLabel = context.newLabel();
+
+    var cases = divSwitch.cases;
+    var lastCase = cases[cases.length - 1];
+    var hasDefault = lastCase && lastCase.tests === null;
+    if (hasDefault) { cases.pop(); }
+
+    var discriminant = translate(divSwitch.discriminant, context);
+    var discriminantAuxDeclaration = context.newAux('_switch', discriminant);
+    var discriminantAux = discriminantAuxDeclaration.declarations[0].id;
+    var options = generateTestsAndLabelsForCases(cases, context);
+
+    context.verbatim(discriminantAuxDeclaration);
+    context.select(
+      discriminantAux,
+      options,
+      hasDefault ? defaultCaseLabel : afterSwitchLabel
+    );
+    options.forEach(function (option) {
+      context.label(option.label);
+      translateBody(option.caseClause, context, 'consequent');
+      context.goTo(afterSwitchLabel);
+    });
+    if (hasDefault) {
+      var defaultCase = lastCase;
+      context.label(defaultCaseLabel);
+      translateBody(defaultCase, context, 'consequent');
+      context.goTo(afterSwitchLabel);
+    }
+    context.label(afterSwitchLabel);
+  };
+
+  function generateTestsAndLabelsForCases(cases, context) {
+    return cases.map(function (caseClause) {
+      return {
+        label: context.newLabel(),
+        tests: caseClause.tests.map(function (test) {
+          return translate(test, context);
+        }),
+        caseClause: caseClause
+      };
+    });
+  }
+
   translators.FromSentence = function (divFrom, context) {
     var initValue = divFrom.init.value;
     var limitValue = divFrom.limit.value;
@@ -130,6 +176,10 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     var tests = divFor.tests;
     var updates = divFor.updates;
     translateForLikeLoop(divFor, inits, tests, updates, context);
+  };
+
+  translators.Range = function (divRange, context) {
+    return t.newRange(divRange.min, divRange.max);
   };
 
   /**

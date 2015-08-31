@@ -146,8 +146,23 @@ define([], function () {
     this.operator = operator;
     this.argument = argument;
     this.prefix = typeof prefix === 'undefined' ? true : prefix;
-  };
+  }
   inherits(UnaryExpression, Node);
+
+  function VariableDeclaration(declarations, kind) {
+    if (!Array.isArray(declarations)) { declarations = [declarations]; }
+    this.type = 'VariableDeclaration';
+    this.declarations = declarations;
+    this.kind = kind || 'var';
+  }
+  inherits(VariableDeclaration, Node);
+
+  function VariableDeclarator(id, init) {
+    this.type = 'VariableDeclarator';
+    this.id = id;
+    this.init = init;
+  }
+  inherits(VariableDeclarator, Node);
 
   function WhileStatement(condition, statements) {
     this.type = 'WhileStatement';
@@ -179,6 +194,8 @@ define([], function () {
     SwitchCase: SwitchCase,
     SwitchStatement: SwitchStatement,
     UnaryExpression: UnaryExpression,
+    VariableDeclaration: VariableDeclaration,
+    VariableDeclarator: VariableDeclarator,
     WhileStatement: WhileStatement
   };
 });

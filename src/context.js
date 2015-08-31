@@ -7,7 +7,10 @@ define(['ast', 'templates'], function (ast, t) {
   Context.prototype = {
     constructor: Context,
 
+    _auxNames: Object.create(null),
+
     startLinearization: function () {
+      this._auxNames = Object.create(null);
       this._currentLinearization = new Linearization();
     },
 
@@ -17,6 +20,18 @@ define(['ast', 'templates'], function (ast, t) {
 
     end: function () {
       return this._currentLinearization.end();
+    },
+
+    newAux: function (name, initializer) {
+      var nameCount = this._auxNames[name] || 0;
+      var suffix = this._auxNames[name] = nameCount + 1;
+      if (nameCount > 0) {
+        name += suffix;
+      }
+      var identifier = new ast.Identifier(name);
+      return new ast.VariableDeclaration(
+        new ast.VariableDeclarator(identifier, initializer)
+      );
     },
 
     newLabel: function () {
@@ -39,6 +54,14 @@ define(['ast', 'templates'], function (ast, t) {
     goTo: function (label) {
       return this._currentLinearization.goTo(label);
     },
+
+    select: function (evaluation, options, defaultLabel) {
+      return this._currentLinearization.select(
+        evaluation,
+        options,
+        defaultLabel
+      );
+    }
   };
 
   function Linearization() {
@@ -93,6 +116,10 @@ define(['ast', 'templates'], function (ast, t) {
       this._addSentence(this._goTo(label));
     },
 
+    select: function (evaluation, options, defaultLabel) {
+      this._addSentence(this._select(evaluation, options, defaultLabel));
+    },
+
     end: function () {
       this._addSentence(this._end());
     },
@@ -131,6 +158,26 @@ define(['ast', 'templates'], function (ast, t) {
       };
     },
 
+    _select: function (evaluation, options, defaultLabel) {
+      var _this = this;
+      return {
+        type: 'Select',
+        get sentences() {
+          var defaultExpression = _this._programCounterSet(defaultLabel.label);
+          var cases = options.map(function (option) {
+            var tests = option.tests;
+            return _this._programCounterBranch(
+              t.some(evaluation, tests),
+              option.label.label
+            );
+          });
+          return [defaultExpression]
+            .concat(cases)
+            .concat([new ast.BreakStatement]);
+        }
+      };
+    },
+
     _end: function () {
       return {
         type: 'End',
@@ -148,7 +195,7 @@ define(['ast', 'templates'], function (ast, t) {
           new ast.ConditionalExpression(
             testAst,
             new ast.Literal(consequent + 1),
-            new ast.Literal(alternate + 1)
+            alternate ? new ast.Literal(alternate + 1) : t.programCounter
           )
         )
       );

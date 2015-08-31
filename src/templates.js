@@ -4,11 +4,11 @@ define(['ast'], function (ast) {
 
   return {
 
-    callWith: function (name) {
-      return new ast.CallExpression(
-        new ast.Identifier(name),
-        Array.prototype.slice.call(arguments, 1)
-      );
+    callWith: function (name, args) {
+      if (!Array.isArray(args)) {
+        args = args ? [args] : [];
+      }
+      return new ast.CallExpression(new ast.Identifier(name), args);
     },
 
     concurrentBody: function (cases) {
@@ -118,6 +118,10 @@ define(['ast'], function (ast) {
       );
     },
 
+    newRange: function (min, max) {
+      return this.callWith('__range', [min, max]);
+    },
+
     get processEndReturn() {
       return new ast.ReturnStatement(this.endToken);
     },
@@ -144,6 +148,10 @@ define(['ast'], function (ast) {
         new ast.Identifier('exec'),
         new ast.Identifier('pc')
       );
+    },
+
+    some: function (evaluation, tests) {
+      return this.callWith('__some', [evaluation].concat(tests));
     },
 
     toBool: function (ast) {
