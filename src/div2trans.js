@@ -121,17 +121,16 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
     var discriminant = translate(divSwitch.discriminant, context);
     var aux = context.newAux('_switch', discriminant);
-    var options = generateTestsAndLabelsForCases(cases, context);
+    var choices = generateChoices(cases, context);
 
     context.verbatim(aux.declaration);
     context.select(
-      aux.identifier,
-      options,
+      aux.identifier, choices,
       hasDefault ? defaultCaseLabel : afterSwitchLabel
     );
-    options.forEach(function (option) {
-      context.label(option.label);
-      translateBody(option.caseClause, context, 'consequent');
+    choices.forEach(function (choice) {
+      context.label(choice.label);
+      translateBody(choice.case, context, 'consequent');
       context.goTo(afterSwitchLabel);
     });
     if (hasDefault) {
@@ -143,14 +142,14 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     context.label(afterSwitchLabel);
   };
 
-  function generateTestsAndLabelsForCases(cases, context) {
+  function generateChoices(cases, context) {
     return cases.map(function (caseClause) {
       return {
         label: context.newLabel(),
         tests: caseClause.tests.map(function (test) {
           return translate(test, context);
         }),
-        caseClause: caseClause
+        case: caseClause
       };
     });
   }
