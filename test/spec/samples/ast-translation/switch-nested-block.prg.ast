@@ -1,0 +1,176 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "SwitchSentence",
+      "discriminant": {
+        "type": "Identifier",
+        "name": "x"
+      },
+      "cases": [
+        {
+          "type": "SwitchCase",
+          "tests": [
+            {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            }
+          ],
+          "consequent": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "Literal",
+                  "value": 3,
+                  "raw": "3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "SwitchCase",
+          "tests": [
+            {
+              "type": "Range",
+              "min": {
+                "type": "Literal",
+                "value": 2,
+                "raw": "2"
+              },
+              "max": {
+                "type": "Literal",
+                "value": 10,
+                "raw": "10"
+              }
+            }
+          ],
+          "consequent": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "Literal",
+                  "value": 5,
+                  "raw": "5"
+                }
+              },
+              {
+                "type": "SwitchSentence",
+                "discriminant": {
+                  "type": "Identifier",
+                  "name": "y"
+                },
+                "cases": [
+                  {
+                    "type": "SwitchCase",
+                    "tests": [
+                      {
+                        "type": "Literal",
+                        "value": 1,
+                        "raw": "1"
+                      }
+                    ],
+                    "consequent": {
+                      "type": "SentenceBlock",
+                      "sentences": [
+                        {
+                          "type": "ExpressionSentence",
+                          "expression": {
+                            "type": "Literal",
+                            "value": 8,
+                            "raw": "8"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "SwitchCase",
+                    "tests": [
+                      {
+                        "type": "Literal",
+                        "value": 2,
+                        "raw": "2"
+                      }
+                    ],
+                    "consequent": {
+                      "type": "SentenceBlock",
+                      "sentences": [
+                        {
+                          "type": "ExpressionSentence",
+                          "expression": {
+                            "type": "Literal",
+                            "value": 10,
+                            "raw": "10"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "type": "SwitchCase",
+          "tests": [
+            {
+              "type": "Literal",
+              "value": 11,
+              "raw": "11"
+            },
+            {
+              "type": "Range",
+              "min": {
+                "type": "Literal",
+                "value": 15,
+                "raw": "15"
+              },
+              "max": {
+                "type": "Literal",
+                "value": 20,
+                "raw": "20"
+              }
+            }
+          ],
+          "consequent": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "Literal",
+                  "value": 13,
+                  "raw": "13"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "SwitchCase",
+          "tests": null,
+          "consequent": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "Literal",
+                  "value": 15,
+                  "raw": "15"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

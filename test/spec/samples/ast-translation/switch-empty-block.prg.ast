@@ -1,0 +1,13 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "SwitchSentence",
+      "discriminant": {
+        "type": "Identifier",
+        "name": "x"
+      },
+      "cases": []
+    }
+  ]
+}

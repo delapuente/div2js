@@ -55,7 +55,9 @@ define([
       'for-nested-block.prg',
       'if-block.prg',
       'if-else-block.prg',
-      'switch-block.prg'
+      'switch-block.prg',
+      'switch-empty-block.prg',
+      'switch-nested-block.prg'
     ];
 
     programs.forEach(function (programName) {
