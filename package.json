@@ -1,7 +1,7 @@
 {
   "name": "div2js",
   "version": "0.0.1",
-  "description": "A DIV2 Game Studio compiler to JavaScript",
+  "description": "A DIV2 transpiler for the modern web",
   "scripts": {
     "postinstall": "grunt hookmeup"
   },
