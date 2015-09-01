@@ -120,13 +120,12 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     if (hasDefault) { cases.pop(); }
 
     var discriminant = translate(divSwitch.discriminant, context);
-    var discriminantAuxDeclaration = context.newAux('_switch', discriminant);
-    var discriminantAux = discriminantAuxDeclaration.declarations[0].id;
+    var aux = context.newAux('_switch', discriminant);
     var options = generateTestsAndLabelsForCases(cases, context);
 
-    context.verbatim(discriminantAuxDeclaration);
+    context.verbatim(aux.declaration);
     context.select(
-      discriminantAux,
+      aux.identifier,
       options,
       hasDefault ? defaultCaseLabel : afterSwitchLabel
     );

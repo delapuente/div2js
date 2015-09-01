@@ -29,9 +29,13 @@ define(['ast', 'templates'], function (ast, t) {
         name += suffix;
       }
       var identifier = new ast.Identifier(name);
-      return new ast.VariableDeclaration(
+      var declaration = new ast.VariableDeclaration(
         new ast.VariableDeclarator(identifier, initializer)
       );
+      return {
+        identifier: identifier,
+        declaration: declaration
+      };
     },
 
     newLabel: function () {
