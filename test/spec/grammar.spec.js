@@ -52,7 +52,8 @@ define([
       'basic-from.prg',
       'basic-from-step.prg',
       'basic-for.prg',
-      'complete-for.prg'
+      'complete-for.prg',
+      'clone.prg'
     ];
 
     programs.forEach(function (programName) {

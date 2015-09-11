@@ -122,8 +122,17 @@ define(['ast'], function (ast) {
       return this.callWith('__range', [min, max]);
     },
 
-    get processEndReturn() {
+    get processEnd() {
       return new ast.ReturnStatement(this.endToken);
+    },
+
+    processClone: function (child, parent) {
+      return new ast.ReturnStatement(
+        this.callWith(
+          '__processClone',
+          [ast.Literal.for(child), ast.Literal.for(parent)]
+        )
+      );
     },
 
     processFunction: function (name, body) {

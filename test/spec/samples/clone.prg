@@ -1,0 +1,5 @@
+PROGRAM test;
+BEGIN
+  CLONE
+  END
+END

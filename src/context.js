@@ -22,6 +22,10 @@ define(['ast', 'templates'], function (ast, t) {
       return this._currentLinearization.end();
     },
 
+    clone: function (childLabel, parentLabel) {
+      return this._currentLinearization.clone(childLabel, parentLabel);
+    },
+
     newAux: function (name, initializer) {
       var nameCount = this._auxNames[name] || 0;
       var suffix = this._auxNames[name] = nameCount + 1;
@@ -128,6 +132,10 @@ define(['ast', 'templates'], function (ast, t) {
       this._addSentence(this._end());
     },
 
+    clone: function (childLabel, parentLabel) {
+      this._addSentence(this._clone(childLabel, parentLabel));
+    },
+
     _verbatim: function (sentence) {
       return {
         type: 'Verbatim',
@@ -186,8 +194,16 @@ define(['ast', 'templates'], function (ast, t) {
       return {
         type: 'End',
         get sentences() {
-          // TODO: Maybe the endToken should be injected from div2trans.js
-          return [new ast.ReturnStatement(t.endToken)];
+          return [t.processEnd];
+        }
+      };
+    },
+
+    _clone: function (childLabel, parentLabel) {
+      return {
+        type: 'Clone',
+        get sentences() {
+          return [t.processClone(childLabel.label + 1, parentLabel.label + 1)];
         }
       };
     },

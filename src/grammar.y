@@ -327,13 +327,6 @@ group_of_sentences
     { $$ = $1; }
   ;
 
-group_of_sentences_for_loops
-  : END
-    { $$ = []; }
-  | sentence_list_for_loops END
-    { $$ = $1; }
-  ;
-
 group_of_sentences_for_if_else
   : ELSE
     { $$ = []; }
@@ -361,15 +354,11 @@ sentence
         expression: $1
       };
     }
-  ;
-
-sentence_for_loops
- : sentence
- | BREAK ';'
+  | BREAK ';'
     { $$ = { type: "BreakSentence" }; }
- | CONTINUE ';'
+  | CONTINUE ';'
     { $$ = { type: "ContinueSentence" }; }
- ;
+  ;
 
 /* It exists to relax the rules for ; in sentences. */
 opt_end
@@ -422,13 +411,6 @@ sentence_list
   : sentence
     { $$ = [$1]; }
   | sentence_list sentence
-    { $1.push($2); }
-  ;
-
-sentence_list_for_loops
-  : sentence_for_loops
-    { $$ = [$1]; }
-  | sentence_list_for_loops sentence
     { $1.push($2); }
   ;
 
@@ -497,7 +479,7 @@ range
   ;
 
 while_sentence
-  : WHILE '(' expression ')' group_of_sentences_for_loops
+  : WHILE '(' expression ')' group_of_sentences
     {
       $$ = {
         type: "WhileSentence",
@@ -532,7 +514,7 @@ group_of_sentences_for_repeat
         body: []
       };
     }
-  | sentence_list_for_loops until_condition 
+  | sentence_list until_condition 
     {
       $$ = {
         test: $2,
@@ -547,7 +529,7 @@ until_condition
   ;
 
 loop_sentence
-  : LOOP group_of_sentences_for_loops
+  : LOOP group_of_sentences
     {
       $$ = {
         type: "LoopSentence",
@@ -560,7 +542,7 @@ loop_sentence
   ;
 
 from_sentence
-  : FROM id '=' expression TO expression step ';' group_of_sentences_for_loops
+  : FROM id '=' expression TO expression step ';' group_of_sentences
     {
       $$ = {
         type: "FromSentence",
@@ -584,7 +566,7 @@ step
   ;
 
 for_sentence
-  : FOR for_params group_of_sentences_for_loops
+  : FOR for_params group_of_sentences
     {
       $$ = {
         type: "ForSentence",
@@ -673,6 +655,15 @@ frame_sentence
 
 clone_sentence
   : CLONE group_of_sentences
+    {
+      $$ = {
+        type: "CloneSentence",
+        body: {
+          type: "SentenceBlock",
+          sentences: $2
+        }
+      };
+    }
   ;
 
 expression_list

@@ -22,6 +22,15 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     );
   };
 
+  translators.CloneSentence = function (divClone, context) {
+    var insideCloneLabel = context.newLabel();
+    var afterCloneLabel = context.newLabel();
+    context.clone(insideCloneLabel, afterCloneLabel);
+    context.label(insideCloneLabel);
+    translateBody(divClone, context);
+    context.label(afterCloneLabel);
+  };
+
   translators.Unit = function (divUnit, context) {
     var programFunction = translate(divUnit.program, context);
     var processesFunctions = divUnit.processes.map(function (divProcess) {
