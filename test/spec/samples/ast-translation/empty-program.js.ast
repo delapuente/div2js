@@ -62,7 +62,7 @@
                           "type": "ReturnStatement",
                           "argument": {
                             "type": "Identifier",
-                            "name": "__PROCESS_END"
+                            "name": "__yieldEnd"
                           }
                         }
                       ]

@@ -24,7 +24,7 @@ define(['ast'], function (ast) {
     get endToken() {
       return {
         type: 'Identifier',
-        name: '__PROCESS_END'
+        name: '__yieldEnd'
       };
     },
 
@@ -129,7 +129,7 @@ define(['ast'], function (ast) {
     processClone: function (child, parent) {
       return new ast.ReturnStatement(
         this.callWith(
-          '__processClone',
+          '__yieldClone',
           [ast.Literal.for(child), ast.Literal.for(parent)]
         )
       );
