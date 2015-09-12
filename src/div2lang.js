@@ -360,11 +360,7 @@ case 88:
 
       this.$ = {
         type: "ReturnSentence",
-        argument: {
-          type: "Literal",
-          value: 100,
-          raw: "100"
-        }
+        argument: null 
       };
     
 break;
@@ -380,11 +376,7 @@ case 90:
 
       this.$ = {
         type: "FrameSentence",
-        argument: {
-          type: "Literal",
-          value: 100,
-          raw: "100"
-        }
+        argument: null
       };
     
 break;

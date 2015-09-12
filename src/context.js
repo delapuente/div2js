@@ -26,6 +26,14 @@ define(['ast', 'templates'], function (ast, t) {
       return this._currentLinearization.clone(childLabel, parentLabel);
     },
 
+    frame: function (resumeLabel, expression) {
+      return this._currentLinearization.frame(resumeLabel, expression);
+    },
+
+    return: function (expression) {
+      return this._currentLinearization.return(expression);
+    },
+
     newAux: function (name, initializer) {
       var nameCount = this._auxNames[name] || 0;
       var suffix = this._auxNames[name] = nameCount + 1;
@@ -84,15 +92,23 @@ define(['ast', 'templates'], function (ast, t) {
       var cases = [];
       var sentences = this._sentences;
       var currentCase = null;
-      var consequent;
+      var caseIsFinished = false;
+      var isReturn, isLabel, consequent;
 
       for (var i = 0, wrapper; (wrapper = sentences[i]); i++) {
-        if (wrapper instanceof Label) {
+        isLabel = wrapper instanceof Label;
+        isReturn = wrapper.type === 'Return';
+
+        if (caseIsFinished && !isLabel) { continue; }
+
+        if (isLabel) {
           currentCase = t.concurrentLabel(wrapper.label + 1);
           cases.push(currentCase);
         }
         consequent = currentCase.consequent;
         consequent.push.apply(consequent, wrapper.sentences);
+
+        caseIsFinished = isReturn || (caseIsFinished && !isLabel);
       }
       return cases;
     },
@@ -134,6 +150,14 @@ define(['ast', 'templates'], function (ast, t) {
 
     clone: function (childLabel, parentLabel) {
       this._addSentence(this._clone(childLabel, parentLabel));
+    },
+
+    frame: function (resumeLabel, expression) {
+      this._addSentence(this._frame(resumeLabel, expression));
+    },
+
+    return: function (expression) {
+      this._addSentence(this._return(expression));
     },
 
     _verbatim: function (sentence) {
@@ -204,6 +228,24 @@ define(['ast', 'templates'], function (ast, t) {
         type: 'Clone',
         get sentences() {
           return [t.processClone(childLabel.label + 1, parentLabel.label + 1)];
+        }
+      };
+    },
+
+    _frame: function (resumeLabel, expression) {
+      return {
+        type: 'Frame',
+        get sentences() {
+          return [t.processFrame(resumeLabel.label + 1, expression)];
+        }
+      };
+    },
+
+    _return: function (expression) {
+      return {
+        type: 'Return',
+        get sentences() {
+          return [t.processReturn(expression)];
         }
       };
     },

@@ -119,6 +119,14 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     context.label(afterLoopLabel);
   };
 
+  translators.ReturnSentence = function (divReturn, context) {
+    var returnArgument = divReturn.argument;
+    if (!returnArgument) {
+      returnArgument = t.defaultReturnArgument;
+    }
+    context.return(translate(returnArgument, context));
+  };
+
   translators.SwitchSentence = function (divSwitch, context) {
     var afterSwitchLabel = context.newLabel();
     var defaultCaseLabel = context.newLabel();
@@ -162,6 +170,14 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
       };
     });
   }
+
+
+  translators.FrameSentence = function (divFrame, context) {
+    var resumeLabel = context.newLabel();
+    var argument = divFrame.argument || t.defaultFrameArgument;
+    context.frame(resumeLabel, translate(argument, context));
+    context.label(resumeLabel);
+  };
 
   translators.FromSentence = function (divFrom, context) {
     var initValue = divFrom.init.value;

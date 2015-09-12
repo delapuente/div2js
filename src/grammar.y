@@ -616,11 +616,7 @@ return_sentence
     {
       $$ = {
         type: "ReturnSentence",
-        argument: {
-          type: "Literal",
-          value: 100,
-          raw: "100"
-        }
+        argument: null 
       };
     }
   | RETURN '(' expression ')'
@@ -637,11 +633,7 @@ frame_sentence
     {
       $$ = {
         type: "FrameSentence",
-        argument: {
-          type: "Literal",
-          value: 100,
-          raw: "100"
-        }
+        argument: null
       };
     }
   | FRAME '(' expression ')'

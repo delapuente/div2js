@@ -102,6 +102,33 @@ define(['ast'], function (ast) {
       };
     },
 
+    /**
+     * Builds a DIV2 AST for the default argument for FRAME.
+     *
+     * @return a DIV2 comparison expression.
+     * TODO: Maybe a set of DIV2 constructors is actually needed.
+     */
+    get defaultFrameArgument() {
+      return {
+        type: "Literal",
+        value: 100,
+        raw: "100"
+      };
+    },
+
+    /**
+     * Builds a DIV2 AST for the default argument for RETURN (process id).
+     *
+     * @return a DIV2 comparison expression.
+     * TODO: Maybe a set of DIV2 constructors is actually needed.
+     */
+    get defaultReturnArgument() {
+      return {
+        type: "Identifier",
+        name: "id"
+      };
+    },
+
     infiniteLoop: function (body) {
       return new ast.WhileStatement(this.trueLiteral, body);
     },
@@ -135,6 +162,15 @@ define(['ast'], function (ast) {
       );
     },
 
+    processFrame: function (resume, expression) {
+      return new ast.ReturnStatement(
+        this.callWith(
+          '__yieldFrame',
+          [ast.Literal.for(resume), expression]
+        )
+      );
+    },
+
     processFunction: function (name, body) {
       return new ast.FunctionDeclaration(
         new ast.Identifier('program_' + name),
@@ -150,6 +186,15 @@ define(['ast'], function (ast) {
         new ast.Identifier('exec'),
         new ast.Identifier('args')
       ];
+    },
+
+    processReturn: function (expression) {
+      return new ast.ReturnStatement(
+        this.callWith(
+          '__yieldReturn',
+          expression
+        )
+      );
     },
 
     get programCounter() {
