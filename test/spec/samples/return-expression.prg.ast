@@ -15,7 +15,11 @@
       "sentences": [
         {
           "type": "ReturnSentence",
-          "argument": null
+          "argument": {
+            "type": "Literal",
+            "value": 1,
+            "raw": "1"
+          }
         }
       ]
     }

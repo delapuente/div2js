@@ -24,6 +24,9 @@ define([
     function get(path) {
       return fetch(path)
       .then(function (response) {
+        if (response.status === 404) {
+          throw new Error(path + ' does not exist.');
+        }
         return response.json();
       });
     }
@@ -58,7 +61,12 @@ define([
       'switch-block.prg',
       'switch-empty-block.prg',
       'switch-nested-block.prg',
-      'clone.prg'
+      'clone.prg',
+      'frame.prg',
+      'frame-expression.prg',
+      'return.prg',
+      'return-expression.prg',
+      'return-conditional.prg'
     ];
 
     programs.forEach(function (programName) {

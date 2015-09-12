@@ -4,7 +4,7 @@
     "type": "Program",
     "name": {
       "type": "Identifier",
-      "name": "basic"
+      "name": "test"
     },
     "consts": null,
     "globals": null,
@@ -14,7 +14,7 @@
       "type": "ProcessBody",
       "sentences": [
         {
-          "type": "ReturnSentence",
+          "type": "FrameSentence",
           "argument": null
         }
       ]

@@ -46,14 +46,17 @@ define([
       'basic-repeat.prg',
       'basic-expression.prg',
       'repeat.prg',
-      'return.prg',
       'call.prg',
       'call-empty.prg',
       'basic-from.prg',
       'basic-from-step.prg',
       'basic-for.prg',
       'complete-for.prg',
-      'clone.prg'
+      'clone.prg',
+      'frame.prg',
+      'frame-expression.prg',
+      'return.prg',
+      'return-expression.prg'
     ];
 
     programs.forEach(function (programName) {

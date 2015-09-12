@@ -1,6 +1,6 @@
 PROGRAM basic;
 BEGIN
   REPEAT
-    FRAME;
+    a;
   UNTIL (1);
 END

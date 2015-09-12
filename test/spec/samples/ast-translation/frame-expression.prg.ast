@@ -1,0 +1,21 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "FrameSentence",
+      "argument": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      }
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 2,
+        "raw": "2"
+      }
+    }
+  ]
+}

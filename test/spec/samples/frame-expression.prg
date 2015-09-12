@@ -1,0 +1,4 @@
+PROGRAM test;
+BEGIN
+  FRAME(1);
+END

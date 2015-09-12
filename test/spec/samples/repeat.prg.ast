@@ -24,11 +24,10 @@
             "type": "SentenceBlock",
             "sentences": [
               {
-                "type": "FrameSentence",
-                "argument": {
-                  "type": "Literal",
-                  "value": 100,
-                  "raw": "100"
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "Identifier",
+                  "name": "a"
                 }
               }
             ]

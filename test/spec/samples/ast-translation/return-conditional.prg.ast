@@ -1,0 +1,43 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "IfSentence",
+      "test": {
+        "type": "Literal",
+        "value": 1,
+        "raw": "1"
+      },
+      "consequent": {
+        "type": "SentenceBlock",
+        "sentences": [
+          {
+            "type": "ReturnSentence",
+            "argument": {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            }
+          },
+          {
+            "type": "ExpressionSentence",
+            "expression": {
+              "type": "Literal",
+              "value": 3,
+              "raw": "3"
+            }
+          }
+        ]
+      },
+      "alternate": null
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 4,
+        "raw": "4"
+      }
+    }
+  ]
+}
