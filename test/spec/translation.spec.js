@@ -17,6 +17,18 @@ define([
 
     var translate;
 
+    function setupTranslationContext() {
+      var prototype = ctx.Context.prototype;
+      var isProcessStub = sinon.stub(prototype, 'isProcess');
+      isProcessStub.withArgs('p1').returns(true);
+      isProcessStub.withArgs('f1').returns(false);
+    }
+
+    function restoreTranslationContext() {
+      var prototype = ctx.Context.prototype;
+      prototype.isProcess.restore();
+    }
+
     function samplePath(name) {
       return '/test/spec/samples/ast-translation/' + name + '.ast';
     }
@@ -32,10 +44,15 @@ define([
     }
 
     beforeEach(function (done) {
+      setupTranslationContext();
       context(['/src/div2trans.js'], function (trans) {
         translate = trans.translate;
         done();
       });
+    });
+
+    afterEach(function () {
+      restoreTranslationContext();
     });
 
     var programs = [
@@ -66,7 +83,10 @@ define([
       'frame-expression.prg',
       'return.prg',
       'return-expression.prg',
-      'return-conditional.prg'
+      'return-conditional.prg',
+      'call-empty.prg',
+      'call-arguments.prg',
+      'call-function.prg'
     ];
 
     programs.forEach(function (programName) {

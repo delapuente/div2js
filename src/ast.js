@@ -17,6 +17,12 @@ define([], function () {
   }
   inherits(AssignmentExpression, Node);
 
+  function ArrayExpression(elements) {
+    this.type = 'ArrayExpression';
+    this.elements = elements || [];
+  }
+  inherits(AssignmentExpression, Node);
+
   function BinaryExpression(left, right, operator) {
     this.type = 'BinaryExpression';
     this.operator = operator;
@@ -178,6 +184,7 @@ define([], function () {
 
   return {
     AssignmentExpression: AssignmentExpression,
+    ArrayExpression: ArrayExpression,
     BinaryExpression: BinaryExpression,
     BlockStatement: BlockStatement,
     BreakStatement: BreakStatement,

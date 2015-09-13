@@ -30,6 +30,10 @@ define(['ast', 'templates'], function (ast, t) {
       return this._currentLinearization.frame(resumeLabel, expression);
     },
 
+    isProcess: function (name) {
+      throw new Error('Not implemented!');
+    },
+
     return: function (expression) {
       return this._currentLinearization.return(expression);
     },

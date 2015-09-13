@@ -1,0 +1,16 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "CallExpression",
+        "callee": {
+          "type": "Identifier",
+          "name": "f1"
+        },
+        "arguments": []
+      }
+    }
+  ]
+}

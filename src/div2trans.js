@@ -22,6 +22,23 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     );
   };
 
+  translators.CallExpression = function (divCall, context) {
+    var name = divCall.callee.name;
+    var callWrapper = context.isProcess(name) ?
+                      '__newProcess' : '__callFunction';
+
+    var parameters = new ast.ArrayExpression(
+      divCall.arguments.map(function (arg) {
+        return translate(arg, context);
+      })
+    );
+
+    return t.callWith(callWrapper, [
+      ast.Literal.for(name),
+      parameters
+    ]);
+  };
+
   translators.CloneSentence = function (divClone, context) {
     var insideCloneLabel = context.newLabel();
     var afterCloneLabel = context.newLabel();
