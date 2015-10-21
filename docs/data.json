@@ -3,7 +3,7 @@
         "name": "div2js",
         "description": "A DIV2 Game Studio compiler to JavaScript",
         "version": "0.0.1",
-        "url": "https://github.com/lodr/div2js"
+        "url": "https://github.com/delapuente/div2js"
     },
     "files": {},
     "modules": {},

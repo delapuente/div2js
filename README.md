@@ -40,4 +40,4 @@ And navigate to `http://localhost:9002/` you will enter the test runner. These t
 
 ## So, what's next?
 
-There are tons of work pending yet. Take a look at [milestones](https://github.com/lodr/div2js/milestones) and [issues](https://github.com/lodr/div2js/issues) for details of the current status.
+There are tons of work pending yet. Take a look at [milestones](https://github.com/delapuente/div2js/milestones) and [issues](https://github.com/delapuente/div2js/issues) for details of the current status.
