@@ -98,7 +98,7 @@ define([], function () {
   }
   inherits(Literal, Node);
 
-  Literal.for = function (value, raw) {
+  Literal.for = function (value) {
     if (typeof value === 'number' && value < 0) {
       return new UnaryExpression(new Literal(Math.abs(value)), '-');
     }

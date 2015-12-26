@@ -1,0 +1,32 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "test"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": null,
+    "body": {
+      "type": "ProcessBody",
+      "sentences": [
+        {
+          "type": "ExpressionSentence",
+          "expression": {
+            "type": "UpdateExpression",
+            "operator": "++",
+            "argument": {
+              "type": "Identifier",
+              "name": "x"
+            },
+            "prefix": false
+          }
+        }
+      ]
+    }
+  },
+  "processes": [] 
+}

@@ -1,0 +1,71 @@
+{
+  "type": "WhileStatement",
+  "test": {
+    "type": "Literal",
+    "value": true,
+    "raw": "true"
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "SwitchStatement",
+        "discriminant": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+            "type": "Identifier",
+            "name": "exec"
+          },
+          "property": {
+            "type": "Identifier",
+            "name": "pc"
+          }
+        },
+        "cases": [
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "MemberExpression",
+                    "computed": true,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "mem"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "x"
+                    }
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 1,
+                    "raw": "1"
+                  }
+                }
+              },
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Identifier",
+                  "name": "__yieldEnd"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

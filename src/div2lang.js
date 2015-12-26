@@ -420,7 +420,7 @@ break;
 case 103:
 
       this.$ = {
-        type: "UpdateSentence",
+        type: "UpdateExpression",
         operator: $$[$0],
         argument: $$[$0-1],
         prefix: false
@@ -449,8 +449,8 @@ case 107:
 
       this.$ = {
         type: "UpdateExpression",
-        operator: $$[$0],
-        argument: $$[$0-1],
+        operator: $$[$0-1],
+        argument: $$[$0],
         prefix: true
       };
     

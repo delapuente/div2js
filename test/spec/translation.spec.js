@@ -56,6 +56,7 @@ define([
     });
 
     var programs = [
+      'assignment.prg',
       'empty-program.prg',
       'straight-block.prg',
       'while-block.prg',

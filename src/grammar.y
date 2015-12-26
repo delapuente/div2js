@@ -695,7 +695,7 @@ postfix_expression
 	| postfix_expression update_operator
     {
       $$ = {
-        type: "UpdateSentence",
+        type: "UpdateExpression",
         operator: $2,
         argument: $1,
         prefix: false
@@ -728,8 +728,8 @@ unary_expression
     {
       $$ = {
         type: "UpdateExpression",
-        operator: $2,
-        argument: $1,
+        operator: $1,
+        argument: $2,
         prefix: true
       };
     }

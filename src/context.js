@@ -31,6 +31,7 @@ define(['ast', 'templates'], function (ast, t) {
     },
 
     isProcess: function (name) {
+      name = name;
       throw new Error('Not implemented!');
     },
 
@@ -213,7 +214,7 @@ define(['ast', 'templates'], function (ast, t) {
           });
           return [defaultExpression]
             .concat(cases)
-            .concat([new ast.BreakStatement]);
+            .concat([new ast.BreakStatement()]);
         }
       };
     },

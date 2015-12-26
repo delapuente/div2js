@@ -56,7 +56,8 @@ define([
       'frame.prg',
       'frame-expression.prg',
       'return.prg',
-      'return-expression.prg'
+      'return-expression.prg',
+      'operators.prg'
     ];
 
     programs.forEach(function (programName) {
