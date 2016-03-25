@@ -1,8 +1,14 @@
 
-define(['ast', 'templates'], function (ast, t) {
+define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
   'use strict';
 
-  function Context() {}
+  function Context(ctx) {
+    for (var key in ctx) {
+      if (ctx.hasOwnProperty(key)) {
+        this[key] = ctx[key];
+      }
+    }
+  }
 
   Context.prototype = {
     constructor: Context,
@@ -31,8 +37,7 @@ define(['ast', 'templates'], function (ast, t) {
     },
 
     isProcess: function (name) {
-      name = name;
-      throw new Error('Not implemented!');
+      return name in this.processes;
     },
 
     return: function (expression) {
