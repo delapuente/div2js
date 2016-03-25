@@ -7,7 +7,8 @@ requirejs.config({
 
 requirejs([
   'spec/grammar.spec.js',
-  'spec/translation.spec.js'
+  'spec/translation.spec.js',
+  'spec/execution.spec.js'
 ], function () {
   mocha.run();
 });
