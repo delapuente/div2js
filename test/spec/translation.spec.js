@@ -87,7 +87,8 @@ define([
       'return-conditional.prg',
       'call-empty.prg',
       'call-arguments.prg',
-      'call-function.prg'
+      'call-function.prg',
+      'new-process.prg'
     ];
 
     programs.forEach(function (programName) {
