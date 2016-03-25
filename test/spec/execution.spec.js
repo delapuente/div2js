@@ -34,6 +34,7 @@ define([
           return compiler.compile(src);
         })
         .then(function (obj) {
+          console.log(obj);
           return loader.load(obj);
         })
         .then(function (prg) {

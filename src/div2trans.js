@@ -34,7 +34,7 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     );
 
     return t.callWith(callWrapper, [
-      ast.Literal.for(name),
+      ast.Literal['for'](name),
       parameters
     ]);
   };
@@ -254,15 +254,6 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     function verbatim(divExpression) {
       context.verbatim(new ast.ExpressionStatement(translate(divExpression)));
     }
-  }
-
-  function buildForLikeLoop(loop, inits, tests, updates, context) {
-    var verbatim = context.verbatim.bind(context);
-    var testLabel = context.newLabel();
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
-    var updatesLabel = context.newLabel();
-
   }
 
   function translate(divAst, context) {
