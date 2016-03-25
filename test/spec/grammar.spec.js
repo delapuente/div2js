@@ -5,25 +5,13 @@ define([
 ], function (div2lang) {
   'use strict';
 
-  var context = newContext({
-    'div2lang': div2lang,
-    'div2trans': {}
-  });
-
   describe('DIV2 parser', function () {
 
-    var parser;
+    var parser = div2lang;
 
     function samplePath(name) {
       return '/test/spec/samples/' + name;
     }
-
-    beforeEach(function (done) {
-      context(['/src/div2js.js'], function (div2js) {
-        parser = div2js.parser;
-        done();
-      });
-    });
 
     var programs = [
       'basic.prg',
