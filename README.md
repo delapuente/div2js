@@ -1,6 +1,6 @@
 # DIV2JS
 
-DIV2JS is a transpiler of DIV2 for the modern web. In experimental stage right now, DIV2JS tries to be a perfect simulatorfor the DIV2 language.
+DIV2JS is a transpiler of DIV2 for the modern web. In experimental stage right now, DIV2JS tries to be a perfect simulator for the DIV2 language.
 
 ## Install
 
@@ -16,7 +16,7 @@ Now enter in the `test` folder and run:
 $ bower install
 ```
 
-Exist `test` folder and finally, run in the root:
+Exit `test` folder and finally, run in the root:
 
 ```bash
 $ grunt
