@@ -10,8 +10,9 @@ define([
     var div2Ast = parser.parse(srcText);
     var jsAst = translator.translate(div2Ast);
     var mapAst = generateProcessMap(jsAst);
-    var objText = generator.generate(mapAst);
-    return Promise.resolve(objText);
+    var wrappedAst = wrap(mapAst);
+    var objText = generator.generate(wrappedAst);
+    return objText;
   }
 
   function generateProcessMap(ast) {
@@ -28,6 +29,14 @@ define([
       }
     });
     return mapAst;
+  }
+
+  function wrap(mapAst) {
+    var wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
+    var body = wrapper.expression.body.body;
+    var ret = body[body.length - 1];
+    ret.argument = mapAst.expression;
+    return wrapper;
   }
 
   function newEntry(functionDeclaration) {
@@ -58,6 +67,39 @@ define([
   function startsWith(str, prefix) {
     return str.substr(0, prefix.length) === prefix;
   }
+
+  // XXX: This is the AST for runtime/wrapper.js
+  // XXX: They should be kept in sync somehow. Now it is manual.
+  // XXX: Consider loading and parsing the template from an external source or
+  // embedding in a building step.
+  var wrapperTemplate = {
+    'type': 'ExpressionStatement',
+    'expression': {
+      'type': 'FunctionExpression',
+      'id': null,
+      'params': [],
+      'defaults': [],
+      'body': {
+        'type': 'BlockStatement',
+        'body': [
+          {
+            'type': 'ExpressionStatement',
+            'expression': {
+              'type': 'Literal',
+              'value': 'use strict',
+              'raw': '\'use strict\''
+            }
+          },
+          {
+            'type': 'ReturnStatement',
+            'argument': null
+          }
+        ]
+      },
+      'generator': false,
+      'expression': false
+    }
+  };
 
   return {
     compile: compile
