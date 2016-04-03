@@ -159,7 +159,7 @@ case 35: case 37: case 75: case 98:
  this.$ = $$[$0-1]; 
 break;
 case 48:
- this.$ = { type: "DebuggerSentence" }; 
+ this.$ = { type: "DebugSentence" }; 
 break;
 case 49:
 

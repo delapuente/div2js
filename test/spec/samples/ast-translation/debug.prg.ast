@@ -1,0 +1,16 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "DebugSentence"
+    },
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Literal",
+        "value": 2,
+        "raw": "2"
+      }
+    }
+  ]
+}

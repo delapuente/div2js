@@ -171,6 +171,15 @@ define(['ast'], function (ast) {
       );
     },
 
+    processDebug: function (resume) {
+      return new ast.ReturnStatement(
+        this.callWith(
+          '__yieldDebug',
+          [ast.Literal.for(resume)]
+        )
+      );
+    },
+
     processFunction: function (name, body) {
       return new ast.FunctionDeclaration(
         new ast.Identifier('program_' + name),

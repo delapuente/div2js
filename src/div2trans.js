@@ -196,6 +196,12 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     context.label(resumeLabel);
   };
 
+  translators.DebugSentence = function (divDebug, context) {
+    var resumeLabel = context.newLabel();
+    context.debug(resumeLabel);
+    context.label(resumeLabel);
+  };
+
   translators.FromSentence = function (divFrom, context) {
     var initValue = divFrom.init.value;
     var limitValue = divFrom.limit.value;

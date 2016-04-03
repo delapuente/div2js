@@ -346,7 +346,7 @@ sentence
   | frame_sentence ';'
   | clone_sentence
   | DEBUG ';'
-    { $$ = { type: "DebuggerSentence" }; }
+    { $$ = { type: "DebugSentence" }; }
   | expression ';'
     {
       $$ = {

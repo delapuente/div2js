@@ -36,6 +36,10 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
       return this._currentLinearization.frame(resumeLabel, expression);
     },
 
+    debug: function (resumeLabel) {
+      return this._currentLinearization.debug(resumeLabel);
+    },
+
     isProcess: function (name) {
       return name in this.processes;
     },
@@ -166,6 +170,10 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
       this._addSentence(this._frame(resumeLabel, expression));
     },
 
+    debug: function (resumeLabel) {
+      this._addSentence(this._debug(resumeLabel));
+    },
+
     return: function (expression) {
       this._addSentence(this._return(expression));
     },
@@ -247,6 +255,15 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
         type: 'Frame',
         get sentences() {
           return [t.processFrame(resumeLabel.label + 1, expression)];
+        }
+      };
+    },
+
+    _debug: function (resumeLabel) {
+      return {
+        type: 'Debug',
+        get sentences() {
+          return [t.processDebug(resumeLabel.label + 1)];
         }
       };
     },

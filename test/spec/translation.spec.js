@@ -88,7 +88,8 @@ define([
       'call-empty.prg',
       'call-arguments.prg',
       'call-function.prg',
-      'new-process.prg'
+      'new-process.prg',
+      'debug.prg'
     ];
 
     programs.forEach(function (programName) {
