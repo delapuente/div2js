@@ -33,7 +33,7 @@ define([
 
   function wrap(mapAst) {
     var wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
-    var body = wrapper.expression.body.body;
+    var body = wrapper.body[0].expression.body.body;
     var ret = body[body.length - 1];
     ret.argument = mapAst.expression;
     return wrapper;
@@ -73,32 +73,84 @@ define([
   // XXX: Consider loading and parsing the template from an external source or
   // embedding in a building step.
   var wrapperTemplate = {
-    'type': 'ExpressionStatement',
-    'expression': {
-      'type': 'FunctionExpression',
-      'id': null,
-      'params': [],
-      'defaults': [],
-      'body': {
-        'type': 'BlockStatement',
-        'body': [
-          {
-            'type': 'ExpressionStatement',
-            'expression': {
-              'type': 'Literal',
-              'value': 'use strict',
-              'raw': '\'use strict\''
+    'type': 'Program',
+    'body': [
+      {
+        'type': 'ExpressionStatement',
+        'expression': {
+          'type': 'FunctionExpression',
+          'id': null,
+          'params': [
+            {
+              'type': 'Identifier',
+              'name': 'rt'
             }
+          ],
+          'defaults': [],
+          'body': {
+            'type': 'BlockStatement',
+            'body': [
+              {
+                'type': 'ExpressionStatement',
+                'expression': {
+                  'type': 'Literal',
+                  'value': 'use strict',
+                  'raw': '\'use strict\''
+                }
+              },
+              {
+                'type': 'FunctionDeclaration',
+                'id': {
+                  'type': 'Identifier',
+                  'name': '__yieldDebug'
+                },
+                'params': [],
+                'defaults': [],
+                'body': {
+                  'type': 'BlockStatement',
+                  'body': [
+                    {
+                      'type': 'ReturnStatement',
+                      'argument': {
+                        'type': 'NewExpression',
+                        'callee': {
+                          'type': 'MemberExpression',
+                          'computed': false,
+                          'object': {
+                            'type': 'Identifier',
+                            'name': 'rt'
+                          },
+                          'property': {
+                            'type': 'Identifier',
+                            'name': 'Baton'
+                          }
+                        },
+                        'arguments': [
+                          {
+                            'type': 'Literal',
+                            'value': 'debug',
+                            'raw': '\'debug\''
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                },
+                'generator': false,
+                'expression': false
+              },
+              {
+                'type': 'ReturnStatement',
+                'argument': null
+              }
+            ]
           },
-          {
-            'type': 'ReturnStatement',
-            'argument': null
-          }
-        ]
-      },
-      'generator': false,
-      'expression': false
-    }
+          'generator': false,
+          'expression': false
+        }
+      }
+    ],
+    'sourceType': 'script'
   };
 
   return {

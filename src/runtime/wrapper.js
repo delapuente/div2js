@@ -1,5 +1,9 @@
-(function () {
+(function (rt) {
   'use strict';
 
-  return; // here goes the process map.
+  function __yieldDebug() {
+    return new rt.Baton('debug');
+  }
+
+  return /*PMAP*/;
 });
