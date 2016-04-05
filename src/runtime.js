@@ -1,5 +1,5 @@
 
-define([], function () {
+define(['scheduler'], function (scheduler) {
   'use strict';
 
   function Runtime(processMap) {
@@ -14,13 +14,26 @@ define([], function () {
     ondebug: undefined,
 
     run: function () {
-      if (typeof this.onfinished === 'function') {
-        this.onfinished();
-      }
+      this._mem = new Int32Array(1);
+      this._scheduler = new scheduler.Scheduler(this._mem, {
+        ondebug: this.ondebug,
+        onfinished: this.onfinished
+      });
+      this._scheduler.addProcess(this._processMap.program);
+      this._scheduler.run();
     }
   };
 
+  function Baton(type, data) {
+    data = data || {};
+    this.type = type;
+    Object.keys(data).forEach(function (key) {
+      this[key] = data[key];
+    }.bind(this));
+  }
+
   return {
-    Runtime: Runtime
+    Runtime: Runtime,
+    Baton: Baton
   };
 });

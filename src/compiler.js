@@ -104,7 +104,12 @@ define([
                   'type': 'Identifier',
                   'name': '__yieldDebug'
                 },
-                'params': [],
+                'params': [
+                  {
+                    'type': 'Identifier',
+                    'name': 'npc'
+                  }
+                ],
                 'defaults': [],
                 'body': {
                   'type': 'BlockStatement',
@@ -130,6 +135,26 @@ define([
                             'type': 'Literal',
                             'value': 'debug',
                             'raw': '\'debug\''
+                          },
+                          {
+                            'type': 'ObjectExpression',
+                            'properties': [
+                              {
+                                'type': 'Property',
+                                'key': {
+                                  'type': 'Identifier',
+                                  'name': 'npc'
+                                },
+                                'computed': false,
+                                'value': {
+                                  'type': 'Identifier',
+                                  'name': 'npc'
+                                },
+                                'kind': 'init',
+                                'method': false,
+                                'shorthand': false
+                              }
+                            ]
                           }
                         ]
                       }
@@ -138,6 +163,41 @@ define([
                 },
                 'generator': false,
                 'expression': false
+              },
+              {
+                'type': 'VariableDeclaration',
+                'declarations': [
+                  {
+                    'type': 'VariableDeclarator',
+                    'id': {
+                      'type': 'Identifier',
+                      'name': '__yieldEnd'
+                    },
+                    'init': {
+                      'type': 'NewExpression',
+                      'callee': {
+                        'type': 'MemberExpression',
+                        'computed': false,
+                        'object': {
+                          'type': 'Identifier',
+                          'name': 'rt'
+                        },
+                        'property': {
+                          'type': 'Identifier',
+                          'name': 'Baton'
+                        }
+                      },
+                      'arguments': [
+                        {
+                          'type': 'Literal',
+                          'value': 'end',
+                          'raw': '\'end\''
+                        }
+                      ]
+                    }
+                  }
+                ],
+                'kind': 'var'
               },
               {
                 'type': 'ReturnStatement',

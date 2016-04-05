@@ -1,5 +1,16 @@
 
 define([], function () {
   'use strict';
-  return {};
+
+  function DebugSession(mem) {
+    this._mem = mem;
+  }
+
+  return {
+    DebugSession: DebugSession,
+
+    debug: function (mem) {
+      return new DebugSession(mem);
+    }
+  };
 });
