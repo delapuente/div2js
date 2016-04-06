@@ -43,9 +43,9 @@ define([
     };
   }
 
-  describe('Workflow', function () {
+  describe('Workflow of transpiled programs', function () {
 
-    it('Finishes', function () {
+    it('The empty program just finishes', function () {
       return load('empty-program.prg')
         .then(function (program) {
           return new Promise(function (fulfil) {
@@ -55,7 +55,7 @@ define([
         });
     });
 
-    it('Starts a debug session when invoked', function () {
+    it('A program calling DEBUG, yields to debug, then finishes', function () {
       var debugSpy = sinon.spy();
       return load('debug-invocation.prg')
         .then(function (program) {
@@ -67,6 +67,41 @@ define([
         })
         .then(function () {
           expect(debugSpy.calledOnce).to.be.true;
+        });
+    });
+
+    it('A program calling DEBUG twice, yields to debug, resumes and finishes',
+    function () {
+      var program;
+      var secondSpy = sinon.spy();
+      var debugSpy = sinon.spy(function () { program.ondebug = secondSpy; });
+      return load('debug-resume.prg')
+        .then(function (prg) {
+          program = prg;
+          return new Promise(function (fulfil) {
+            program.ondebug = debugSpy;
+            program.onfinished = fulfil;
+            program.run();
+          });
+        })
+        .then(function () {
+          expect(secondSpy.calledAfter(debugSpy)).to.be.true;
+        });
+    });
+
+
+    it('A program creating a process, yields to process then returns ' +
+       'to main program, then finishes', function () {
+      return load('concurrency-1-process.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            var results = [];
+            program.ondebug = withDebugSession(function (session) {
+              results.push(session.seek(dbgr.symbols.G_ARGC).value);
+            });
+            program.onfinished = fulfil;
+            program.run();
+          });
         });
     });
 

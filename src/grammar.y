@@ -302,12 +302,25 @@ type
 
 process_list
   : process
+    {
+      $$ = [$1];
+    }
   | process_list process
+    {
+      $$ = $1.push($2);
+    }
   ;
 
 process
-  : PROCESS id ';' private body
-  | PROCESS id ';' body
+  : PROCESS id ';' private_block body
+    {
+      $$ = {
+        type: "Process",
+        name: $2,
+        privates: $4,
+        body: $5
+      };
+    }
   ;
 
 body

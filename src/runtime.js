@@ -3,15 +3,32 @@ define(['scheduler'], function (scheduler) {
   'use strict';
 
   function Runtime(processMap) {
+    this._ondebug = null;
+    this._onfinished = null;
+    this._scheduler = null;
     this._processMap = processMap;
   }
 
   Runtime.prototype = {
     constructor: Runtime,
 
-    onfinished: undefined,
+    set onfinished(callback) {
+      this._onfinished = callback;
+      if (this._scheduler instanceof scheduler.Scheduler) {
+        this._scheduler.onfinished = this._onfinished;
+      }
+    },
 
-    ondebug: undefined,
+    get onfinished() { return this._onfinished; },
+
+    set ondebug(callback) {
+      this._ondebug = callback;
+      if (this._scheduler instanceof scheduler.Scheduler) {
+        this._scheduler.ondebug = this._ondebug;
+      }
+    },
+
+    get ondebug() { return this._ondebug; },
 
     run: function () {
       this._mem = new Int32Array(1);

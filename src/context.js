@@ -3,6 +3,7 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
   'use strict';
 
   function Context(ctx) {
+    this._processes = {};
     for (var key in ctx) {
       if (ctx.hasOwnProperty(key)) {
         this[key] = ctx[key];
@@ -40,8 +41,12 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
       return this._currentLinearization.debug(resumeLabel);
     },
 
+    declareProcess: function (name) {
+      this._processes[name] = true;
+    },
+
     isProcess: function (name) {
-      return name in this.processes;
+      return name in this._processes;
     },
 
     return: function (expression) {

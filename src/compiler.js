@@ -6,6 +6,9 @@ define([
 ], function (parser, translator, generator) {
   'use strict';
 
+  parser.yy = parser.yy || {};
+  parser.yy.parseError = parser.parseError;
+
   function compile(srcText) {
     var div2Ast = parser.parse(srcText);
     var jsAst = translator.translate(div2Ast);

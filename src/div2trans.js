@@ -50,6 +50,7 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
 
   translators.Unit = function (divUnit, context) {
     var programFunction = translate(divUnit.program, context);
+    console.log(divUnit);
     var processesFunctions = divUnit.processes.map(function (divProcess) {
       return translate(divProcess, context);
     });
