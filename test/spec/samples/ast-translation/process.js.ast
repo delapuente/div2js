@@ -1,0 +1,76 @@
+{
+  "type": "FunctionDeclaration",
+  "id": {
+    "type": "Identifier",
+    "name": "process_a"
+  },
+  "params": [
+    {
+      "type": "Identifier",
+      "name": "mem"
+    },
+    {
+      "type": "Identifier",
+      "name": "exec"
+    },
+    {
+      "type": "Identifier",
+      "name": "args"
+    }
+  ],
+  "defaults": [],
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "WhileStatement",
+        "test": {
+          "type": "Literal",
+          "value": true,
+          "raw": "true"
+        },
+        "body": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "SwitchStatement",
+              "discriminant": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": {
+                  "type": "Identifier",
+                  "name": "exec"
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "pc"
+                }
+              },
+              "cases": [
+                {
+                  "type": "SwitchCase",
+                  "test": {
+                    "type": "Literal",
+                    "value": 1,
+                    "raw": "1"
+                  },
+                  "consequent": [
+                    {
+                      "type": "ReturnStatement",
+                      "argument": {
+                        "type": "Identifier",
+                        "name": "__yieldEnd"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "generator": false,
+  "expression": false
+}

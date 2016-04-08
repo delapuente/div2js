@@ -1,0 +1,12 @@
+{
+  "type": "Process",
+  "name": {
+    "type": "Identifier",
+    "name": "a"
+  },
+  "privates": null,
+  "body": {
+    "type": "ProcessBody",
+    "sentences": []
+  }
+}

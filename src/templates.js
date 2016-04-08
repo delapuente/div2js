@@ -180,9 +180,17 @@ define(['ast'], function (ast) {
       );
     },
 
-    processFunction: function (name, body) {
+    programFunction: function (name, body) {
       return new ast.FunctionDeclaration(
         new ast.Identifier('program_' + name),
+        this.processParameters, null,
+        body
+      );
+    },
+
+    processFunction: function (name, body) {
+      return new ast.FunctionDeclaration(
+        new ast.Identifier('process_' + name),
         this.processParameters, null,
         body
       );

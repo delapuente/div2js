@@ -1,0 +1,7 @@
+PROGRAM basic;
+BEGIN
+END
+
+PROCESS a;
+BEGIN
+END
