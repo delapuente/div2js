@@ -79,7 +79,12 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
   };
 
   translators.Identifier = function (divIdentifier, context) {
-    return t.memory(divIdentifier.name);
+    var name = divIdentifier.name;
+    var scope = context.getScope(name);
+    if (!scope) { throw new Error('Unknown name ' + name); }
+    var scopeTranslator = 'memory' + scope[0].toUpperCase() + scope.substr(1);
+    if (!(scopeTranslator in t)) { throw new Error('Unknown scope ' + scope); }
+    return t[scopeTranslator](name);
   };
 
   translators.IfSentence = function (divIf, context) {

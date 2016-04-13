@@ -137,12 +137,37 @@ define(['ast'], function (ast) {
       return new ast.SwitchCase(ast.Literal.for(label));
     },
 
-    memory: function (name) {
-      return new ast.MemberExpression(
-        new ast.Identifier('mem'),
-        new ast.Identifier(name),
-        true
-      );
+    memoryGlobal: function (name) {
+      return this._memory(name, this._globalAddress(name));
+    },
+
+    //TODO: Wrong, implement as mem[exec.local_base + L_NAME]
+    memoryLocal: function (name) {
+      return this._memory(name, new ast.Identifier(name));
+    },
+
+    //TODO: Wrong, implement as mem[exec.local_base + name]
+    memoryPrivate: function (name) {
+      return this.memoryLocal(name);
+    },
+
+    _memory: function (name, index) {
+      return new ast.MemberExpression(new ast.Identifier('mem'), index, true);
+    },
+
+    _globalAddress: function (name) {
+      return {
+        type: 'BinaryExpression',
+        operator: '+',
+        left: {
+          type: 'Identifier',
+          name: 'G_BASE'
+        },
+        right: {
+          type: 'Identifier',
+          name: 'G_' + name.toUpperCase()
+        }
+      };
     },
 
     newRange: function (min, max) {

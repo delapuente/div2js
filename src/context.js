@@ -3,7 +3,10 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
   'use strict';
 
   function Context(ctx) {
-    this._processes = {};
+    this._processes = Object.create(null);
+    this._auxNames = Object.create(null);
+    this._currentProcessPrivates = Object.create(null);
+
     for (var key in ctx) {
       if (ctx.hasOwnProperty(key)) {
         this[key] = ctx[key];
@@ -13,8 +16,6 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
 
   Context.prototype = {
     constructor: Context,
-
-    _auxNames: Object.create(null),
 
     startLinearization: function () {
       this._auxNames = Object.create(null);
@@ -96,6 +97,24 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
         options,
         defaultLabel
       );
+    },
+
+    getScope: function (identifier) {
+      var scope;
+      if (symbols.wellKnownGlobals.indexOf(identifier) >= 0) {
+        scope = 'global';
+      }
+      //TODO: What about id? it is not a local but a special keyword with
+      //identifier semantics to avoid assignation on it. Should be translated
+      //as a local but identified like a special token and translated in a
+      //special way.
+      else if (symbols.wellKnownLocals.indexOf(identifier) >= 0) {
+        scope = 'local';
+      }
+      else if (identifier in this._currentProcessPrivates) {
+        scope = 'private';
+      }
+      return scope;
     }
   };
 
