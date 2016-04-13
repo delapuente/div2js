@@ -56,7 +56,7 @@ define([], function () {
 
     end: function () {
       this.stop();
-      this._call('onfinished');
+      return this._call('onfinished');
     },
 
     stop: function () {
@@ -73,8 +73,10 @@ define([], function () {
 
     _onactiondebug: function (baton) {
       this._processList[this._currentProcess].pc = baton.npc;
-      this._call('ondebug', this._mem);
-      this._scheduleStep();
+      //TODO: Add tests for checking _onactiondebug waits for debug callback
+      this._call('ondebug', this._mem).then(function () {
+        this._scheduleStep();
+      }.bind(this));
     },
 
     _onactionend: function () {
@@ -85,9 +87,14 @@ define([], function () {
     _call: function (name) {
       var args = Array.prototype.slice.call(arguments, 1);
       var target = this[name];
+      var result;
       if (typeof target.apply === 'function') {
-        return target.apply(this, args);
+        result = target.apply(this, args);
       }
+      if (!(result instanceof Promise)) {
+        result = Promise.resolve(result);
+      }
+      return result;
     }
   };
 
