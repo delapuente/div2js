@@ -4,7 +4,7 @@ define([], function () {
 
   return {
     wellKnownGlobals: [
-      'unit_size'
+      'text_z'
     ],
 
     wellKnownLocals: [

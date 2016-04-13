@@ -1,14 +1,14 @@
 PROGRAM test;
 BEGIN
-  argc = 1;
+  text_z = 1;
   DEBUG;
   a();
   DEBUG;
-  argc = 3;
+  text_z = 3;
   DEBUG;
 END
 
 PROCESS a;
 BEGIN
-  argc = 2;
+  text_z = 2;
 END
