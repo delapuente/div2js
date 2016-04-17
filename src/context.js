@@ -101,20 +101,28 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
 
     getScope: function (identifier) {
       var scope;
-      if (symbols.wellKnownGlobals.indexOf(identifier) >= 0) {
+      if (symbols.isGlobal(identifier)) {
         scope = 'global';
       }
       //TODO: What about id? it is not a local but a special keyword with
       //identifier semantics to avoid assignation on it. Should be translated
       //as a local but identified like a special token and translated in a
       //special way.
-      else if (symbols.wellKnownLocals.indexOf(identifier) >= 0) {
+      else if (symbols.isLocal(identifier)) {
         scope = 'local';
       }
       else if (identifier in this._currentProcessPrivates) {
         scope = 'private';
       }
       return scope;
+    },
+
+    getGlobalBaseDeclarator: function () {
+      return new ast.VariableDeclarator(
+        t.globalBaseIdentifier,
+        // TODO: Must take into account all DIV padding including program source
+        ast.Literal['for'](0)
+      );
     }
   };
 

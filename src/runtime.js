@@ -2,18 +2,19 @@
 define(['scheduler'], function (scheduler) {
   'use strict';
 
-  function Runtime(processMap) {
+  function Runtime(processMap, memoryMap) {
     this._ondebug = null;
     this._onfinished = null;
     this._scheduler = null;
     this._processMap = processMap;
+    this._memoryMap = memoryMap;
   }
 
   Runtime.prototype = {
     constructor: Runtime,
 
     set onfinished(callback) {
-      this._onfinished = callback;
+      this._onfinished = this._passingMemory(callback);
       if (this._scheduler instanceof scheduler.Scheduler) {
         this._scheduler.onfinished = this._onfinished;
       }
@@ -22,13 +23,20 @@ define(['scheduler'], function (scheduler) {
     get onfinished() { return this._onfinished; },
 
     set ondebug(callback) {
-      this._ondebug = callback;
+      this._ondebug = this._passingMemory(callback);
       if (this._scheduler instanceof scheduler.Scheduler) {
         this._scheduler.ondebug = this._ondebug;
       }
     },
 
     get ondebug() { return this._ondebug; },
+
+    _passingMemory: function (callback) {
+      if (typeof callback === 'function') {
+        return callback.bind(undefined, this._mem, this._memoryMap);
+      }
+      return callback;
+    },
 
     run: function () {
       this._mem = new Int32Array(1);

@@ -1,5 +1,10 @@
 
-define(['context', 'ast', 'templates'], function (ctx, ast, t) {
+define([
+  'context',
+  'ast',
+  'templates',
+  'symbols'
+], function (ctx, ast, t, symbols) {
   'use strict';
 
   var translators = Object.create(null);
@@ -53,8 +58,30 @@ define(['context', 'ast', 'templates'], function (ctx, ast, t) {
     var processesFunctions = divUnit.processes.map(function (divProcess) {
       return translate(divProcess, context);
     });
-    return new ast.Program([programFunction].concat(processesFunctions));
+    var memoryMap = getMemoryMap(context);
+    return new ast.Program(
+      memoryMap
+      .concat([programFunction])
+      .concat(processesFunctions)
+    );
   };
+
+  function getMemoryMap(context) {
+    var offset = 0;
+    var globalBase = context.getGlobalBaseDeclarator();
+    var globalOffsets = symbols.wellKnownGlobals.map(function (symbol) {
+      // TODO: In the future, this will be a property of the symbol
+      var name = symbol;
+      var global = new ast.VariableDeclarator(
+        new t.identifierForGlobal(name),
+        new ast.Literal['for'](offset)
+      );
+      offset += 4; // TODO: Extract info from the symbol
+      return global;
+    });
+    // XXX: Notice this return a list of variable declarators.
+    return [new ast.VariableDeclaration([globalBase].concat(globalOffsets))];
+  }
 
   translators.Program = function (divProgram, context) {
     var name = divProgram.name.name;

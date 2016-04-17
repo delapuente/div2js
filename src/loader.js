@@ -3,8 +3,10 @@ define(['runtime'], function (runtime) {
   'use strict';
 
   function load(objText) {
-    var processMap = eval(objText)(runtime);
-    var program = new runtime.Runtime(processMap);
+    var unit = eval(objText)(runtime);
+    var processMap = unit.pmap;
+    var memoryMap = unit.mmap;
+    var program = new runtime.Runtime(processMap, memoryMap);
     return Promise.resolve(program);
   }
 

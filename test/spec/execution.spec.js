@@ -37,8 +37,8 @@ define([
   }
 
   function withDebugSession(callback) {
-    return function (mem) {
-      var session = dbgr.debug(mem);
+    return function (mem, mmap) {
+      var session = dbgr.debug(mmap, mem);
       callback(session);
     };
   }
@@ -97,7 +97,7 @@ define([
           return new Promise(function (fulfil) {
             var results = [];
             program.ondebug = withDebugSession(function (session) {
-              results.push(session.seek(dbgr.symbols.G_ARGC).value);
+              results.push(session.seek(session.symbols.G_TEXT_Z).value);
             });
             program.onfinished = fulfil;
             program.run();

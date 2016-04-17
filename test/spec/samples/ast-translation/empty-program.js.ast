@@ -2,6 +2,39 @@
   "type": "Program",
   "body": [
     {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "G_BASE"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 0,
+            "raw": "0"
+          }
+        },
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "G_TEXT_Z"
+          },
+          "init": {
+            "type": "ExpressionStatement",
+            "expression": {
+              "type": "Literal",
+              "value": 0,
+              "raw": "0"
+            }
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
       "type": "FunctionDeclaration",
       "id": {
         "type": "Identifier",

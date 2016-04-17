@@ -3,14 +3,16 @@
 define([
   '/src/context.js',
   '/src/ast.js',
-  '/src/templates.js'
-], function (ctx, ast, templates) {
+  '/src/templates.js',
+  '/src/symbols.js'
+], function (ctx, ast, templates, symbols) {
   'use strict';
 
   var context = newContext({
     'context': ctx,
     'ast': ast,
-    'templates': templates
+    'templates': templates,
+    'symbols': symbols
   });
 
   describe('AST translation from DIV2 to JavaScript', function () {

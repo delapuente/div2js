@@ -3,6 +3,19 @@ define([], function () {
   'use strict';
 
   return {
+    isGlobal: function (name) {
+      return this.wellKnownGlobals.indexOf(name.toLowerCase()) >= 0;
+    },
+
+    isLocal: function (name) {
+      name = name.toLowerCase();
+      // TODO: Actually, id is a special token, non an identifier. Let's fix
+      // that in the parser and translation module.
+      // TODO: Second clause is wrong as local definitions can be not simply
+      // strings.
+      return name === 'id' || this.wellKnownLocals.indexOf(name) >= 0;
+    },
+
     wellKnownGlobals: [
       'text_z'
     ],

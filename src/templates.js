@@ -159,15 +159,15 @@ define(['ast'], function (ast) {
       return {
         type: 'BinaryExpression',
         operator: '+',
-        left: {
-          type: 'Identifier',
-          name: 'G_BASE'
-        },
-        right: {
-          type: 'Identifier',
-          name: 'G_' + name.toUpperCase()
-        }
+        left: this.globalBaseIdentifier,
+        right: this.identifierForGlobal(name)
       };
+    },
+
+    globalBaseIdentifier: new ast.Identifier('G_BASE'),
+
+    identifierForGlobal: function (name) {
+      return new ast.Identifier('G_' + name.toUpperCase());
     },
 
     newRange: function (min, max) {

@@ -12,10 +12,81 @@ define([
   function compile(srcText) {
     var div2Ast = parser.parse(srcText);
     var jsAst = translator.translate(div2Ast);
-    var mapAst = generateProcessMap(jsAst);
-    var wrappedAst = wrap(mapAst);
+    var memoryOffsetsAst = extractMemoryBindings(jsAst);
+    var memoryMapAst = generateMemoryMap(memoryOffsetsAst);
+    var processMapAst = generateProcessMap(jsAst);
+    var wrappedAst = wrap(processMapAst, memoryOffsetsAst, memoryMapAst);
     var objText = generator.generate(wrappedAst);
     return objText;
+  }
+
+  function extractMemoryBindings(ast) {
+    return ast.body.filter(function (statement) {
+      return statement.type === 'VariableDeclaration';
+    });
+  }
+
+  function generateMemoryMap(bindingsAst) {
+    var mapAst = {
+      type: 'ExpressionStatement',
+      expression: {
+        type: 'ObjectExpression',
+        properties: [
+          {
+            type: 'Property',
+            key: {
+              type: 'Identifier',
+              name: 'G'
+            },
+            computed: false,
+            value: {
+              type: 'ObjectExpression',
+              properties: []
+            },
+            kind: 'init',
+            method: false,
+            shorthand: false
+          },
+          {
+            type: 'Property',
+            key: {
+              type: 'Identifier',
+              name: 'L'
+            },
+            computed: false,
+            value: {
+              type: 'ObjectExpression',
+              properties: []
+            },
+            kind: 'init',
+            method: false,
+            shorthand: false
+          },
+          {
+            type: 'Property',
+            key: {
+              type: 'Identifier',
+              name: 'P'
+            },
+            computed: false,
+            value: {
+              type: 'ObjectExpression',
+              properties: []
+            },
+            kind: 'init',
+            method: false,
+            shorthand: false
+          },
+        ]
+      }
+    };
+    var globalBindingsAst = bindingsAst[0];
+    mapAst.expression.properties[0].value.properties =
+    globalBindingsAst.declarations
+    .map(function (offsetAst) {
+      return propertyEntry(offsetAst.id.name, offsetAst.init);
+    });
+    return mapAst;
   }
 
   function generateProcessMap(ast) {
@@ -26,38 +97,55 @@ define([
         properties: []
       }
     };
-    mapAst.expression.properties = ast.body.map(function (statement) {
-      if (statement.type === 'FunctionDeclaration') {
-        return newEntry(statement);
-      }
-    });
+    mapAst.expression.properties = ast.body
+    .filter(function (statement) {
+      return statement.type === 'FunctionDeclaration';
+    })
+    .map(newEntry);
     return mapAst;
   }
 
-  function wrap(mapAst) {
+  function wrap(processMapAst, memoryOffsetsAst, memoryMapAst) {
     var wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
     var body = wrapper.body[0].expression.body.body;
+    body.splice.apply(body, [1, 0].concat(memoryOffsetsAst));
     var ret = body[body.length - 1];
-    ret.argument = mapAst.expression;
+    ret.argument.properties.push(entryForPMap(processMapAst.expression));
+    if (memoryMapAst) {
+      ret.argument.properties.push(entryForMMap(memoryMapAst.expression));
+    }
     return wrapper;
+  }
+
+  function entryForPMap(expression) {
+    return propertyEntry('pmap', expression);
+  }
+
+  function entryForMMap(expression) {
+    return propertyEntry('mmap', expression);
   }
 
   function newEntry(functionDeclaration) {
     var functionExpression = Object.create(functionDeclaration);
     functionExpression.type = 'FunctionExpression';
+    return propertyEntry(getName(functionExpression), functionExpression);
+  }
+
+  function propertyEntry(name, value) {
     return {
       type: 'Property',
       key: {
         type: 'Identifier',
-        name: getName(functionExpression)
+        name: name
       },
       computed: false,
-      value: functionExpression,
+      value: value,
       kind: 'init',
       method: false,
       shorthand: false
     };
   }
+
 
   function getName(functionExpression) {
     var functionId = functionExpression.id.name;
@@ -204,7 +292,10 @@ define([
               },
               {
                 'type': 'ReturnStatement',
-                'argument': null
+                'argument': {
+                  'type': 'ObjectExpression',
+                  'properties': []
+                }
               }
             ]
           },
