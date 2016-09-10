@@ -23,12 +23,9 @@
             "name": "G_TEXT_Z"
           },
           "init": {
-            "type": "ExpressionStatement",
-            "expression": {
-              "type": "Literal",
-              "value": 0,
-              "raw": "0"
-            }
+            "type": "Literal",
+            "value": 0,
+            "raw": "0"
           }
         }
       ],

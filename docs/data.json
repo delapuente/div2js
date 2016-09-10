@@ -1,13 +1,105 @@
 {
     "project": {
         "name": "div2js",
-        "description": "A DIV2 Game Studio compiler to JavaScript",
+        "description": "A DIV2 transpiler for the modern web",
         "version": "0.0.1",
         "url": "https://github.com/delapuente/div2js"
     },
-    "files": {},
+    "files": {
+        "src/div2trans.js": {
+            "name": "src/div2trans.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        },
+        "src/templates.js": {
+            "name": "src/templates.js",
+            "modules": {},
+            "classes": {},
+            "fors": {},
+            "namespaces": {}
+        }
+    },
     "modules": {},
     "classes": {},
-    "classitems": [],
-    "warnings": []
+    "classitems": [
+        {
+            "file": "src/div2trans.js",
+            "line": 273,
+            "description": "All parameters here must be DIV2 AST.",
+            "class": ""
+        },
+        {
+            "file": "src/templates.js",
+            "line": 39,
+            "description": "Builds a DIV2 AST for a FROM update.",
+            "return": {
+                "description": "a DIV2 increment expression.\nTODO: Maybe a set of DIV2 constructors is actually needed."
+            },
+            "class": ""
+        },
+        {
+            "file": "src/templates.js",
+            "line": 61,
+            "description": "Builds a DIV2 AST for a FROM initializator.",
+            "return": {
+                "description": "a DIV2 assignment expression.\nTODO: Maybe a set of DIV2 constructors is actually needed."
+            },
+            "class": ""
+        },
+        {
+            "file": "src/templates.js",
+            "line": 83,
+            "description": "Builds a DIV2 AST for FROM test.",
+            "return": {
+                "description": "a DIV2 comparison expression.\nTODO: Maybe a set of DIV2 constructors is actually needed."
+            },
+            "class": ""
+        },
+        {
+            "file": "src/templates.js",
+            "line": 105,
+            "description": "Builds a DIV2 AST for the default argument for FRAME.",
+            "return": {
+                "description": "a DIV2 comparison expression.\nTODO: Maybe a set of DIV2 constructors is actually needed."
+            },
+            "class": ""
+        },
+        {
+            "file": "src/templates.js",
+            "line": 119,
+            "description": "Builds a DIV2 AST for the default argument for RETURN (process id).",
+            "return": {
+                "description": "a DIV2 comparison expression.\nTODO: Maybe a set of DIV2 constructors is actually needed."
+            },
+            "class": ""
+        }
+    ],
+    "warnings": [
+        {
+            "message": "Missing item type\nAll parameters here must be DIV2 AST.",
+            "line": " src/div2trans.js:273"
+        },
+        {
+            "message": "Missing item type\nBuilds a DIV2 AST for a FROM update.",
+            "line": " src/templates.js:39"
+        },
+        {
+            "message": "Missing item type\nBuilds a DIV2 AST for a FROM initializator.",
+            "line": " src/templates.js:61"
+        },
+        {
+            "message": "Missing item type\nBuilds a DIV2 AST for FROM test.",
+            "line": " src/templates.js:83"
+        },
+        {
+            "message": "Missing item type\nBuilds a DIV2 AST for the default argument for FRAME.",
+            "line": " src/templates.js:105"
+        },
+        {
+            "message": "Missing item type\nBuilds a DIV2 AST for the default argument for RETURN (process id).",
+            "line": " src/templates.js:119"
+        }
+    ]
 }

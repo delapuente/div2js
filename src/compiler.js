@@ -1,9 +1,10 @@
 
 define([
   'div2lang',
+  'div2checker',
   'div2trans',
   'lib/escodegen'
-], function (parser, translator, generator) {
+], function (parser, checker, translator, generator) {
   'use strict';
 
   parser.yy = parser.yy || {};
@@ -11,7 +12,8 @@ define([
 
   function compile(srcText) {
     var div2Ast = parser.parse(srcText);
-    var jsAst = translator.translate(div2Ast);
+    var context = checker.extractContext(div2Ast);
+    var jsAst = translator.translate(div2Ast, context);
     var memoryOffsetsAst = extractMemoryBindings(jsAst);
     var memoryMapAst = generateMemoryMap(memoryOffsetsAst);
     var processMapAst = generateProcessMap(jsAst);

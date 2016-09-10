@@ -119,7 +119,7 @@ define([
           get(targetAst)
         ])
         .then(function (abstractSyntaxTrees) {
-          ast = translate(abstractSyntaxTrees[0]);
+          ast = translate(abstractSyntaxTrees[0], new ctx.Context());
           expectedAst = abstractSyntaxTrees[1];
           expect(ast.pojo()).to.be.deep.equal(expectedAst);
         })
