@@ -117,6 +117,7 @@ module.exports = function(grunt) {
           middleware: function(connect) {
             return [
               connect().use('/src', connect.static('src')),
+              connect().use('/test', connect.static('test')),
               connect.static('test')
             ];
           }
