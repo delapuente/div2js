@@ -99,10 +99,9 @@ define([
       'return.prg',
       'return-expression.prg',
       'return-conditional.prg',
-      'call-empty.prg',
-      'call-arguments.prg',
+      'new-process-empty.prg',
+      'new-process-arguments.prg',
       'call-function.prg',
-      'new-process.prg',
       'debug.prg',
       'process.prg'
     ];

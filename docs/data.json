@@ -26,7 +26,7 @@
     "classitems": [
         {
             "file": "src/div2trans.js",
-            "line": 273,
+            "line": 272,
             "description": "All parameters here must be DIV2 AST.",
             "class": ""
         },
@@ -79,7 +79,7 @@
     "warnings": [
         {
             "message": "Missing item type\nAll parameters here must be DIV2 AST.",
-            "line": " src/div2trans.js:273"
+            "line": " src/div2trans.js:272"
         },
         {
             "message": "Missing item type\nBuilds a DIV2 AST for a FROM update.",

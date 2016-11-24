@@ -178,6 +178,19 @@ define(['ast'], function (ast) {
       return new ast.ReturnStatement(this.endToken);
     },
 
+    call: function (kind, resume, name, argList) {
+      var yieldType = {
+        'function': '__yieldCallFunction',
+        'process': '__yieldNewProcess'
+      }[kind];
+      return new ast.ReturnStatement(
+        this.callWith(
+          yieldType,
+          [ast.Literal.for(resume), ast.Literal.for(name)].concat(argList)
+        )
+      );
+    },
+
     processClone: function (child, parent) {
       return new ast.ReturnStatement(
         this.callWith(
@@ -187,6 +200,8 @@ define(['ast'], function (ast) {
       );
     },
 
+    // TODO: Ok, the former means process clone but what does this mean?
+    // It is not "process frame", it is just frame.
     processFrame: function (resume, expression) {
       return new ast.ReturnStatement(
         this.callWith(
@@ -196,6 +211,7 @@ define(['ast'], function (ast) {
       );
     },
 
+    // TODO: Same here.
     processDebug: function (resume) {
       return new ast.ReturnStatement(
         this.callWith(
@@ -230,6 +246,8 @@ define(['ast'], function (ast) {
       ];
     },
 
+    // TODO: See my comment about processFrame. I don't think this should be
+    // different for a process than for a function.
     processReturn: function (expression) {
       return new ast.ReturnStatement(
         this.callWith(
@@ -243,6 +261,13 @@ define(['ast'], function (ast) {
       return new ast.MemberExpression(
         new ast.Identifier('exec'),
         new ast.Identifier('pc')
+      );
+    },
+
+    get returnValue() {
+      return new ast.MemberExpression(
+        new ast.Identifier('exec'),
+        new ast.Identifier('retv')
       );
     },
 

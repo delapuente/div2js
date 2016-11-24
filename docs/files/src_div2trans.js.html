@@ -114,16 +114,15 @@ define([
   };
 
   translators.CallExpression = function (divCall, context) {
-    var name = ast.Literal[&#x27;for&#x27;](divCall.callee.name);
-    var type = context.isProcess(name) ? &#x27;process&#x27; : &#x27;function&#x27;;
+    var id = divCall.callee.name;
+    var idLiteral = ast.Literal[&#x27;for&#x27;](id);
     var parameters = new ast.ArrayExpression(
       divCall.arguments.map(function (arg) {
         return translate(arg, context);
       })
     );
-    var resumeLabel = context.newLabel();
-    context.call(resumeLabel, type, name, parameters);
-    context.label(resumeLabel);
+    var callKind = context.isProcess(id) ? &#x27;__newProcess&#x27; : &#x27;__callFunction&#x27;;
+    return t.callWith(callKind, [idLiteral, parameters]);
   };
 
   translators.CloneSentence = function (divClone, context) {

@@ -28,15 +28,21 @@ define([
   };
 
   translators.CallExpression = function (divCall, context) {
-    var id = divCall.callee.name;
-    var idLiteral = ast.Literal['for'](id);
     var parameters = new ast.ArrayExpression(
       divCall.arguments.map(function (arg) {
         return translate(arg, context);
       })
     );
-    var callKind = context.isProcess(id) ? '__newProcess' : '__callFunction';
-    return t.callWith(callKind, [idLiteral, parameters]);
+    var id = divCall.callee.name;
+    var isProcess = context.isProcess(id);
+    var afterCallLabel = context.newLabel();
+    var auxName = (isProcess ? '_pid_' : '_result_') + id;
+    var callAux = context.newAux(auxName, t.returnValue);
+    var callKind = isProcess ? 'newProcess' : 'callFunction';
+    context[callKind](afterCallLabel, id, parameters);
+    context.label(afterCallLabel);
+    context.verbatim(callAux.declaration);
+    return callAux.identifier;
   };
 
   translators.CloneSentence = function (divClone, context) {

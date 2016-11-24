@@ -30,6 +30,16 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
       return this._currentLinearization.end();
     },
 
+    callFunction: function (resumeLabel, name, argList) {
+      return this._currentLinearization
+        .callFunction(resumeLabel, name, argList);
+    },
+
+    newProcess: function (resumeLabel, name, argList) {
+      return this._currentLinearization
+        .newProcess(resumeLabel, name, argList);
+    },
+
     clone: function (childLabel, parentLabel) {
       return this._currentLinearization.clone(childLabel, parentLabel);
     },
@@ -194,6 +204,14 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
       this._addSentence(this._end());
     },
 
+    callFunction: function (resumeLabel, name, argList) {
+      this._addSentence(this._call('function', resumeLabel, name, argList));
+    },
+
+    newProcess: function (resumeLabel, name, argList) {
+      this._addSentence(this._call('process', resumeLabel, name, argList));
+    },
+
     clone: function (childLabel, parentLabel) {
       this._addSentence(this._clone(childLabel, parentLabel));
     },
@@ -269,6 +287,16 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
         type: 'End',
         get sentences() {
           return [t.processEnd];
+        }
+      };
+    },
+
+    _call: function (kind, resumeLabel, name, argList) {
+      var type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
+      return {
+        type: type,
+        get sentences() {
+          return [t.call(kind, resumeLabel.label + 1, name, argList)];
         }
       };
     },
