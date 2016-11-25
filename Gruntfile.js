@@ -1,6 +1,9 @@
 module.exports = function(grunt) {
   'use strict';
 
+  var fs = require('fs');
+  var esprima = require('esprima');
+
   // Load grunt tasks automatically
   require('load-grunt-tasks')(grunt);
 
@@ -264,6 +267,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['connect:test', 'mocha']);
   grunt.registerTask('tests', ['test']);
   grunt.registerTask('pack', [
+    'embed-wrapper',
     'clean:dist',
     'clean:temp',
     'jison',
@@ -276,6 +280,22 @@ module.exports = function(grunt) {
   grunt.registerTask('dev', ['watch']);
   grunt.registerTask('grammar', ['watch:grammar']);
   grunt.registerTask('debug', ['connect:debug', 'watch:debug']);
+
+  grunt.registerTask('embed-wrapper', function () {
+    var config = grunt.config.get();
+    var wrapperContents = fs.readFileSync(
+      config.dirs.src + '/runtime/wrapper.js',
+      { encoding: 'utf8' }
+    );
+    var ast = esprima.parse(wrapperContents);
+    var wrapperJson = JSON.stringify(ast);
+    var compilerPath = config.dirs.src + '/compiler.js';
+    var compilerContents = fs.readFileSync(compilerPath, { encoding: 'utf8' });
+    fs.writeFileSync(compilerPath, compilerContents.replace(
+      /var wrapperTemplate [^;]*;/,
+      'var wrapperTemplate = ' + wrapperJson + ';'
+    ));
+  });
 
   grunt.registerTask('hookmeup', ['shell:hooks']);
 };

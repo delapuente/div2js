@@ -14,5 +14,4 @@ define(['runtime'], function (runtime) {
     load: load
   };
 
-
 });
