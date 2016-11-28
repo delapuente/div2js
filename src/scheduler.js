@@ -1,9 +1,11 @@
+// TODO: Rename the scheduler to be the runner.
+// The scheduler is actually fused to the current runtime.
 define([], function () {
   'use strict';
 
   function Scheduler(mem, hooks) {
     hooks = hooks || {};
-    this.ondebug = hooks.ondebug;
+    this.onyield = hooks.onyield;
     this.onfinished = hooks.onfinished;
     this._mem = mem;
     this._processList = [];
@@ -13,19 +15,6 @@ define([], function () {
   Scheduler.prototype = {
     constructor: Scheduler,
 
-    addProcess: function (process) {
-      var execEnvironment = this.newExecEnvironment(process);
-      // XXX: Will be replaced by sorted insertion
-      this._processList.push(execEnvironment);
-    },
-
-    newExecEnvironment: function (process) {
-      return {
-        pc: 1,
-        process: process
-      };
-    },
-
     run: function () {
       if (!this._running) {
         this._running = true;
@@ -33,9 +22,31 @@ define([], function () {
       }
     },
 
+    stop: function () {
+      this._running = false;
+    },
+
     reset: function () {
       this._running = false;
-      this._currentProcess = 0;
+      this._current = 0;
+    },
+
+    add: function (code) {
+      var execEnvironment = this._newExecEnvironment(code);
+      // XXX: Will be replaced by sorted insertion
+      this._processList.push(execEnvironment);
+    },
+
+    deleteCurrent: function () {
+      this._processList.splice(this._current, 1);
+      this._current = this._current;
+    },
+
+    _newExecEnvironment: function (code) {
+      return {
+        pc: 1,
+        code: code
+      };
     },
 
     _scheduleStep: function () {
@@ -47,47 +58,54 @@ define([], function () {
         return;
       }
       if (this._processList.length === 0) {
-        return this.end();
+        this._end();
       }
-      var currentEnvironment = this._processList[this._currentProcess];
-      var result = currentEnvironment.process(this._mem, currentEnvironment);
-      this.takeAction(result);
+      else {
+        var execution = this._currentExecution;
+        var result = execution.code(this._mem, execution);
+        this._takeAction(result);
+      }
     },
 
-    end: function () {
+    _end: function () {
       this.stop();
       return this._call('onfinished');
     },
 
-    stop: function () {
-      this._running = false;
-    },
-
-    takeAction: function (result) {
-      var actionName = '_onaction' + result.type;
-      if (!(actionName in this)) {
-        throw Error('Execution primitive unknown:', result);
+    _takeAction: function (result) {
+      if (!(result instanceof Baton)) {
+        throw Error('Execution returned an unknown result:', result);
       }
-      return this[actionName](result);
-    },
-
-    _onactiondebug: function (baton) {
-      this._processList[this._currentProcess].pc = baton.npc;
-      //TODO: Add tests for checking _onactiondebug waits for debug callback
-      this._call('ondebug', this._mem).then(function () {
+      if (typeof result.npc !== 'undefined') {
+        this._currentExecution.pc = result.npc;
+      }
+      return this._call('onyield', result).then(function () {
+        // TODO: Take into account rescheduling flags once added.
+        this._current++;
         this._scheduleStep();
       }.bind(this));
     },
 
-    _onactionend: function () {
-      this._processList.splice(this._currentProcess, 1);
-      this._scheduleStep();
+    set _current(v) {
+      if (this._processList.length) {
+        this._currentIndex = v % this._processList.length;
+      } else {
+        this._currentIndex = 0;
+      }
+    },
+
+    get _current() {
+      return this._currentIndex;
+    },
+
+    get _currentExecution() {
+      return this._processList[this._current];
     },
 
     _call: function (name) {
-      var args = Array.prototype.slice.call(arguments, 1);
-      var target = this[name];
       var result;
+      var target = this[name];
+      var args = Array.prototype.slice.call(arguments, 1);
       if (typeof target.apply === 'function') {
         result = target.apply(this, args);
       }
@@ -98,7 +116,16 @@ define([], function () {
     }
   };
 
+  function Baton(type, data) {
+    data = data || {};
+    this.type = type;
+    Object.keys(data).forEach(function (key) {
+      this[key] = data[key];
+    }.bind(this));
+  }
+
   return {
-    Scheduler: Scheduler
+    Scheduler: Scheduler,
+    Baton: Baton
   };
 });

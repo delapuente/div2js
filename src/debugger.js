@@ -33,8 +33,12 @@ define([], function () {
   MemCell.prototype = {
     constructor: MemCell,
 
-    read: function () {
+    get value() {
       return this._storage[this._offset];
+    },
+
+    set value(v) {
+      this._storage[this._offset] = v;
     }
   };
 

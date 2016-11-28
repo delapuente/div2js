@@ -8,7 +8,11 @@
   }
 
   function __yieldNewProcess(npc, processName, args) {
-    return;
+    return new rt.Baton('newprocess', {
+      npc: npc,
+      processName: processName,
+      args: args
+    });
   }
 
   var __yieldEnd = new rt.Baton('end');

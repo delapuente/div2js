@@ -31,34 +31,51 @@ define(['scheduler'], function (scheduler) {
 
     get ondebug() { return this._ondebug; },
 
-    _passingMemory: function (callback) {
-      if (typeof callback === 'function') {
-        return callback.bind(undefined, this._mem, this._memoryMap);
-      }
-      return callback;
-    },
-
     run: function () {
       this._mem = new Int32Array(1);
       this._scheduler = new scheduler.Scheduler(this._mem, {
-        ondebug: this.ondebug,
+        onyield: this._schedule.bind(this),
         onfinished: this.onfinished
       });
-      this._scheduler.addProcess(this._processMap.program);
+      this._scheduler.add(this._processMap.program);
       this._scheduler.run();
+    },
+
+    _passingMemory: function (callback) {
+      return function () {
+        var result;
+        if (typeof callback === 'function') {
+          result = callback(this._mem, this._memoryMap);
+        }
+        return result;
+      };
+    },
+
+    _schedule: function (baton) {
+      var name = '_' + baton.type;
+      if (!(name in this)) {
+        throw Error('Unknown execution message: ' + baton.type);
+      }
+      return this[name](baton);
+    },
+
+    _debug: function (baton) {
+      return this._ondebug();
+    },
+
+    _newprocess: function (baton) {
+      var name = baton.processName;
+      var process = this._processMap['process_' + name];
+      this._scheduler.add(process);
+    },
+
+    _end: function (baton) {
+      this._scheduler.deleteCurrent();
     }
   };
 
-  function Baton(type, data) {
-    data = data || {};
-    this.type = type;
-    Object.keys(data).forEach(function (key) {
-      this[key] = data[key];
-    }.bind(this));
-  }
-
   return {
     Runtime: Runtime,
-    Baton: Baton
+    Baton: scheduler.Baton
   };
 });

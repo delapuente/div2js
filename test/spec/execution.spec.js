@@ -73,8 +73,10 @@ define([
     it('A program calling DEBUG twice, yields to debug, resumes and finishes',
     function () {
       var program;
+      var debugSpy = sinon.spy(function () {
+        program.ondebug = secondSpy;
+      });
       var secondSpy = sinon.spy();
-      var debugSpy = sinon.spy(function () { program.ondebug = secondSpy; });
       return load('debug-resume.prg')
         .then(function (prg) {
           program = prg;
@@ -96,10 +98,15 @@ define([
         .then(function (program) {
           return new Promise(function (fulfil) {
             var results = [];
+            var expected = [];
             program.ondebug = withDebugSession(function (session) {
               results.push(session.seek(session.symbols.G_TEXT_Z).value);
+              expected.push(expected.length + 1);
             });
-            program.onfinished = fulfil;
+            program.onfinished = function () {
+              expect(results).to.deep.equal(expected);
+              fulfil();
+            };
             program.run();
           });
         });
@@ -107,6 +114,7 @@ define([
 
   });
 
+  // TODO: This is currently useless and totally WIP.
   describe('Memory state while running transpiled programs', function () {
 
     beforeEach(function () {
