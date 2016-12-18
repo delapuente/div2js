@@ -5,6 +5,9 @@ define([
 ], function (div2lang) {
   'use strict';
 
+  div2lang.yy = div2lang.yy || {};
+  div2lang.yy.parseError = div2lang.parseError;
+
   describe('DIV2 parser', function () {
 
     var parser = div2lang;
@@ -47,7 +50,9 @@ define([
       'return-expression.prg',
       'operators.prg',
       'debug.prg',
-      'process.prg'
+      'process.prg',
+      'expression.prg',
+      'parenthesised-expression.prg'
     ];
 
     programs.forEach(function (programName) {

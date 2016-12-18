@@ -75,6 +75,10 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "<<="                                      { return '<<='; }
 ">>="                                      { return '>>='; }
 
+/* priority 6 (should be declared here to not conflict with > and < */
+">>"                                       { return '>>'; }
+"<<"                                       { return '<<'; }
+
 /* priority 8 */
 "=="                                       { return '=='; }
 ">="                                       { return '>='; }
@@ -94,10 +98,6 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "XOR"                                      { return '^^'; }
 "^^"                                       { return '^^'; }
 "^"                                        { return '^'; }
-
-/* priority 6 */
-">>"                                       { return '>>'; }
-"<<"                                       { return '<<'; }
 
 /* priority 2 (should be declared here to not conflict with + and - */
 "++"                                       { return '++'; }
@@ -144,7 +144,7 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 // TODO: rewrite process_list to be optional
 translation_unit
   : program EOF
-    { 
+    {
       $$ = {
         type: "Unit",
         program: $1,
@@ -280,7 +280,7 @@ declaration
   ;
 
 type
-  : INT_POINTER 
+  : INT_POINTER
     { $$ = "int_pointer"; }
   | INT
     { $$ = "int"; }
@@ -527,7 +527,7 @@ group_of_sentences_for_repeat
         body: []
       };
     }
-  | sentence_list until_condition 
+  | sentence_list until_condition
     {
       $$ = {
         test: $2,
@@ -629,7 +629,7 @@ return_sentence
     {
       $$ = {
         type: "ReturnSentence",
-        argument: null 
+        argument: null
       };
     }
   | RETURN '(' expression ')'
@@ -703,8 +703,24 @@ primary_expression
 postfix_expression
 	: primary_expression
 	| postfix_expression '[' expression ']'
+    {
+      $$ = {
+        type: "MemberExpression",
+        computed: true,
+        structure: $1,
+        property: $3
+      };
+    }
 	| call_expression
 	| postfix_expression '.' id
+    {
+      $$ = {
+        type: "MemberExpression",
+        computed: false,
+        structure: $1,
+        property: $3
+      };
+    }
 	| postfix_expression update_operator
     {
       $$ = {
@@ -747,6 +763,13 @@ unary_expression
       };
     }
 	| unary_operator unary_expression
+    {
+      $$ = {
+        type: "UnaryExpression",
+        operator: $1,
+        argument: $2
+      };
+    }
 	;
 
 update_operator
@@ -764,58 +787,102 @@ unary_operator
 
 multiplicative_expression
 	: unary_expression
-  | multiplicative_expression '*' unary_expression
-	| multiplicative_expression '/' unary_expression
-	| multiplicative_expression '%' unary_expression
+  | multiplicative_expression multiplicative_operator unary_expression
+    {
+      $$ = {
+        type: "BinaryExpression",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
 	;
+
+multiplicative_operator
+  : '*'
+  | '/'
+  | '%'
+  ;
 
 additive_expression
 	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
+	| additive_expression additive_operator multiplicative_expression
+    {
+      $$ = {
+        type: "BinaryExpression",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
 	;
+
+additive_operator
+  : '+'
+  | '-'
+  ;
 
 shift_expression
 	: additive_expression
-	| shift_expression '<<' additive_expression
-	| shift_expression '>>' additive_expression
+	| shift_expression shift_operator additive_expression
+    {
+      $$ = {
+        type: "BinaryExpression",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
+	;
+
+shift_operator
+  : '<<'
+  | '>>'
+  ;
+
+logical_expression
+	: shift_expression
+	| logical_expression logical_operator shift_expression
+    {
+      $$ = {
+        type: "LogicalExpression",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
+	;
+
+logical_operator
+	: '||',
+  | '&&',
+  | '^'
 	;
 
 relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression '<=' shift_expression
-	| relational_expression '>=' shift_expression
+	: logical_expression
+	| relational_expression relational_operator logical_expression
+    {
+      $$ = {
+        type: "RelationalExpression",
+        operator: $2,
+        left: $1,
+        right: $3
+      };
+    }
 	;
 
-equality_expression
-	: relational_expression
-	| equality_expression '==' relational_expression
-	| equality_expression '!=' relational_expression
-	;
-
-and_expression
-	: equality_expression
-	| and_expression '&&' equality_expression
-	;
-
-exclusive_or_expression
-	: and_expression
-	| exclusive_or_expression '^' and_expression
-	;
-
-inclusive_or_expression
-	: exclusive_or_expression
-	| inclusive_or_expression '||' exclusive_or_expression
-	;
-
-conditional_expression
-	: inclusive_or_expression
-	;
+relational_operator
+  : '<',
+  | '>',
+  | '<=',
+  | '>='
+  | '=='
+  | '!='
+  ;
 
 assignment_expression
-	: conditional_expression
+	: relational_expression
 	| unary_expression assignment_operator assignment_expression
     {
       $$ = {

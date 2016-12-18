@@ -2,7 +2,7 @@ PROGRAM test;
 BEGIN
   text_z = 1;
   DEBUG;
-  a();
+  a() + a();
   DEBUG;
   text_z = 3;
   DEBUG;
