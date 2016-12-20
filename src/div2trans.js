@@ -27,6 +27,31 @@ define([
     );
   };
 
+  translators.RelationalExpression = translators.BinaryExpression;
+
+  translators.LogicalExpression = function (divLogical, context) {
+    var logicalFunction;
+    switch (divLogical.operator) {
+      case '&':
+      case '&&':
+        logicalFunction = '__and';
+        break;
+      case '||':
+        logicalFunction = '__or';
+        break;
+      case '^':
+      case '^^':
+        logicalFunction = '__xor';
+        break;
+      default:
+        throw new Error('Logical operator unknown: ' + divLogical.operator);
+    }
+    return new t.callWith(logicalFunction, [
+        translate(divLogical.left, context),
+        translate(divLogical.right, context)
+    ]);
+  };
+
   translators.CallExpression = function (divCall, context) {
     var parameters = new ast.ArrayExpression(
       divCall.arguments.map(function (arg) {
