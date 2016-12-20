@@ -1,0 +1,88 @@
+{
+  "type": "WhileStatement",
+  "test": {
+    "type": "Literal",
+    "value": true,
+    "raw": "true"
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [{
+      "type": "SwitchStatement",
+      "discriminant": {
+        "type": "MemberExpression",
+        "computed": false,
+        "object": {
+          "type": "Identifier",
+          "name": "exec"
+        },
+        "property": {
+          "type": "Identifier",
+          "name": "pc"
+        }
+      },
+      "cases": [{
+        "type": "SwitchCase",
+        "test": {
+          "type": "Literal",
+          "value": 1,
+          "raw": "1"
+        },
+        "consequent": [{
+          "type": "ExpressionStatement",
+          "expression": {
+            "type": "AssignmentExpression",
+            "operator": "=",
+            "left": {
+              "type": "MemberExpression",
+              "computed": true,
+              "object": {
+                "type": "Identifier",
+                "name": "mem"
+              },
+              "property": {
+                "type": "BinaryExpression",
+                "operator": "+",
+                "left": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "exec"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "base"
+                    }
+                  },
+                  "right": {
+                    "type": "Identifier",
+                    "name": "P_OFFSET"
+                  }
+                },
+                "right": {
+                  "type": "Identifier",
+                  "name": "a"
+                }
+              }
+            },
+            "right": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            }
+          }
+        }, {
+          "type": "ReturnStatement",
+          "argument": {
+            "type": "Identifier",
+            "name": "__yieldEnd"
+          }
+        }]
+      }]
+    }]
+  }
+}

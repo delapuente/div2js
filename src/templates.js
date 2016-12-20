@@ -138,30 +138,41 @@ define(['ast'], function (ast) {
     },
 
     memoryGlobal: function (name) {
-      return this._memory(name, this._globalAddress(name));
+      return this._memory(this._globalAddress(name));
     },
 
     //TODO: Wrong, implement as mem[exec.local_base + L_NAME]
     memoryLocal: function (name) {
-      return this._memory(name, new ast.Identifier(name));
+      return this._memory(new ast.Identifier(name));
     },
 
-    //TODO: Wrong, implement as mem[exec.local_base + name]
     memoryPrivate: function (name) {
-      return this.memoryLocal(name);
+      return this._memory(this._privateAddress(name));
     },
 
-    _memory: function (name, index) {
+    _memory: function (index) {
       return new ast.MemberExpression(new ast.Identifier('mem'), index, true);
     },
 
     _globalAddress: function (name) {
-      return {
-        type: 'BinaryExpression',
-        operator: '+',
-        left: this.globalBaseIdentifier,
-        right: this.identifierForGlobal(name)
-      };
+      return new ast.BinaryExpression(
+        this.globalBaseIdentifier,
+        this.identifierForGlobal(name),
+        '+'
+      );
+    },
+
+    // XXX: Returns ast for `exec.base + P_OFFSET + <name>`
+    _privateAddress: function (name) {
+      return new ast.BinaryExpression(
+        new ast.BinaryExpression(
+          this._privateBase,
+          this.privateOffsetIdentifier,
+          '+'
+        ),
+        new ast.Identifier(name),
+        '+'
+      );
     },
 
     globalBaseIdentifier: new ast.Identifier('G_BASE'),
@@ -169,6 +180,14 @@ define(['ast'], function (ast) {
     identifierForGlobal: function (name) {
       return new ast.Identifier('G_' + name.toUpperCase());
     },
+
+    _privateBase: new ast.MemberExpression(
+      new ast.Identifier('exec'),
+      new ast.Identifier('base'),
+      false
+    ),
+
+    privateOffsetIdentifier: new ast.Identifier('P_OFFSET'),
 
     newRange: function (min, max) {
       return this.callWith('__range', [min, max]);

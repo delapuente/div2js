@@ -71,6 +71,7 @@ define([
     var programs = [
       'assignment.prg',
       'assignment-to-global.prg',
+      'assignment-to-private.prg',
       'empty-program.prg',
       'straight-block.prg',
       'while-block.prg',
@@ -103,7 +104,8 @@ define([
       'new-process-arguments.prg',
       'call-function.prg',
       'debug.prg',
-      'process.prg'
+      'process.prg',
+      'expression-priority.prg'
     ];
 
     programs.forEach(function (programName) {

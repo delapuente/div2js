@@ -61,8 +61,32 @@
                             "name": "mem"
                           },
                           "property": {
-                            "type": "Identifier",
-                            "name": "a"
+                            "type": "BinaryExpression",
+                            "operator": "+",
+                            "left": {
+                              "type": "BinaryExpression",
+                              "operator": "+",
+                              "left": {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "exec"
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "base"
+                                }
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "P_OFFSET"
+                              }
+                            },
+                            "right": {
+                              "type": "Identifier",
+                              "name": "a"
+                            }
                           }
                         },
                         {
@@ -73,8 +97,32 @@
                             "name": "mem"
                           },
                           "property": {
-                            "type": "Identifier",
-                            "name": "b"
+                            "type": "BinaryExpression",
+                            "operator": "+",
+                            "left": {
+                              "type": "BinaryExpression",
+                              "operator": "+",
+                              "left": {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "exec"
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "base"
+                                }
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "P_OFFSET"
+                              }
+                            },
+                            "right": {
+                              "type": "Identifier",
+                              "name": "b"
+                            }
                           }
                         },
                         {
@@ -85,8 +133,32 @@
                             "name": "mem"
                           },
                           "property": {
-                            "type": "Identifier",
-                            "name": "c"
+                            "type": "BinaryExpression",
+                            "operator": "+",
+                            "left": {
+                              "type": "BinaryExpression",
+                              "operator": "+",
+                              "left": {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "exec"
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "base"
+                                }
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "P_OFFSET"
+                              }
+                            },
+                            "right": {
+                              "type": "Identifier",
+                              "name": "c"
+                            }
                           }
                         }
                       ]
