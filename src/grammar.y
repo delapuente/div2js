@@ -95,6 +95,7 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "&"                                        { return '&'; }
 "OR"                                       { return '||'; }
 "||"                                       { return '||'; }
+"|"                                        { return '||'; }
 "XOR"                                      { return '^^'; }
 "^^"                                       { return '^^'; }
 "^"                                        { return '^'; }
