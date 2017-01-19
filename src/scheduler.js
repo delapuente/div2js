@@ -45,7 +45,8 @@ define([], function () {
     _newExecEnvironment: function (code) {
       return {
         pc: 1,
-        code: code
+        code: code,
+        retv: new ReturnValuesQueue()
       };
     },
 
@@ -123,6 +124,22 @@ define([], function () {
       this[key] = data[key];
     }.bind(this));
   }
+
+  function ReturnValuesQueue() {
+    this._data = [];
+  }
+
+  ReturnValuesQueue.prototype = {
+    constructor: ReturnValuesQueue,
+
+    enqueue: function (value) {
+      this._data.push(value);
+    },
+
+    dequeue: function () {
+      return this._data.shift();
+    }
+  };
 
   return {
     Scheduler: Scheduler,
