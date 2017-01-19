@@ -7,218 +7,205 @@
   },
   "body": {
     "type": "BlockStatement",
-    "body": [
-      {
-        "type": "SwitchStatement",
-        "discriminant": {
-          "type": "MemberExpression",
-          "computed": false,
-          "object": {
-            "type": "Identifier",
-            "name": "exec"
-          },
-          "property": {
-            "type": "Identifier",
-            "name": "pc"
-          }
+    "body": [{
+      "type": "SwitchStatement",
+      "discriminant": {
+        "type": "MemberExpression",
+        "computed": false,
+        "object": {
+          "type": "Identifier",
+          "name": "exec"
         },
-        "cases": [
-          {
-            "type": "SwitchCase",
-            "test": {
-              "type": "Literal",
-              "value": 1,
-              "raw": "1"
-            },
-            "consequent": [
-              {
-                "type": "ReturnStatement",
-                "argument": {
-                  "type": "CallExpression",
-                  "callee": {
-                    "type": "Identifier",
-                    "name": "__yieldNewProcess"
-                  },
-                  "arguments": [
-                    {
-                      "type": "Literal",
-                      "value": 2,
-                      "raw": "2"
-                    },
-                    {
-                      "type": "Literal",
-                      "value": "p1",
-                      "raw": "\"p1\""
-                    },
-                    {
-                      "type": "ArrayExpression",
-                      "elements": [
-                        {
-                          "type": "MemberExpression",
-                          "computed": true,
-                          "object": {
-                            "type": "Identifier",
-                            "name": "mem"
-                          },
-                          "property": {
-                            "type": "BinaryExpression",
-                            "operator": "+",
-                            "left": {
-                              "type": "BinaryExpression",
-                              "operator": "+",
-                              "left": {
-                                "type": "MemberExpression",
-                                "computed": false,
-                                "object": {
-                                  "type": "Identifier",
-                                  "name": "exec"
-                                },
-                                "property": {
-                                  "type": "Identifier",
-                                  "name": "base"
-                                }
-                              },
-                              "right": {
-                                "type": "Identifier",
-                                "name": "P_OFFSET"
-                              }
-                            },
-                            "right": {
+        "property": {
+          "type": "Identifier",
+          "name": "pc"
+        }
+      },
+      "cases": [{
+          "type": "SwitchCase",
+          "test": {
+            "type": "Literal",
+            "value": 1,
+            "raw": "1"
+          },
+          "consequent": [{
+            "type": "ReturnStatement",
+            "argument": {
+              "type": "CallExpression",
+              "callee": {
+                "type": "Identifier",
+                "name": "__yieldNewProcess"
+              },
+              "arguments": [{
+                  "type": "Literal",
+                  "value": 2,
+                  "raw": "2"
+                },
+                {
+                  "type": "Literal",
+                  "value": "p1",
+                  "raw": "\"p1\""
+                },
+                {
+                  "type": "ArrayExpression",
+                  "elements": [{
+                      "type": "MemberExpression",
+                      "computed": true,
+                      "object": {
+                        "type": "Identifier",
+                        "name": "mem"
+                      },
+                      "property": {
+                        "type": "BinaryExpression",
+                        "operator": "+",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "operator": "+",
+                          "left": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
                               "type": "Identifier",
-                              "name": "a"
+                              "name": "exec"
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "base"
                             }
+                          },
+                          "right": {
+                            "type": "Identifier",
+                            "name": "P_OFFSET"
                           }
                         },
-                        {
-                          "type": "MemberExpression",
-                          "computed": true,
-                          "object": {
-                            "type": "Identifier",
-                            "name": "mem"
-                          },
-                          "property": {
-                            "type": "BinaryExpression",
-                            "operator": "+",
-                            "left": {
-                              "type": "BinaryExpression",
-                              "operator": "+",
-                              "left": {
-                                "type": "MemberExpression",
-                                "computed": false,
-                                "object": {
-                                  "type": "Identifier",
-                                  "name": "exec"
-                                },
-                                "property": {
-                                  "type": "Identifier",
-                                  "name": "base"
-                                }
-                              },
-                              "right": {
-                                "type": "Identifier",
-                                "name": "P_OFFSET"
-                              }
-                            },
-                            "right": {
-                              "type": "Identifier",
-                              "name": "b"
-                            }
-                          }
-                        },
-                        {
-                          "type": "MemberExpression",
-                          "computed": true,
-                          "object": {
-                            "type": "Identifier",
-                            "name": "mem"
-                          },
-                          "property": {
-                            "type": "BinaryExpression",
-                            "operator": "+",
-                            "left": {
-                              "type": "BinaryExpression",
-                              "operator": "+",
-                              "left": {
-                                "type": "MemberExpression",
-                                "computed": false,
-                                "object": {
-                                  "type": "Identifier",
-                                  "name": "exec"
-                                },
-                                "property": {
-                                  "type": "Identifier",
-                                  "name": "base"
-                                }
-                              },
-                              "right": {
-                                "type": "Identifier",
-                                "name": "P_OFFSET"
-                              }
-                            },
-                            "right": {
-                              "type": "Identifier",
-                              "name": "c"
-                            }
-                          }
+                        "right": {
+                          "type": "Identifier",
+                          "name": "a"
                         }
-                      ]
+                      }
+                    },
+                    {
+                      "type": "MemberExpression",
+                      "computed": true,
+                      "object": {
+                        "type": "Identifier",
+                        "name": "mem"
+                      },
+                      "property": {
+                        "type": "BinaryExpression",
+                        "operator": "+",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "operator": "+",
+                          "left": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
+                              "type": "Identifier",
+                              "name": "exec"
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "base"
+                            }
+                          },
+                          "right": {
+                            "type": "Identifier",
+                            "name": "P_OFFSET"
+                          }
+                        },
+                        "right": {
+                          "type": "Identifier",
+                          "name": "b"
+                        }
+                      }
+                    },
+                    {
+                      "type": "MemberExpression",
+                      "computed": true,
+                      "object": {
+                        "type": "Identifier",
+                        "name": "mem"
+                      },
+                      "property": {
+                        "type": "BinaryExpression",
+                        "operator": "+",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "operator": "+",
+                          "left": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
+                              "type": "Identifier",
+                              "name": "exec"
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "base"
+                            }
+                          },
+                          "right": {
+                            "type": "Identifier",
+                            "name": "P_OFFSET"
+                          }
+                        },
+                        "right": {
+                          "type": "Identifier",
+                          "name": "c"
+                        }
+                      }
                     }
                   ]
                 }
-              }
-            ]
+              ]
+            }
+          }]
+        },
+        {
+          "type": "SwitchCase",
+          "test": {
+            "type": "Literal",
+            "value": 2,
+            "raw": "2"
           },
-          {
-            "type": "SwitchCase",
-            "test": {
-              "type": "Literal",
-              "value": 2,
-              "raw": "2"
-            },
-            "consequent": [
-              {
-                "type": "VariableDeclaration",
-                "declarations": [
-                  {
-                    "type": "VariableDeclarator",
-                    "id": {
+          "consequent": [{
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "CallExpression",
+                "callee": {
+                  "type": "MemberExpression",
+                  "computed": false,
+                  "object": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
                       "type": "Identifier",
-                      "name": "_pid_p1"
+                      "name": "exec"
                     },
-                    "init": {
-                      "type": "MemberExpression",
-                      "computed": false,
-                      "object": {
-                        "type": "Identifier",
-                        "name": "exec"
-                      },
-                      "property": {
-                        "type": "Identifier",
-                        "name": "retv"
-                      }
+                    "property": {
+                      "type": "Identifier",
+                      "name": "retv"
                     }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "dequeue"
                   }
-                ],
-                "kind": "var"
-              },
-              {
-                "type": "ExpressionStatement",
-                "expression": {
-                  "type": "Identifier",
-                  "name": "_pid_p1"
-                }
-              },
-              {
-                "type": "ReturnStatement",
-                "argument": {
-                  "type": "Identifier",
-                  "name": "__yieldEnd"
-                }
+                },
+                "arguments": []
               }
-            ]
-          }
-        ]
-      }
-    ]
+            },
+            {
+              "type": "ReturnStatement",
+              "argument": {
+                "type": "Identifier",
+                "name": "__yieldEnd"
+              }
+            }
+          ]
+        }
+      ]
+    }]
   }
 }

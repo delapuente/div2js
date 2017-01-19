@@ -47,7 +47,7 @@ define([], function () {
   function CallExpression(callee, args) {
     this.type = 'CallExpression';
     this.callee = callee;
-    this.arguments = args;
+    this.arguments = args || [];
   }
   inherits(CallExpression, Node);
 

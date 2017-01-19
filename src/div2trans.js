@@ -61,13 +61,12 @@ define([
     var id = divCall.callee.name;
     var isProcess = context.isProcess(id);
     var afterCallLabel = context.newLabel();
-    var auxName = (isProcess ? '_pid_' : '_result_') + id;
-    var callAux = context.newAux(auxName, t.returnValue);
     var callKind = isProcess ? 'newProcess' : 'callFunction';
+    // Isolate as a subexpression (impicitely stored in the results queue)
     context[callKind](afterCallLabel, id, parameters);
     context.label(afterCallLabel);
-    context.verbatim(callAux.declaration);
-    return callAux.identifier;
+    // Replace by the intermediate value (i.e. dequeue from the results queue)
+    return t.dequeueReturnValue;
   };
 
   translators.CloneSentence = function (divClone, context) {

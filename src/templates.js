@@ -283,10 +283,15 @@ define(['ast'], function (ast) {
       );
     },
 
-    get returnValue() {
-      return new ast.MemberExpression(
-        new ast.Identifier('exec'),
-        new ast.Identifier('retv')
+    get dequeueReturnValue() {
+      return new ast.CallExpression(
+        new ast.MemberExpression(
+          new ast.MemberExpression(
+            new ast.Identifier('exec'),
+            new ast.Identifier('retv')
+          ),
+          new ast.Identifier('dequeue')
+        )
       );
     },
 

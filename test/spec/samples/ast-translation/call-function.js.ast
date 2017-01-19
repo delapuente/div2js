@@ -68,15 +68,13 @@
             },
             "consequent": [
               {
-                "type": "VariableDeclaration",
-                "declarations": [
-                  {
-                    "type": "VariableDeclarator",
-                    "id": {
-                      "type": "Identifier",
-                      "name": "_result_f1"
-                    },
-                    "init": {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
                       "type": "MemberExpression",
                       "computed": false,
                       "object": {
@@ -87,16 +85,13 @@
                         "type": "Identifier",
                         "name": "retv"
                       }
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "dequeue"
                     }
-                  }
-                ],
-                "kind": "var"
-              },
-              {
-                "type": "ExpressionStatement",
-                "expression": {
-                  "type": "Identifier",
-                  "name": "_result_f1"
+                  },
+                  "arguments": []
                 }
               },
               {
