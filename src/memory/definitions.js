@@ -3,7 +3,7 @@ define([], function () {
 
   // The definition format of the memory map is described here.
   //
-  // In DIV, memory is a continuous and int (4 bytes) directionable only array
+  // In DIV, memory is a continuous and int (4 bytes) directionable-only array
   // of cells. Pointer arithmetic can not address sub-int-size (word or byte)
   // cells. DIV memory is 4 bytes aligned.
   //
@@ -26,7 +26,7 @@ define([], function () {
   // Based on docs, sources and experimental tests:
   // https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h
   // Experimental tests are besed on measuring offsets between pairs of
-  // variables or struct fields. It seems, there are "hidden" variables.
+  // variables or struct fields. It seems there are "hidden" variables.
   //
   // IMPORTANT!!
   // Ultimate values are put to preserve experimental offsets. When multiple

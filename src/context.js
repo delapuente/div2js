@@ -1,5 +1,5 @@
 
-define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
+define(['ast', 'templates'], function (ast, t) {
   'use strict';
 
   function Context(ctx) {
@@ -16,6 +16,14 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
 
   Context.prototype = {
     constructor: Context,
+
+    setMemoryMap: function (mmap) {
+      this._mmap = mmap;
+    },
+
+    getMemoryMap: function () {
+      return this._mmap;
+    },
 
     startLinearization: function () {
       this._auxNames = Object.create(null);
@@ -111,6 +119,7 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
 
     getScope: function (identifier) {
       var scope;
+      var symbols = this._mmap.symbols;
       if (symbols.isGlobal(identifier)) {
         scope = 'global';
       }
@@ -125,14 +134,6 @@ define(['symbols', 'ast', 'templates'], function (symbols, ast, t) {
         scope = 'private';
       }
       return scope;
-    },
-
-    getGlobalBaseDeclarator: function () {
-      return new ast.VariableDeclarator(
-        t.globalBaseIdentifier,
-        // TODO: Must take into account all DIV padding including program source
-        ast.Literal['for'](0)
-      );
     }
   };
 

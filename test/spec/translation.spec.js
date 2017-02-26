@@ -4,7 +4,7 @@ define([
   '/src/context.js',
   '/src/ast.js',
   '/src/templates.js',
-  '/src/symbols.js'
+  '/src/memory/symbols.js'
 ], function (ctx, ast, templates, symbols) {
   'use strict';
 
@@ -12,7 +12,7 @@ define([
     'context': ctx,
     'ast': ast,
     'templates': templates,
-    'symbols': symbols
+    'memory/symbols': symbols
   });
 
   describe('AST translation from DIV2 to JavaScript', function () {
@@ -72,7 +72,8 @@ define([
       'assignment.prg',
       'assignment-to-global.prg',
       'assignment-to-private.prg',
-      'empty-program.prg',
+      'empty-program.prg', // TODO: This case is special and we should implement
+                           //a less specific test, agnostic from the memory map.
       'straight-block.prg',
       'while-block.prg',
       'while-empty-block.prg',

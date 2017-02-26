@@ -3,8 +3,7 @@ define([
   'context',
   'ast',
   'templates',
-  'symbols'
-], function (ctx, ast, t, symbols) {
+], function (ctx, ast, t) {
   'use strict';
 
   var translators = Object.create(null);
@@ -83,29 +82,59 @@ define([
     var processesFunctions = divUnit.processes.map(function (divProcess) {
       return translate(divProcess, context);
     });
-    var memoryMap = getMemoryMap(context);
+    var globals = translateGlobals(context);
     return new ast.Program(
-      memoryMap
+      globals
       .concat([programFunction])
       .concat(processesFunctions)
     );
   };
 
-  function getMemoryMap(context) {
-    var offset = 0;
-    var globalBase = context.getGlobalBaseDeclarator();
-    var globalOffsets = symbols.wellKnownGlobals.map(function (symbol) {
-      // TODO: In the future, this will be a property of the symbol
-      var name = symbol;
-      var global = new ast.VariableDeclarator(
-        new t.identifierForGlobal(name),
-        new ast.Literal['for'](offset)
-      );
-      offset += 4; // TODO: Extract info from the symbol
-      return global;
-    });
+  //TODO: Will be generalized to tackle locals and privates.
+  function translateGlobals(context) {
+    var mmap = context.getMemoryMap();
+    var offset = mmap.GLOBAL_OFFSET;
+    var globalBase = new ast.VariableDeclarator(
+      t.globalBaseIdentifier,
+      ast.Literal['for'](offset)
+    );
+    var globalVars = getGlobalDefinitions(
+      [],
+      mmap.cells.globals,
+      mmap.ALIGNMENT
+    );
+
     // XXX: Notice this return a list of variable declarators.
-    return [new ast.VariableDeclaration([globalBase].concat(globalOffsets))];
+    return [new ast.VariableDeclaration([globalBase].concat(globalVars))];
+  }
+
+  function getGlobalDefinitions(prefixes, cells, alignment) {
+    var offset = 0;
+    var definitions = [];
+    for (var i = 0, cell; (cell = cells[i]); i++) {
+      prefixes.push(cell.name);
+      definitions.push(new ast.VariableDeclarator(
+        t.identifierForGlobal(prefixes),
+        ast.Literal['for'](offset)
+      ));
+      if (cell.type === 'struct') {
+        definitions = definitions.concat(
+          getGlobalDefinitions(prefixes, cell.fields, alignment)
+        );
+      }
+      prefixes.pop();
+      offset += cell.size / alignment;
+    }
+    return flat(definitions);
+
+    function flat(list) {
+      return list.reduce(function (flat, item) {
+        if (!Array.isArray(item)) {
+          item = [item];
+        }
+        return flat.concat(item);
+      }, []);
+    }
   }
 
   translators.Program = function (divProgram, context) {

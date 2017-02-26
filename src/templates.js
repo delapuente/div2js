@@ -177,8 +177,8 @@ define(['ast'], function (ast) {
 
     globalBaseIdentifier: new ast.Identifier('G_BASE'),
 
-    identifierForGlobal: function (name) {
-      return new ast.Identifier('G_' + name.toUpperCase());
+    identifierForGlobal: function (names) {
+      return new ast.Identifier(['G'].concat(names).join('_').toUpperCase());
     },
 
     _privateBase: new ast.MemberExpression(
