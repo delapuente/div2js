@@ -121,6 +121,12 @@ define([], function () {
   }
   inherits(MemberExpression, Node);
 
+  function ObjectExpression(properties) {
+    this.type = 'ObjectExpression';
+    this.properties = properties;
+  }
+  inherits(ObjectExpression, Node);
+
   function Program(body) {
     this.type = 'Program';
     this.body = body;
@@ -182,6 +188,47 @@ define([], function () {
     klass.prototype.constructor = klass;
   }
 
+  function fromJson(json) {
+    var type = typeof json;
+    var isJsonSerializable = ['function', 'undefined'].indexOf(type) === -1;
+    if (!isJsonSerializable) { return undefined; }
+    if (Array.isArray(json)) {
+      var elements = json.map(function (item) {
+        var value = fromJson(item);
+        if (typeof value === 'undefined') {
+          return new Literal(null);
+        }
+        return value;
+      });
+      return new ArrayExpression(elements);
+    }
+    else if (type === 'object') {
+      var properties = Object.keys(json)
+      .map(function (key) {
+        var value = fromJson(json[key]);
+        if (typeof value === 'undefined') {
+          return undefined;
+        }
+        return {
+          type: 'Property',
+          key: Literal['for'](key),
+          computed: false,
+          value: value,
+          kind: 'init',
+          method: false,
+          shorthand: false
+        };
+      })
+      .filter(function (property) {
+        return typeof property !== 'undefined';
+      });
+      return new ObjectExpression(properties);
+    }
+    else {
+      return Literal['for'](json);
+    }
+  }
+
   return {
     AssignmentExpression: AssignmentExpression,
     ArrayExpression: ArrayExpression,
@@ -196,6 +243,7 @@ define([], function () {
     Literal: Literal,
     LogicalExpression: LogicalExpression,
     MemberExpression: MemberExpression,
+    ObjectExpression: ObjectExpression,
     Program: Program,
     ReturnStatement: ReturnStatement,
     SwitchCase: SwitchCase,
@@ -203,6 +251,7 @@ define([], function () {
     UnaryExpression: UnaryExpression,
     VariableDeclaration: VariableDeclaration,
     VariableDeclarator: VariableDeclarator,
-    WhileStatement: WhileStatement
+    WhileStatement: WhileStatement,
+    fromJson: fromJson
   };
 });

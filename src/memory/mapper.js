@@ -10,7 +10,7 @@ define([], function () {
   //TODO: Perhaps we are lacking the concept of cell size or addressable word
   // as the minimum number of bytes addressable. In the case of DIV2, this
   // number is 4 which matches the ALIGNMENT.
-  
+
   MemoryMap.ALIGNMENT = 4; // 4 bytes
   MemoryMap.GLOBAL_OFFSET = 0;  // TODO: Must take into account all
                                 // DIV padding including program source
@@ -66,7 +66,17 @@ define([], function () {
     }
   };
 
+  MemoryMap.exportToJson = function (map) {
+    return map.symbols;
+  };
+
+  MemoryMap.importFromJson = function (json) {
+    return new MemoryMap(json);
+  };
+
   return {
-    MemoryMap: MemoryMap
+    MemoryMap: MemoryMap,
+    exportToJson: MemoryMap.exportToJson,
+    importFromJson: MemoryMap.importFromJson
   };
 });

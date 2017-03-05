@@ -95,11 +95,6 @@ define([
     var mmap = context.getMemoryMap();
     var alignment = mmap.constructor.ALIGNMENT;
     var offset = mmap.constructor.GLOBAL_OFFSET;
-    var globalSize = new ast.VariableDeclarator(
-      t.globalSizeIdentifier,
-      //TODO: Not sure if size should be divided by alignment or cell size.
-      ast.Literal['for'](mmap.globalSegmentSize / alignment)
-    );
     var globalBase = new ast.VariableDeclarator(
       t.globalBaseIdentifier,
       ast.Literal['for'](offset)
@@ -107,9 +102,7 @@ define([
     var globalVars = getGlobalDefinitions([], mmap.cells.globals, alignment);
 
     // XXX: Notice this return a list of variable declarators.
-    return [new ast.VariableDeclaration(
-      [globalSize, globalBase].concat(globalVars)
-    )];
+    return [new ast.VariableDeclaration([globalBase].concat(globalVars))];
   }
 
   function getGlobalDefinitions(prefixes, cells, alignment) {

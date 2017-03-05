@@ -1,13 +1,17 @@
 
-define(['scheduler'], function (scheduler) {
+define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
   'use strict';
 
+  var MemoryMap = mapper.MemoryMap;
+
+  //TODO: Runtime should be passed with a light version of the memory map,
+  // enough to be able of allocating the needed memory.
   function Runtime(processMap, memoryMap) {
     this._ondebug = null;
     this._onfinished = null;
     this._scheduler = null;
     this._processMap = processMap;
-    this._memoryMap = memoryMap;
+    this._memoryMap = new MemoryMap(memoryMap);
   }
 
   Runtime.prototype = {
@@ -32,9 +36,11 @@ define(['scheduler'], function (scheduler) {
     get ondebug() { return this._ondebug; },
 
     run: function () {
-      // TODO: Not sure if Intr32Array should be encapsulated and the cell size
+      // TODO: Not sure if Int32Array should be encapsulated and the cell size
       // passed as a part of the memory map.
-      this._mem = new Int32Array(this._memoryMap.G.G_SEGMENT_SIZE);
+      var alignment = MemoryMap.ALIGNMENT;
+      var globalSegmentSize = this._memoryMap.globalSegmentSize;
+      this._mem = new Int32Array(globalSegmentSize / alignment);
       this._scheduler = new scheduler.Scheduler(this._mem, {
         onyield: this._schedule.bind(this),
         onfinished: this.onfinished

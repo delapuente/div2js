@@ -3,8 +3,10 @@ define([
   'div2lang',
   'div2checker',
   'div2trans',
+  'ast',
+  'memory/mapper',
   'lib/escodegen'
-], function (parser, checker, translator, generator) {
+], function (parser, checker, translator, ast, mapper, generator) {
   'use strict';
 
   parser.yy = parser.yy || {};
@@ -14,9 +16,13 @@ define([
     var div2Ast = parser.parse(srcText);
     var context = checker.extractContext(div2Ast);
     var jsAst = translator.translate(div2Ast, context);
-    var memoryOffsetsAst = extractMemoryBindings(jsAst);
-    var memoryMapAst = generateMemoryMap(memoryOffsetsAst);
+    //TODO: When implementing non debug mode, the memory map can be omitted
+    // although segment sizes and other relevant runtime variables are still
+    // needed.
+    var mmap = context.getMemoryMap();
+    var memoryMapAst = generateMemoryMap(mmap);
     var processMapAst = generateProcessMap(jsAst);
+    var memoryOffsetsAst = extractMemoryBindings(jsAst);
     var wrappedAst = wrap(processMapAst, memoryOffsetsAst, memoryMapAst);
     var objText = generator.generate(wrappedAst);
     return objText;
@@ -28,67 +34,9 @@ define([
     });
   }
 
-  function generateMemoryMap(bindingsAst) {
-    var mapAst = {
-      type: 'ExpressionStatement',
-      expression: {
-        type: 'ObjectExpression',
-        properties: [
-          {
-            type: 'Property',
-            key: {
-              type: 'Identifier',
-              name: 'G'
-            },
-            computed: false,
-            value: {
-              type: 'ObjectExpression',
-              properties: []
-            },
-            kind: 'init',
-            method: false,
-            shorthand: false
-          },
-          {
-            type: 'Property',
-            key: {
-              type: 'Identifier',
-              name: 'L'
-            },
-            computed: false,
-            value: {
-              type: 'ObjectExpression',
-              properties: []
-            },
-            kind: 'init',
-            method: false,
-            shorthand: false
-          },
-          {
-            type: 'Property',
-            key: {
-              type: 'Identifier',
-              name: 'P'
-            },
-            computed: false,
-            value: {
-              type: 'ObjectExpression',
-              properties: []
-            },
-            kind: 'init',
-            method: false,
-            shorthand: false
-          },
-        ]
-      }
-    };
-    var globalBindingsAst = bindingsAst[0];
-    mapAst.expression.properties[0].value.properties =
-    globalBindingsAst.declarations
-    .map(function (offsetAst) {
-      return propertyEntry(offsetAst.id.name, offsetAst.init);
-    });
-    return mapAst;
+  function generateMemoryMap(mmap) {
+    var jsonMmap = mapper.exportToJson(mmap);
+    return new ast.ExpressionStatement(ast.fromJson(jsonMmap));
   }
 
   function generateProcessMap(ast) {

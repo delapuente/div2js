@@ -6,18 +6,6 @@
           "type": "VariableDeclarator",
           "id": {
             "type": "Identifier",
-            "name": "G_SEGMENT_SIZE"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 1,
-            "raw": "1"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
             "name": "G_BASE"
           },
           "init": {

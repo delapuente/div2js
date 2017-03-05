@@ -97,7 +97,9 @@ define([
             var results = [];
             var expected = [];
             program.ondebug = withDebugSession(function (session) {
-              results.push(session.seek(session.symbols.G_TEXT_Z).value);
+              results.push(
+                session.seek(session.offset('globals', 'text_z')).value
+              );
               expected.push(expected.length + 1);
             });
             program.onfinished = function () {
