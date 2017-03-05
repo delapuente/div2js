@@ -4,20 +4,27 @@ define([
   '/src/context.js',
   '/src/ast.js',
   '/src/templates.js',
-  '/src/memory/symbols.js'
-], function (ctx, ast, templates, symbols) {
+  '/src/memory/mapper.js'
+], function (ctx, ast, templates, mapper) {
   'use strict';
+
+  var testDefinitions = {
+    wellKnownGlobals: [
+      "text_z"
+    ],
+    wellKnownLocals: []
+  };
 
   var context = newContext({
     'context': ctx,
     'ast': ast,
     'templates': templates,
-    'memory/symbols': symbols
+    'memory/definitions': testDefinitions
   });
 
   describe('AST translation from DIV2 to JavaScript', function () {
 
-    var translate;
+    var translate, symbols;
 
     function setupTranslationContext() {
       var prototype = ctx.Context.prototype;
@@ -58,7 +65,11 @@ define([
 
     beforeEach(function (done) {
       setupTranslationContext();
-      context(['/src/div2trans.js'], function (trans) {
+      context([
+        '/src/div2trans.js',
+        '/src/memory/symbols.js'
+      ], function (trans, syms) {
+        symbols = syms;
         translate = trans.translate;
         done();
       });
@@ -121,7 +132,9 @@ define([
           get(targetAst)
         ])
         .then(function (abstractSyntaxTrees) {
-          ast = translate(abstractSyntaxTrees[0], new ctx.Context());
+          var translationContext = new ctx.Context();
+          translationContext.setMemoryMap(new mapper.MemoryMap(symbols));
+          ast = translate(abstractSyntaxTrees[0], translationContext);
           expectedAst = abstractSyntaxTrees[1];
           expect(ast.pojo()).to.be.deep.equal(expectedAst);
         })

@@ -175,6 +175,8 @@ define(['ast'], function (ast) {
       );
     },
 
+    globalSizeIdentifier: new ast.Identifier('G_SEGMENT_SIZE'),
+
     globalBaseIdentifier: new ast.Identifier('G_BASE'),
 
     identifierForGlobal: function (names) {

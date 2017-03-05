@@ -10,6 +10,7 @@ define(['memory/definitions'], function (definitions) {
     if (!normalized.name) {
       throw new Error('Symbol has no name!');
     }
+    normalized.hidden = symbol.hidden || false;
     normalized.type = (symbol.type || 'int').toLowerCase();
     normalized.length = symbol.length || 1;
     if (symbol.type === 'struct') {

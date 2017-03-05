@@ -93,36 +93,42 @@ define([
   //TODO: Will be generalized to tackle locals and privates.
   function translateGlobals(context) {
     var mmap = context.getMemoryMap();
-    var offset = mmap.GLOBAL_OFFSET;
+    var alignment = mmap.constructor.ALIGNMENT;
+    var offset = mmap.constructor.GLOBAL_OFFSET;
+    var globalSize = new ast.VariableDeclarator(
+      t.globalSizeIdentifier,
+      //TODO: Not sure if size should be divided by alignment or cell size.
+      ast.Literal['for'](mmap.globalSegmentSize / alignment)
+    );
     var globalBase = new ast.VariableDeclarator(
       t.globalBaseIdentifier,
       ast.Literal['for'](offset)
     );
-    var globalVars = getGlobalDefinitions(
-      [],
-      mmap.cells.globals,
-      mmap.ALIGNMENT
-    );
+    var globalVars = getGlobalDefinitions([], mmap.cells.globals, alignment);
 
     // XXX: Notice this return a list of variable declarators.
-    return [new ast.VariableDeclaration([globalBase].concat(globalVars))];
+    return [new ast.VariableDeclaration(
+      [globalSize, globalBase].concat(globalVars)
+    )];
   }
 
   function getGlobalDefinitions(prefixes, cells, alignment) {
     var offset = 0;
     var definitions = [];
     for (var i = 0, cell; (cell = cells[i]); i++) {
-      prefixes.push(cell.name);
-      definitions.push(new ast.VariableDeclarator(
-        t.identifierForGlobal(prefixes),
-        ast.Literal['for'](offset)
-      ));
-      if (cell.type === 'struct') {
-        definitions = definitions.concat(
-          getGlobalDefinitions(prefixes, cell.fields, alignment)
-        );
+      if (!cell.hidden) {
+        prefixes.push(cell.name);
+        definitions.push(new ast.VariableDeclarator(
+          t.identifierForGlobal(prefixes),
+          ast.Literal['for'](offset)
+        ));
+        if (cell.type === 'struct') {
+          definitions = definitions.concat(
+            getGlobalDefinitions(prefixes, cell.fields, alignment)
+          );
+        }
+        prefixes.pop();
       }
-      prefixes.pop();
       offset += cell.size / alignment;
     }
     return flat(definitions);

@@ -7,9 +7,6 @@ define([
 ], function (compiler, loader, dbgr) {
   'use strict';
 
-  var context = newContext({
-  });
-
   function samplePath(name) {
     return '/test/spec/samples/execution/' + name;
   }

@@ -32,7 +32,9 @@ define(['scheduler'], function (scheduler) {
     get ondebug() { return this._ondebug; },
 
     run: function () {
-      this._mem = new Int32Array(1);
+      // TODO: Not sure if Intr32Array should be encapsulated and the cell size
+      // passed as a part of the memory map.
+      this._mem = new Int32Array(this._memoryMap.G.G_SEGMENT_SIZE);
       this._scheduler = new scheduler.Scheduler(this._mem, {
         onyield: this._schedule.bind(this),
         onfinished: this.onfinished

@@ -1,9 +1,19 @@
 {
   "type": "Program",
-  "body": [
-    {
+  "body": [{
       "type": "VariableDeclaration",
-      "declarations": [
+      "declarations": [{
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "G_SEGMENT_SIZE"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 1,
+            "raw": "1"
+          }
+        },
         {
           "type": "VariableDeclarator",
           "id": {
@@ -20,348 +30,12 @@
           "type": "VariableDeclarator",
           "id": {
             "type": "Identifier",
-            "name": "G_MOUSE"
+            "name": "G_TEXT_Z"
           },
           "init": {
             "type": "Literal",
             "value": 0,
             "raw": "0"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_SCROLL"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 1,
-            "raw": "1"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_M7"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 2,
-            "raw": "2"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_JOY"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 3,
-            "raw": "3"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_SETUP"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 4,
-            "raw": "4"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_NET"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 5,
-            "raw": "5"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_M8"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 6,
-            "raw": "6"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_DIRINFO"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 7,
-            "raw": "7"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_FILEINFO"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 8,
-            "raw": "8"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_VIDEO_MODES"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 9,
-            "raw": "9"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_TIMER"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 10,
-            "raw": "10"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_TEXT_Z"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 11,
-            "raw": "11"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_FADING"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 12,
-            "raw": "12"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_SHIFT_STATUS"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 13,
-            "raw": "13"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_ASCII"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 14,
-            "raw": "14"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_SCAN_CODE"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 15,
-            "raw": "15"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_JOY_FILTER"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 16,
-            "raw": "16"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_JOY_STATUS"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 17,
-            "raw": "17"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_RESTORE_TYPE"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 18,
-            "raw": "18"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_DUMP_TYPE"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 19,
-            "raw": "19"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_MAX_PROCESS_TIME"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 20,
-            "raw": "20"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_FPS"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 21,
-            "raw": "21"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_ARGC"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 22,
-            "raw": "22"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_ARGV"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 23,
-            "raw": "23"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_CHANNEL"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 24,
-            "raw": "24"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_VSYNC"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 25,
-            "raw": "25"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_DRAW_Z"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 26,
-            "raw": "26"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_NUM_VIDEO_MODES"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 27,
-            "raw": "27"
-          }
-        },
-        {
-          "type": "VariableDeclarator",
-          "id": {
-            "type": "Identifier",
-            "name": "G_UNIT_SIZE"
-          },
-          "init": {
-            "type": "Literal",
-            "value": 28,
-            "raw": "28"
           }
         }
       ],
@@ -373,8 +47,7 @@
         "type": "Identifier",
         "name": "program_test"
       },
-      "params": [
-        {
+      "params": [{
           "type": "Identifier",
           "name": "mem"
         },
@@ -390,55 +63,47 @@
       "defaults": [],
       "body": {
         "type": "BlockStatement",
-        "body": [
-          {
-            "type": "WhileStatement",
-            "test": {
-              "type": "Literal",
-              "value": true,
-              "raw": "true"
-            },
-            "body": {
-              "type": "BlockStatement",
-              "body": [
-                {
-                  "type": "SwitchStatement",
-                  "discriminant": {
-                    "type": "MemberExpression",
-                    "computed": false,
-                    "object": {
-                      "type": "Identifier",
-                      "name": "exec"
-                    },
-                    "property": {
-                      "type": "Identifier",
-                      "name": "pc"
-                    }
-                  },
-                  "cases": [
-                    {
-                      "type": "SwitchCase",
-                      "test": {
-                        "type": "Literal",
-                        "value": 1,
-                        "raw": "1"
-                      },
-                      "consequent": [
-                        {
-                          "type": "ReturnStatement",
-                          "argument": {
-                            "type": "Identifier",
-                            "name": "__yieldEnd"
-                          }
-                        }
-                      ]
-                    }
-                  ]
+        "body": [{
+          "type": "WhileStatement",
+          "test": {
+            "type": "Literal",
+            "value": true,
+            "raw": "true"
+          },
+          "body": {
+            "type": "BlockStatement",
+            "body": [{
+              "type": "SwitchStatement",
+              "discriminant": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": {
+                  "type": "Identifier",
+                  "name": "exec"
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "pc"
                 }
-              ]
-            }
+              },
+              "cases": [{
+                "type": "SwitchCase",
+                "test": {
+                  "type": "Literal",
+                  "value": 1,
+                  "raw": "1"
+                },
+                "consequent": [{
+                  "type": "ReturnStatement",
+                  "argument": {
+                    "type": "Identifier",
+                    "name": "__yieldEnd"
+                  }
+                }]
+              }]
+            }]
           }
-        ]
+        }]
       },
       "generator": false,
       "expression": false

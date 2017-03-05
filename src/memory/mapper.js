@@ -7,18 +7,35 @@ define([], function () {
     this._buildMap();
   }
 
+  //TODO: Perhaps we are lacking the concept of cell size or addressable word
+  // as the minimum number of bytes addressable. In the case of DIV2, this
+  // number is 4 which matches the ALIGNMENT.
+  
+  MemoryMap.ALIGNMENT = 4; // 4 bytes
+  MemoryMap.GLOBAL_OFFSET = 0;  // TODO: Must take into account all
+                                // DIV padding including program source
+  MemoryMap.SIZE_IN_BYTES = {
+    'byte': 1,
+    'word': 2,
+    'int': 4
+  };
+
   MemoryMap.prototype = {
     constructor: MemoryMap,
 
-    ALIGNMENT: 4, // 4 bytes
+    get globalSegmentSize() {
+      return this._getSegmentSize('globals');
+    },
 
-    // TODO: Must take into account all DIV padding including program source
-    GLOBAL_OFFSET: 0,
+    get localSegmentSize() {
+      return this._getSegmentSize('locals');
+    },
 
-    SIZE_IN_BYTES: {
-      'byte': 1,
-      'word': 2,
-      'int': 4
+    _getSegmentSize: function (segment) {
+      var cells = this.cells[segment];
+      return cells.reduce(function (total, cell) {
+        return total + cell.size;
+      }, 0);
     },
 
     _buildMap: function () {
@@ -38,7 +55,7 @@ define([], function () {
     _sizeOf: function (symbol) {
       var individualSize;
       if (symbol.type !== 'struct') {
-        individualSize = this.SIZE_IN_BYTES[symbol.type];
+        individualSize = MemoryMap.SIZE_IN_BYTES[symbol.type];
       }
       else {
         individualSize = symbol.fields.reduce(function (partial, field) {
