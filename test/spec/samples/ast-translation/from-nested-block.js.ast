@@ -44,8 +44,24 @@
                       "name": "mem"
                     },
                     "property": {
-                      "type": "Identifier",
-                      "name": "x"
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                          "type": "Identifier",
+                          "name": "exec"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "base"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "L_X"
+                      }
                     }
                   },
                   "right": {
@@ -102,8 +118,24 @@
                               "name": "mem"
                             },
                             "property": {
-                              "type": "Identifier",
-                              "name": "x"
+                              "type": "BinaryExpression",
+                              "operator": "+",
+                              "left": {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "exec"
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "base"
+                                }
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "L_X"
+                              }
                             }
                           },
                           "right": {
@@ -154,8 +186,24 @@
                       "name": "mem"
                     },
                     "property": {
-                      "type": "Identifier",
-                      "name": "y"
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                          "type": "Identifier",
+                          "name": "exec"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "base"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "L_Y"
+                      }
                     }
                   },
                   "right": {
@@ -212,8 +260,24 @@
                               "name": "mem"
                             },
                             "property": {
-                              "type": "Identifier",
-                              "name": "y"
+                              "type": "BinaryExpression",
+                              "operator": "+",
+                              "left": {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                  "type": "Identifier",
+                                  "name": "exec"
+                                },
+                                "property": {
+                                  "type": "Identifier",
+                                  "name": "base"
+                                }
+                              },
+                              "right": {
+                                "type": "Identifier",
+                                "name": "L_Y"
+                              }
                             }
                           },
                           "right": {
@@ -287,8 +351,24 @@
                       "name": "mem"
                     },
                     "property": {
-                      "type": "Identifier",
-                      "name": "y"
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                          "type": "Identifier",
+                          "name": "exec"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "base"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "L_Y"
+                      }
                     }
                   },
                   "right": {
@@ -354,8 +434,24 @@
                       "name": "mem"
                     },
                     "property": {
-                      "type": "Identifier",
-                      "name": "x"
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                          "type": "Identifier",
+                          "name": "exec"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "base"
+                        }
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "L_X"
+                      }
                     }
                   },
                   "right": {

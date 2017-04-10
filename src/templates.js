@@ -141,9 +141,8 @@ define(['ast'], function (ast) {
       return this._memory(this._globalAddress(name));
     },
 
-    //TODO: Wrong, implement as mem[exec.local_base + L_NAME]
     memoryLocal: function (name) {
-      return this._memory(new ast.Identifier(name));
+      return this._memory(this._localAddress(name));
     },
 
     memoryPrivate: function (name) {
@@ -162,11 +161,20 @@ define(['ast'], function (ast) {
       );
     },
 
+    // XXX: Returns ast for `exec.base + L_<NAME>`
+    _localAddress: function (name) {
+      return new ast.BinaryExpression(
+        this._localBase,
+        this.identifierForLocal(name),
+        '+'
+      );
+    },
+
     // XXX: Returns ast for `exec.base + P_OFFSET + <name>`
     _privateAddress: function (name) {
       return new ast.BinaryExpression(
         new ast.BinaryExpression(
-          this._privateBase,
+          this._localBase,
           this.privateOffsetIdentifier,
           '+'
         ),
@@ -183,7 +191,11 @@ define(['ast'], function (ast) {
       return new ast.Identifier(['G'].concat(names).join('_').toUpperCase());
     },
 
-    _privateBase: new ast.MemberExpression(
+    identifierForLocal: function (names) {
+      return new ast.Identifier(['L'].concat(names).join('_').toUpperCase());
+    },
+
+    _localBase: new ast.MemberExpression(
       new ast.Identifier('exec'),
       new ast.Identifier('base'),
       false
