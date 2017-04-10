@@ -88,6 +88,23 @@ define([
         });
     });
 
+    it('Each process sets its own locals', function () {
+      return load('locals.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            program.onfinished = withDebugSession(function (session) {
+              var aX = session.getProcess({ index: 0 }).local('x').value;
+              var bX = session.getProcess({ index: 1 }).local('x').value;
+              var cX = session.getProcess({ index: 2 }).local('x').value;
+              expect(aX).to.be(1);
+              expect(bX).to.be(2);
+              expect(cX).to.be(3);
+              fulfil();
+            });
+            program.run();
+          });
+        });
+    });
 
     it('A program creating a process, yields to process then returns ' +
        'to main program, then finishes', function () {
