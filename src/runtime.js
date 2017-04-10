@@ -3,22 +3,25 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
   'use strict';
 
   var MemoryMap = mapper.MemoryMap;
+  var MemoryBrowser = mapper.MemoryBrowser;
 
   //TODO: Runtime should be passed with a light version of the memory map,
   // enough to be able of allocating the needed memory.
-  function Runtime(processMap, memoryMap) {
+  function Runtime(processMap, memorySymbols) {
     this._ondebug = null;
     this._onfinished = null;
     this._scheduler = null;
     this._processMap = processMap;
-    this._memoryMap = new MemoryMap(memoryMap);
+    this._memoryMap = new MemoryMap(memorySymbols);
+    this._allocateMemory();
+    this._setupScheduler();
   }
 
   Runtime.prototype = {
     constructor: Runtime,
 
     set onfinished(callback) {
-      this._onfinished = this._passingMemory(callback);
+      this._onfinished = callback;
       if (this._scheduler instanceof scheduler.Scheduler) {
         this._scheduler.onfinished = this._onfinished;
       }
@@ -27,7 +30,7 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     get onfinished() { return this._onfinished; },
 
     set ondebug(callback) {
-      this._ondebug = this._passingMemory(callback);
+      this._ondebug = callback;
       if (this._scheduler instanceof scheduler.Scheduler) {
         this._scheduler.ondebug = this._ondebug;
       }
@@ -36,27 +39,28 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     get ondebug() { return this._ondebug; },
 
     run: function () {
+      this._scheduler.run();
+    },
+
+    _allocateMemory: function () {
       // TODO: Not sure if Int32Array should be encapsulated and the cell size
       // passed as a part of the memory map.
       var alignment = MemoryMap.ALIGNMENT;
       var globalSegmentSize = this._memoryMap.globalSegmentSize;
-      this._mem = new Int32Array(globalSegmentSize / alignment);
+      var localSegmentSize = this._memoryMap.localSegmentSize;
+      // TODO: It remains to add max private size to the multiplication.
+      var processPoolSize = this._memoryMap.maxProcess * localSegmentSize;
+      var memorySize = globalSegmentSize + processPoolSize;
+      this._mem = new Int32Array(memorySize / alignment);
+      this.memoryBrowser = new MemoryBrowser(this._mem, this._memoryMap);
+    },
+
+    _setupScheduler: function () {
       this._scheduler = new scheduler.Scheduler(this._mem, {
         onyield: this._schedule.bind(this),
         onfinished: this.onfinished
       });
       this._scheduler.add(this._processMap.program);
-      this._scheduler.run();
-    },
-
-    _passingMemory: function (callback) {
-      return function () {
-        var result;
-        if (typeof callback === 'function') {
-          result = callback(this._mem, this._memoryMap);
-        }
-        return result;
-      };
     },
 
     _schedule: function (baton) {

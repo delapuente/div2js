@@ -34,8 +34,8 @@ define([
   }
 
   function withDebugSession(callback) {
-    return function (mem, mmap) {
-      var session = dbgr.debug(mmap, mem);
+    return function () {
+      var session = dbgr.debug(this);
       callback(session);
     };
   }
@@ -98,7 +98,7 @@ define([
             var expected = [];
             program.ondebug = withDebugSession(function (session) {
               results.push(
-                session.seek(session.offset('globals', 'text_z')).value
+                session.get('globals', 'text_z').value
               );
               expected.push(expected.length + 1);
             });

@@ -2,6 +2,14 @@
 define([], function () {
 
   function MemoryMap(symbols) {
+    // TODO: In DIV, the binary has process pool and globals in the data segment
+    // but in this implementation we are allocating that memory at the beginning
+    // so we need either the different segment sizes (for debugging) or the
+    // complete memory size (regular execution).
+    // TODO: consider embedding an initial memory dump in the form of a base64
+    // blob. Heavy "binaries".
+    this.maxProcess = 5919; // XXX: This is the max process count for empty
+                            // programs. Still trying to figure out why.
     this.symbols = symbols;
     this.cells = Object.create(null);
     this._buildMap();
@@ -74,8 +82,65 @@ define([], function () {
     return new MemoryMap(json);
   };
 
+  // XXX: Consider to move to its own module.
+  function MemoryBrowser(mem, map) {
+    this._mem = mem;
+    this._map = map;
+  }
+
+  MemoryBrowser.prototype = {
+    constructor: MemoryBrowser,
+
+    global: function (name) {
+      return this.seek(this.offset('global', name));
+    },
+
+    local: function (name, base) {
+      return this.seek(this.offset('locals', name, base));
+    },
+
+    //TODO: Add support for structs
+    offset: function (segment, name, base) {
+      segment = segment.toLowerCase()
+      base = base || 0;
+      //TODO: It lacks of LOCAL_OFFSET;
+      var segmentBase = segment === 'globals' ?
+                        MemoryMap.GLOBAL_OFFSET : 0;
+      //TODO: Should the offset be part of the memory map? I think so. Perhaps
+      // this deserves another thought.
+      var offset = 0;
+      var cells = this._map.cells[segment];
+      for (var i = 0; (cells[i].name !== name); i++) {
+        offset += cells[i].size / MemoryMap.ALIGNMENT;
+      }
+      return base + segmentBase + offset;
+    },
+
+    seek: function (offset) {
+      return new MemView(this._mem, offset);
+    }
+  };
+
+  function MemView(storage, offset) {
+    this._storage = storage;
+    this._offset = offset;
+  }
+
+  MemView.prototype = {
+    constructor: MemView,
+
+    get value() {
+      return this._storage[this._offset];
+    },
+
+    set value(v) {
+      this._storage[this._offset] = v;
+    }
+  };
+
   return {
     MemoryMap: MemoryMap,
+    MemoryBrowser: MemoryBrowser,
     exportToJson: MemoryMap.exportToJson,
     importFromJson: MemoryMap.importFromJson
   };
