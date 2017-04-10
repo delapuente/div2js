@@ -30,6 +30,11 @@
       "kind": "var"
     },
     {
+      "type": "VariableDeclaration",
+      "declarations": [],
+      "kind": "var"
+    },
+    {
       "type": "FunctionDeclaration",
       "id": {
         "type": "Identifier",

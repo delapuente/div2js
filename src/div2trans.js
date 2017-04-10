@@ -83,41 +83,58 @@ define([
       return translate(divProcess, context);
     });
     var globals = translateGlobals(context);
+    var locals = translateLocals(context);
     return new ast.Program(
-      globals
+      [globals, locals]
       .concat([programFunction])
       .concat(processesFunctions)
     );
   };
 
-  //TODO: Will be generalized to tackle locals and privates.
   function translateGlobals(context) {
-    var mmap = context.getMemoryMap();
-    var alignment = mmap.constructor.ALIGNMENT;
-    var offset = mmap.constructor.GLOBAL_OFFSET;
-    var globalBase = new ast.VariableDeclarator(
+    var globalBase = getGlobalBaseDeclaration(context);
+    var globalDeclarations = translateSegment('globals', context);
+    globalDeclarations.declarations.unshift(globalBase);
+    return globalDeclarations;
+  }
+
+  function translateLocals(context) {
+    return translateSegment('locals', context);
+  }
+
+  function getGlobalBaseDeclaration(context) {
+    var offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
+    return new ast.VariableDeclarator(
       t.globalBaseIdentifier,
       ast.Literal['for'](offset)
     );
-    var globalVars = getGlobalDefinitions([], mmap.cells.globals, alignment);
-
-    // XXX: Notice this return a list of variable declarators.
-    return [new ast.VariableDeclaration([globalBase].concat(globalVars))];
   }
 
-  function getGlobalDefinitions(prefixes, cells, alignment) {
+  function translateSegment(segment, context) {
+    var mmap = context.getMemoryMap();
+    var alignment = mmap.constructor.ALIGNMENT;
+
+    var vars =
+      getSegmentDeclarations(segment, [], mmap.cells[segment], alignment);
+
+    return new ast.VariableDeclaration(vars);
+  }
+
+  function getSegmentDeclarations(segment, prefixes, cells, alignment) {
     var offset = 0;
     var definitions = [];
     for (var i = 0, cell; (cell = cells[i]); i++) {
       if (!cell.hidden) {
+        var identifierFactory =
+          'identifierFor' + { 'globals': 'Global', 'locals': 'Local' }[segment];
         prefixes.push(cell.name);
         definitions.push(new ast.VariableDeclarator(
-          t.identifierForGlobal(prefixes),
+          t[identifierFactory](prefixes),
           ast.Literal['for'](offset)
         ));
         if (cell.type === 'struct') {
           definitions = definitions.concat(
-            getGlobalDefinitions(prefixes, cell.fields, alignment)
+            getSegmentDeclarations(segment, prefixes, cell.fields, alignment)
           );
         }
         prefixes.pop();
