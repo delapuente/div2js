@@ -303,13 +303,9 @@ type
 
 process_list
   : process
-    {
-      $$ = [$1];
-    }
+    { $$ = [$1]; }
   | process_list process
-    {
-      $$ = $1.push($2);
-    }
+    { $1.push($2); }
   ;
 
 process

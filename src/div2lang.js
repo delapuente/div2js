@@ -147,15 +147,11 @@ break;
 case 28:
  this.$ = "struct_pointer"; 
 break;
-case 29:
-
-      this.$ = [$$[$0]];
-    
+case 29: case 56: case 62: case 66: case 92:
+ this.$ = [$$[$0]]; 
 break;
-case 30:
-
-      this.$ = $$[$0-1].push($$[$0]);
-    
+case 30: case 57: case 63:
+ $$[$0-1].push($$[$0]); 
 break;
 case 31:
 
@@ -232,12 +228,6 @@ case 55:
         cases: $$[$0]
       };
     
-break;
-case 56: case 62: case 66: case 92:
- this.$ = [$$[$0]]; 
-break;
-case 57: case 63:
- $$[$0-1].push($$[$0]); 
 break;
 case 59:
  this.$ = [$$[$0-1]]; 
