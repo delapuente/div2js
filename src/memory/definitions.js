@@ -39,32 +39,32 @@ define([], function () {
         "type": "struct",
         "name": "mouse",
         "fields": [
-          "x",
-          "y",
-          "z",
+          { name: "x", default: 160 },
+          { name: "y", default: 100 },
+          { name: "z", default: -512 },
           "file",
           "graph",
           "angle",
-          "size",
+          { name: "size", default: 100 },
           "flags",
           "region",
           "left",
           "middle",
           "right",
           "cursor",
-          "speed"
+          { name: "speed", default: 2 }
         ]
       },
       {
         "type": "struct",
         "name": "scroll",
         "fields": [
-          "z",
+          { name: "z", default: 512 },
           "camera",
-          "ratio",
+          { name: "ratio", default: 200 },
           "speed",
-          "region1",
-          "region2",
+          { name: "region1", default: -1 },
+          { name: "region2", default: -1 },
           "x0", "y0",
           "x1", "y1"
         ],
@@ -74,12 +74,12 @@ define([], function () {
         "type": "struct",
         "name": "m7",
         "fields": [
-          "z",
+          { name: "z", default: 256 },
           "camera",
-          "height",
-          "distance",
+          { name: "height", default: 32 },
+          { name: "distance", default: 64 },
           "horizon",
-          "focus",
+          { name: "focus", default: 256 },
           "color"
         ],
         "length": 10
@@ -134,7 +134,7 @@ define([], function () {
         "type": "struct",
         "name": "m8",
         "fields": [
-          "z",
+          { name: "z", default: 256 },
           "camera",
           "height",
           "angle"
@@ -188,16 +188,16 @@ define([], function () {
         "name": "timer",
         "length": 10
       },
-      "text_z",
+      { name: "text_z", default: -256 },
       "fading",
       "shift_status",
       "ascii",
       "scan_code",
-      "joy_filter",
-      "joy_status",
-      "restore_type",
-      "dump_type",
-      "max_process_time",
+      { name: "joy_filter", default: 10 },
+      { name: "joy_status", default: 1 },
+      { name: "restore_type", default: 1 },
+      { name: "dump_type", default: 1 },
+      { name: "max_process_time", default: 500 },
       "fps",
       "argc",
       {
@@ -209,9 +209,9 @@ define([], function () {
         "length": 32
       },
       "vsync",
-      "draw_z",
-      "num_video_modes",
-      "unit_size"
+      { name: "draw_z", default: -255 },
+      { name: "num_video_modes", default: 14 },
+      { name: "unit_size", default: 4 }
     ],
 
     "wellKnownLocals": [
@@ -230,12 +230,12 @@ define([], function () {
           "stack_pointer",
           "is_executed",
           "is_painted",
-          "m8_object",
+          { name: "m8_object", default: -1 },
           "old_ctype",
           "frame_percent",
           "box_x0",
           "box_y0",
-          "box_x1",
+          { name: "box_x1", default: -1 },
           "box_y1",
           "f_count",
           "caller_id"
@@ -252,7 +252,7 @@ define([], function () {
       "z",
       "graph",
       "flags",
-      "size",
+      { name: "size", default: 100 },
       "angle",
       "region",
       "file",
@@ -261,10 +261,10 @@ define([], function () {
       "height",
       "resolution",
       "radius",
-      "m8_wall",
-      "m8_sector",
-      "m8_nextsector",
-      "m8_step"
+      { name: "m8_wall", default: -1 },
+      { name: "m8_sector", default: -1 },
+      { name: "m8_nextsector", default: -1 },
+      { name: "m8_step", default: 32 }
     ]
   };
 });
