@@ -49,10 +49,15 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
       var globalSegmentSize = this._memoryMap.globalSegmentSize;
       var localSegmentSize = this._memoryMap.localSegmentSize;
       // TODO: It remains to add max private size to the multiplication.
-      var processPoolSize = this._memoryMap.maxProcess * localSegmentSize;
+      var processSize = localSegmentSize;
+      var processPoolSize = this._memoryMap.maxProcess * processSize;
       var memorySize = globalSegmentSize + processPoolSize;
       this._mem = new Int32Array(memorySize / alignment);
-      this.memoryBrowser = new MemoryBrowser(this._mem, this._memoryMap);
+      this.memoryBrowser = new MemoryBrowser(
+        this._mem,
+        this._memoryMap,
+        this._processSize
+      );
     },
 
     _setupScheduler: function () {

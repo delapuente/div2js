@@ -93,12 +93,12 @@ define([
         .then(function (program) {
           return new Promise(function (fulfil) {
             program.onfinished = withDebugSession(function (session) {
-              var aX = session.getProcess({ index: 0 }).local('x').value;
-              var bX = session.getProcess({ index: 1 }).local('x').value;
-              var cX = session.getProcess({ index: 2 }).local('x').value;
-              expect(aX).to.be(1);
-              expect(bX).to.be(2);
-              expect(cX).to.be(3);
+              var aX = session.process({ index: 0 }).local('x').value;
+              var bX = session.process({ index: 1 }).local('x').value;
+              var cX = session.process({ index: 2 }).local('x').value;
+              expect(aX).to.equal(1);
+              expect(bX).to.equal(2);
+              expect(cX).to.equal(3);
               fulfil();
             });
             program.run();
@@ -115,7 +115,7 @@ define([
             var expected = [];
             program.ondebug = withDebugSession(function (session) {
               results.push(
-                session.get('globals', 'text_z').value
+                session.global('text_z').value
               );
               expected.push(expected.length + 1);
             });

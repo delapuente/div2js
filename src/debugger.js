@@ -9,9 +9,12 @@ define(['memory/mapper'], function (mapper) {
   DebugSession.prototype = {
     constructor: DebugSession,
 
-    // TODO: It remains to add type info
-    get: function (segment, name, base) {
-      return this._browser.seek(this._browser.offset(segment, name, base));
+    get global() {
+      return this._browser.global.bind(this._browser);
+    },
+
+    get process() {
+      return this._browser.process.bind(this._browser);
     }
   };
 

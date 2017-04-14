@@ -83,20 +83,23 @@ define([], function () {
   };
 
   // XXX: Consider to move to its own module.
-  function MemoryBrowser(mem, map) {
+  function MemoryBrowser(mem, map, processSize) {
     this._mem = mem;
     this._map = map;
+    this._processSize = processSize;
   }
 
   MemoryBrowser.prototype = {
     constructor: MemoryBrowser,
 
     global: function (name) {
-      return this.seek(this.offset('global', name));
+      return this.seek(this.offset('globals', name));
     },
 
-    local: function (name, base) {
-      return this.seek(this.offset('locals', name, base));
+    process: function (options) {
+      var index = options.index || 0;
+      var processOffset = MemoryMap.GLOBAL_OFFSET + index * this._processSize;
+      return new ProcessView(this, processOffset);
     },
 
     //TODO: Add support for structs
@@ -110,7 +113,8 @@ define([], function () {
       // this deserves another thought.
       var offset = 0;
       var cells = this._map.cells[segment];
-      for (var i = 0; (cells[i].name !== name); i++) {
+      for (var i = 0, l = cells.length; i < l; i++) {
+        if (cells[i].name === name) { break; }
         offset += cells[i].size / MemoryMap.ALIGNMENT;
       }
       return base + segmentBase + offset;
@@ -135,6 +139,21 @@ define([], function () {
 
     set value(v) {
       this._storage[this._offset] = v;
+    }
+  };
+
+  function ProcessView(browser, base) {
+    this._browser = browser;
+    this._base = base;
+  }
+
+  ProcessView.prototype = {
+    constructor: ProcessView,
+
+    local: function (name) {
+      return this._browser.seek(
+        this._browser.offset('locals', name, this._base)
+      );
     }
   };
 
