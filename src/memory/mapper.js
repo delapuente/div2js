@@ -32,11 +32,23 @@ define([], function () {
     constructor: MemoryMap,
 
     get globalSegmentSize() {
-      return this._getSegmentSize('globals');
+      return this._getSegmentSize('globals') / MemoryMap.ALIGNMENT;
     },
 
     get localSegmentSize() {
-      return this._getSegmentSize('locals');
+      return this._getSegmentSize('locals') / MemoryMap.ALIGNMENT;
+    },
+
+    get processPoolSize() {
+      return this.maxProcess * this.processSize;
+    },
+
+    get processSize() {
+      return this.localSegmentSize; //TODO: Add privateSegmentSize
+    },
+
+    get poolOffset() {
+      return MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize;
     },
 
     _getSegmentSize: function (segment) {
@@ -47,17 +59,24 @@ define([], function () {
     },
 
     _buildMap: function () {
-      this.cells.globals = this.symbols.globals.map(this._getCell, this);
-      this.cells.locals = this.symbols.locals.map(this._getCell, this);
+      this.cells.globals = this._inToCells(this.symbols.globals);
+      this.cells.locals = this._inToCells(this.symbols.locals);
     },
 
-    _getCell: function (symbol) {
-      var cell = Object.create(symbol);
-      cell.size = this._sizeOf(symbol);
-      if (symbol.type === 'struct') {
-        cell.fields = symbol.fields.map(this._getCell, this);
-      }
-      return cell;
+    _inToCells: function (symbols) {
+      var offset = 0;
+      var cells = [];
+      symbols.forEach(function (symbol) {
+        var cell = Object.create(symbol);
+        cell.size = this._sizeOf(symbol);
+        cell.offset = offset;
+        if (symbol.type === 'struct') {
+          cell.fields = this._inToCells(symbol.fields);
+        }
+        offset += cell.size / MemoryMap.ALIGNMENT;
+        cells.push(cell);
+      }.bind(this));
+      return cells;
     },
 
     _sizeOf: function (symbol) {
@@ -83,10 +102,9 @@ define([], function () {
   };
 
   // XXX: Consider to move to its own module.
-  function MemoryBrowser(mem, map, processSize) {
+  function MemoryBrowser(mem, map) {
     this._mem = mem;
     this._map = map;
-    this._processSize = processSize;
   }
 
   MemoryBrowser.prototype = {
@@ -97,31 +115,45 @@ define([], function () {
     },
 
     process: function (options) {
+      var options = options || {};
+      var id = options.id;
+      //TODO: Check id validity
+      if (id) {
+        return new ProcessView(this, id);
+      }
       var index = options.index || 0;
-      var processOffset = MemoryMap.GLOBAL_OFFSET + index * this._processSize;
+      var poolOffset = this._map.poolOffset;
+      var processSize = this._map.processSize;
+      var processOffset = poolOffset + index * processSize;
       return new ProcessView(this, processOffset);
     },
 
-    //TODO: Add support for structs
     offset: function (segment, name, base) {
-      segment = segment.toLowerCase()
       base = base || 0;
-      //TODO: It lacks of LOCAL_OFFSET;
-      var segmentBase = segment === 'globals' ?
-                        MemoryMap.GLOBAL_OFFSET : 0;
-      //TODO: Should the offset be part of the memory map? I think so. Perhaps
-      // this deserves another thought.
-      var offset = 0;
       var cells = this._map.cells[segment];
-      for (var i = 0, l = cells.length; i < l; i++) {
-        if (cells[i].name === name) { break; }
-        offset += cells[i].size / MemoryMap.ALIGNMENT;
+      var names = name.split('.');
+      var offset = this._offset(cells, names);
+      if (offset === undefined) {
+        throw new Error('Can not get the offset for ' + name);
       }
-      return base + segmentBase + offset;
+      return base + offset;
     },
 
     seek: function (offset) {
       return new MemView(this._mem, offset);
+    },
+
+    _offset: function (cells, names) {
+      var offset;
+      var name = names[0];
+      var cell = cells.find(function (cell) {
+        return cell.name === name;
+      });
+      if (!cell) { return undefined; }
+      if (cell.type !== 'struct') { return cell.offset; }
+      var fieldOffset = this._offset(cell.fields, names.slice(1));
+      if (fieldOffset === undefined) { return undefined; }
+      return cell.offset + fieldOffset;
     }
   };
 
@@ -154,6 +186,14 @@ define([], function () {
       return this._browser.seek(
         this._browser.offset('locals', name, this._base)
       );
+    },
+
+    get offset() {
+      return this._base;
+    },
+
+    get id() {
+      return this.local('reserved.id').value;
     }
   };
 

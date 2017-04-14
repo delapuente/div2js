@@ -31,21 +31,24 @@ define([], function () {
       this._current = 0;
     },
 
-    add: function (code) {
-      var execEnvironment = this._newExecEnvironment(code);
+    add: function (code, base) {
+      var execEnvironment = this._newExecEnvironment(code, base);
       // XXX: Will be replaced by sorted insertion
       this._processList.push(execEnvironment);
     },
 
     deleteCurrent: function () {
-      this._processList.splice(this._current, 1);
+      var removed = this._processList.splice(this._current, 1);
       this._current = this._current;
+      return removed.id;
     },
 
-    _newExecEnvironment: function (code) {
+    _newExecEnvironment: function (code, processId) {
       return {
         pc: 1,
         code: code,
+        id: processId,
+        base: processId,
         retv: new ReturnValuesQueue()
       };
     },
@@ -62,7 +65,7 @@ define([], function () {
         this._end();
       }
       else {
-        var execution = this._currentExecution;
+        var execution = this.currentExecution;
         var result = execution.code(this._mem, execution);
         this._takeAction(result);
       }
@@ -78,7 +81,7 @@ define([], function () {
         throw Error('Execution returned an unknown result:', result);
       }
       if (typeof result.npc !== 'undefined') {
-        this._currentExecution.pc = result.npc;
+        this.currentExecution.pc = result.npc;
       }
       return this._call('onyield', result).then(function () {
         // TODO: Take into account rescheduling flags once added.
@@ -99,7 +102,7 @@ define([], function () {
       return this._currentIndex;
     },
 
-    get _currentExecution() {
+    get currentExecution() {
       return this._processList[this._current];
     },
 

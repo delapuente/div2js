@@ -22,7 +22,7 @@ define(['memory/mapper'], function (mapper) {
     DebugSession: DebugSession,
 
     debug: function (runtime) {
-      return new DebugSession(runtime.memoryBrowser);
+      return new DebugSession(runtime.getMemoryBrowser());
     }
   };
 });

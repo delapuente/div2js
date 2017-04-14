@@ -93,12 +93,30 @@ define([
         .then(function (program) {
           return new Promise(function (fulfil) {
             program.onfinished = withDebugSession(function (session) {
-              var aX = session.process({ index: 0 }).local('x').value;
-              var bX = session.process({ index: 1 }).local('x').value;
-              var cX = session.process({ index: 2 }).local('x').value;
+              var aX = session.process({ index: 1 }).local('x').value;
+              var bX = session.process({ index: 2 }).local('x').value;
+              var cX = session.process({ index: 3 }).local('x').value;
               expect(aX).to.equal(1);
               expect(bX).to.equal(2);
               expect(cX).to.equal(3);
+              fulfil();
+            });
+            program.run();
+          });
+        });
+    });
+
+    it('Process are reused ', function () {
+      return load('process-reuse.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            program.onfinished = withDebugSession(function (session) {
+              var aX = session.process({ index: 1 }).local('x').value;
+              var bX = session.process({ index: 2 }).local('x').value;
+              var cX = session.process({ index: 3 }).local('x').value;
+              expect(aX).to.equal(3);
+              expect(bX).to.equal(0);
+              expect(cX).to.equal(0);
               fulfil();
             });
             program.run();

@@ -115,16 +115,11 @@ define([
 
   function translateSegment(segment, context) {
     var mmap = context.getMemoryMap();
-    var alignment = mmap.constructor.ALIGNMENT;
-
-    var vars =
-      getSegmentDeclarations(segment, [], mmap.cells[segment], alignment);
-
+    var vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
     return new ast.VariableDeclaration(vars);
   }
 
-  function getSegmentDeclarations(segment, prefixes, cells, alignment) {
-    var offset = 0;
+  function getSegmentDeclarations(segment, prefixes, cells) {
     var definitions = [];
     for (var i = 0, cell; (cell = cells[i]); i++) {
       if (!cell.hidden) {
@@ -133,16 +128,15 @@ define([
         prefixes.push(cell.name);
         definitions.push(new ast.VariableDeclarator(
           t[identifierFactory](prefixes),
-          ast.Literal['for'](offset)
+          ast.Literal['for'](cell.offset)
         ));
         if (cell.type === 'struct') {
           definitions = definitions.concat(
-            getSegmentDeclarations(segment, prefixes, cell.fields, alignment)
+            getSegmentDeclarations(segment, prefixes, cell.fields)
           );
         }
         prefixes.pop();
       }
-      offset += cell.size / alignment;
     }
     return flat(definitions);
 

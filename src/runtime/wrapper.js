@@ -1,7 +1,7 @@
 (function (rt) {
   'use strict';
 
-  /* Here comes the memory map */
+  /* Here comes the offset declarations */
 
   function __yieldDebug(npc) {
     return new rt.Baton('debug', { npc: npc });
