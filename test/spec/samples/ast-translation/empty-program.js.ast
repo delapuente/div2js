@@ -1,8 +1,10 @@
 {
   "type": "Program",
-  "body": [{
+  "body": [
+    {
       "type": "VariableDeclaration",
-      "declarations": [{
+      "declarations": [
+        {
           "type": "VariableDeclarator",
           "id": {
             "type": "Identifier",
@@ -10,8 +12,8 @@
           },
           "init": {
             "type": "Literal",
-            "value": 0,
-            "raw": "0"
+            "value": 1,
+            "raw": "1"
           }
         },
         {
@@ -40,7 +42,8 @@
         "type": "Identifier",
         "name": "program_test"
       },
-      "params": [{
+      "params": [
+        {
           "type": "Identifier",
           "name": "mem"
         },
@@ -56,47 +59,55 @@
       "defaults": [],
       "body": {
         "type": "BlockStatement",
-        "body": [{
-          "type": "WhileStatement",
-          "test": {
-            "type": "Literal",
-            "value": true,
-            "raw": "true"
-          },
-          "body": {
-            "type": "BlockStatement",
-            "body": [{
-              "type": "SwitchStatement",
-              "discriminant": {
-                "type": "MemberExpression",
-                "computed": false,
-                "object": {
-                  "type": "Identifier",
-                  "name": "exec"
-                },
-                "property": {
-                  "type": "Identifier",
-                  "name": "pc"
+        "body": [
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "Literal",
+              "value": true,
+              "raw": "true"
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "SwitchStatement",
+                  "discriminant": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                      "type": "Identifier",
+                      "name": "exec"
+                    },
+                    "property": {
+                      "type": "Identifier",
+                      "name": "pc"
+                    }
+                  },
+                  "cases": [
+                    {
+                      "type": "SwitchCase",
+                      "test": {
+                        "type": "Literal",
+                        "value": 1,
+                        "raw": "1"
+                      },
+                      "consequent": [
+                        {
+                          "type": "ReturnStatement",
+                          "argument": {
+                            "type": "Identifier",
+                            "name": "__yieldEnd"
+                          }
+                        }
+                      ]
+                    }
+                  ]
                 }
-              },
-              "cases": [{
-                "type": "SwitchCase",
-                "test": {
-                  "type": "Literal",
-                  "value": 1,
-                  "raw": "1"
-                },
-                "consequent": [{
-                  "type": "ReturnStatement",
-                  "argument": {
-                    "type": "Identifier",
-                    "name": "__yieldEnd"
-                  }
-                }]
-              }]
-            }]
+              ]
+            }
           }
-        }]
+        ]
       },
       "generator": false,
       "expression": false

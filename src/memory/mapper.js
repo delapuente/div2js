@@ -20,8 +20,9 @@ define([], function () {
   // number is 4 which matches the ALIGNMENT.
 
   MemoryMap.ALIGNMENT = 4; // 4 bytes
-  MemoryMap.GLOBAL_OFFSET = 0;  // TODO: Must take into account all
-                                // DIV padding including program source
+  MemoryMap.GLOBAL_OFFSET = 1;  // TODO: Must take into account all
+                                // DIV padding including program source. Leave
+                                // 0 address free.
   MemoryMap.SIZE_IN_BYTES = {
     'byte': 1,
     'word': 2,
@@ -44,7 +45,12 @@ define([], function () {
     },
 
     get processSize() {
-      return this.localSegmentSize; //TODO: Add privateSegmentSize
+      var size = this.localSegmentSize; //TODO: Add privateSegmentSize
+      //XXX: Force to be ALWAYS even. In addition to an odd pool offset,
+      //it warrants all the process to start in an ODD address so the id
+      //is ALWAYS ODD and thus, always TRUE.
+      if (size % 2 !== 0) { return size + 1; }
+      return size;
     },
 
     get poolOffset() {
@@ -129,7 +135,7 @@ define([], function () {
     },
 
     offset: function (segment, name, base) {
-      base = base || 0;
+      base = base || (segment === 'globals' ? MemoryMap.GLOBAL_OFFSET : 0);
       var cells = this._map.cells[segment];
       var names = name.split('.');
       var offset = this._offset(cells, names);
