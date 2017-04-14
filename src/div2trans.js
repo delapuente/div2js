@@ -8,6 +8,9 @@ define([
 
   var translators = Object.create(null);
 
+  // TODO: Consider switching these to MemortBrowser-based assignment and read
+  // so the JS code can be optimized and inlined later. This would decouple
+  // translation from memory layout.
   translators.AssignmentExpression = function (divAssignment, context) {
     return new ast.AssignmentExpression(
       translate(divAssignment.left, context),
