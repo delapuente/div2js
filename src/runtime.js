@@ -23,7 +23,7 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     set onfinished(callback) {
       this._onfinished = callback;
       if (this._scheduler instanceof scheduler.Scheduler) {
-        this._scheduler.onfinished = this._onfinished;
+        this._scheduler.onfinished = this._onfinished.bind(this);
       }
     },
 
@@ -61,9 +61,11 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     },
 
     _setupScheduler: function () {
+      var onfinished = typeof this.onfinished === 'function' ?
+                       this.onfinished.bind(this) : undefined;
       this._scheduler = new scheduler.Scheduler(this._mem, {
         onyield: this._schedule.bind(this),
-        onfinished: this.onfinished
+        onfinished: onfinished
       });
       this._scheduler.add(this._processMap.program);
     },
