@@ -1,14 +1,12 @@
-// TODO: Rename the scheduler to be the runner.
-// The scheduler is actually fused to the current runtime.
 define([], function () {
   'use strict';
 
-  function Scheduler(mem, hooks) {
+  function Scheduler(mem, processMap, hooks) {
     hooks = hooks || {};
     this.onyield = hooks.onyield;
     this.onfinished = hooks.onfinished;
     this._mem = mem;
-    this._processList = [];
+    this._pmap = processMap;
     this.reset();
   }
 
@@ -26,15 +24,23 @@ define([], function () {
       this._running = false;
     },
 
+    resetExectution: function () {
+      this._processList = [];
+      this.reset();
+    },
+
     reset: function () {
+      this._processList = [];
       this._running = false;
       this._current = 0;
     },
 
-    add: function (code, base) {
-      var execEnvironment = this._newExecEnvironment(code, base);
-      // XXX: Will be replaced by sorted insertion
-      this._processList.push(execEnvironment);
+    addProgram: function (base) {
+      this._add('program', base);
+    },
+
+    addProcess: function (name, base) {
+      this._add('process_' + name, base);
     },
 
     deleteCurrent: function () {
@@ -43,12 +49,19 @@ define([], function () {
       return removed.id;
     },
 
-    _newExecEnvironment: function (code, processId) {
+    _add: function (name, base) {
+      var runnable = this._pmap[name];
+      var processEnvironment = this._newProcessEnvironment(runnable, base);
+      // XXX: Will be replaced by sorted insertion
+      this._processList.push(processEnvironment);
+    },
+
+    _newProcessEnvironment: function (runnable, base) {
       return {
         pc: 1,
-        code: code,
-        id: processId,
-        base: processId,
+        runnable: runnable,
+        id: base,
+        base: base,
         retv: new ReturnValuesQueue()
       };
     },
@@ -66,7 +79,7 @@ define([], function () {
       }
       else {
         var execution = this.currentExecution;
-        var result = execution.code(this._mem, execution);
+        var result = execution.runnable(this._mem, execution);
         this._takeAction(result);
       }
     },

@@ -1,5 +1,5 @@
 
-define(['runtime'], function (runtime) {
+define(['runtime/runtime'], function (runtime) {
   'use strict';
 
   function load(objText) {
