@@ -5,17 +5,17 @@ BEGIN
   c();
 END
 
-PROCESS a;
+PROCESS a();
 BEGIN
   x = 1;
 END
 
-PROCESS b;
+PROCESS b();
 BEGIN
   x = 2;
 END
 
-PROCESS c;
+PROCESS c();
 BEGIN
   x = 3;
 END

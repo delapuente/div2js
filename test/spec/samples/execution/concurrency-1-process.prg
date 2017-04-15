@@ -8,7 +8,7 @@ BEGIN
   DEBUG;
 END
 
-PROCESS a;
+PROCESS a();
 BEGIN
   text_z = 2;
 END

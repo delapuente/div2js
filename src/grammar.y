@@ -309,14 +309,27 @@ process_list
   ;
 
 process
-  : PROCESS id ';' private_block body
+  : PROCESS id '(' param_list ')' ';' private_block body
     {
       $$ = {
         type: "Process",
         name: $2,
-        privates: $4,
-        body: $5
+        params: $4,
+        privates: $7,
+        body: $8
       };
+    }
+  ;
+
+param_list
+  : { $$ = []; }
+  | id
+    {
+      $$ = [$1];
+    }
+  | param_list ',' id
+    {
+      $1.push($3);
     }
   ;
 

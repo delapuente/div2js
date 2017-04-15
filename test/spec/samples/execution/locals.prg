@@ -3,19 +3,19 @@ BEGIN
   a();
 END
 
-PROCESS a;
+PROCESS a();
 BEGIN
   b();
   x = 1;
 END
 
-PROCESS b;
+PROCESS b();
 BEGIN
   c();
   x = 2;
 END
 
-PROCESS c;
+PROCESS c();
 BEGIN
   x = 3;
 END

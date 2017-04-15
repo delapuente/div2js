@@ -2,6 +2,6 @@ PROGRAM basic;
 BEGIN
 END
 
-PROCESS a;
+PROCESS a();
 BEGIN
 END

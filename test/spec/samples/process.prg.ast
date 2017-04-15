@@ -22,11 +22,12 @@
         "type": "Identifier",
         "name": "a"
       },
+      "params": [],
       "privates": null,
       "body": {
          "type": "ProcessBody",
          "sentences": []
       }
     }
-  ] 
+  ]
 }
