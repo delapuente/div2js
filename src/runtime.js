@@ -13,6 +13,7 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     this._scheduler = null;
     this._processMap = processMap;
     this._memoryMap = new MemoryMap(memorySymbols);
+    this._createProcessTemplate();
     this._allocateMemory();
     this._initializeMemory();
     this._setupScheduler();
@@ -60,7 +61,32 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
       );
     },
 
+    _createProcessTemplate: function () {
+      //TODO: Add privates
+      //TODO: Support arrays
+      var locals = this._memoryMap.cells['locals'];
+      this._processTemplate = new Int32Array(this._memoryMap.processSize);
+      this._copyDefaults(this._processTemplate, locals, 0);
+    },
+
+    _copyDefaults: function (buffer, cells, base) {
+      cells.forEach(function (cell) {
+        var length = cell.length;
+        var itemSize = cell.size / cell.length;
+        for (var i = 0, l = cell.length; i < l; i++) {
+          var itemOffset = base + (i * itemSize);
+          if (cell.type !== 'struct') {
+            buffer[itemOffset + cell.offset] = cell.default;
+          }
+          else {
+            this._copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
+          }
+        }
+      }.bind(this));
+    },
+
     _initializeMemory: function () {
+      //TODO: Add globals
       for (var index = 0, l = this._memoryMap.maxProcess; index < l; index++) {
         var process = this._memoryBrowser.process({ index: index });
         process.local('reserved.process_id').value = process.offset;
@@ -92,7 +118,9 @@ define(['scheduler', 'memory/mapper'], function (scheduler, mapper) {
     },
 
     _enableProcess: function (process) {
-      process.local('reserved.status').value = 2;
+      var id = process.id;
+      process.setMemory(this._processTemplate);
+      process.local('reserved.process_id').value = id; // restore Id
     },
 
     _freeProcess: function (processId) {

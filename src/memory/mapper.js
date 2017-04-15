@@ -134,6 +134,10 @@ define([], function () {
       return new ProcessView(this, processOffset);
     },
 
+    setMemory: function (buffer, offset) {
+      return this._mem.set(buffer, offset);
+    },
+
     offset: function (segment, name, base) {
       base = base || (segment === 'globals' ? MemoryMap.GLOBAL_OFFSET : 0);
       var cells = this._map.cells[segment];
@@ -188,6 +192,10 @@ define([], function () {
   ProcessView.prototype = {
     constructor: ProcessView,
 
+    setMemory: function (memBuffer) {
+      this._browser.setMemory(memBuffer, this.offset); // Ignore id
+    },
+
     local: function (name) {
       return this._browser.seek(
         this._browser.offset('locals', name, this._base)
@@ -199,7 +207,7 @@ define([], function () {
     },
 
     get id() {
-      return this.local('reserved.id').value;
+      return this.local('reserved.process_id').value;
     }
   };
 

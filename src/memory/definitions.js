@@ -14,14 +14,14 @@ define([], function () {
   // Each cell is defined by an object with the following fields:
   //
   //   * type   - is the type of the cell: byte (1 byte), word (2 bytes), int
-  //              (4 bytes, default if omitted) and struct.
-  //   * name   - is the name of the symbol.
+  //              (4 bytes, "default" if omitted) and struct.
+  //   * "name"   - is the "name" of the symbol.
   //   * fields - if the type is struct, this is the list of symbols of the
   //              struct.
   //   * length - times to repeat this symbol (1 if omitted)
   //
   // Since most of the times, a symbol is 1 int, instead of an object, you
-  // can specify a string with the name of the symbol.
+  // can specify a string with the "name" of the symbol.
 
   // Based on docs, sources and experimental tests:
   // https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h
@@ -39,32 +39,32 @@ define([], function () {
         "type": "struct",
         "name": "mouse",
         "fields": [
-          { name: "x", default: 160 },
-          { name: "y", default: 100 },
-          { name: "z", default: -512 },
+          { "name": "x", "default": 160 },
+          { "name": "y", "default": 100 },
+          { "name": "z", "default": -512 },
           "file",
           "graph",
           "angle",
-          { name: "size", default: 100 },
+          { "name": "size", "default": 100 },
           "flags",
           "region",
           "left",
           "middle",
           "right",
           "cursor",
-          { name: "speed", default: 2 }
+          { "name": "speed", "default": 2 }
         ]
       },
       {
         "type": "struct",
         "name": "scroll",
         "fields": [
-          { name: "z", default: 512 },
+          { "name": "z", "default": 512 },
           "camera",
-          { name: "ratio", default: 200 },
+          { "name": "ratio", "default": 200 },
           "speed",
-          { name: "region1", default: -1 },
-          { name: "region2", default: -1 },
+          { "name": "region1", "default": -1 },
+          { "name": "region2", "default": -1 },
           "x0", "y0",
           "x1", "y1"
         ],
@@ -74,12 +74,12 @@ define([], function () {
         "type": "struct",
         "name": "m7",
         "fields": [
-          { name: "z", default: 256 },
+          { "name": "z", "default": 256 },
           "camera",
-          { name: "height", default: 32 },
-          { name: "distance", default: 64 },
+          { "name": "height", "default": 32 },
+          { "name": "distance", "default": 64 },
           "horizon",
-          { name: "focus", default: 256 },
+          { "name": "focus", "default": 256 },
           "color"
         ],
         "length": 10
@@ -134,7 +134,7 @@ define([], function () {
         "type": "struct",
         "name": "m8",
         "fields": [
-          { name: "z", default: 256 },
+          { "name": "z", "default": 256 },
           "camera",
           "height",
           "angle"
@@ -188,16 +188,16 @@ define([], function () {
         "name": "timer",
         "length": 10
       },
-      { name: "text_z", default: -256 },
+      { "name": "text_z", "default": -256 },
       "fading",
       "shift_status",
       "ascii",
       "scan_code",
-      { name: "joy_filter", default: 10 },
-      { name: "joy_status", default: 1 },
-      { name: "restore_type", default: 1 },
-      { name: "dump_type", default: 1 },
-      { name: "max_process_time", default: 500 },
+      { "name": "joy_filter", "default": 10 },
+      { "name": "joy_status", "default": 1 },
+      { "name": "restore_type", "default": 1 },
+      { "name": "dump_type", "default": 1 },
+      { "name": "max_process_time", "default": 500 },
       "fps",
       "argc",
       {
@@ -209,9 +209,9 @@ define([], function () {
         "length": 32
       },
       "vsync",
-      { name: "draw_z", default: -255 },
-      { name: "num_video_modes", default: 14 },
-      { name: "unit_size", default: 4 }
+      { "name": "draw_z", "default": -255 },
+      { "name": "num_video_modes", "default": 14 },
+      { "name": "unit_size", "default": 4 }
     ],
 
     "wellKnownLocals": [
@@ -223,19 +223,19 @@ define([], function () {
           "id_scan",
           "process_type",
           "type_scan",
-          "status",
+          { "name": "status", "default": 2 },
           "parameters",
           "param_offset",
           "program_index",
           "stack_pointer",
           "is_executed",
           "is_painted",
-          { name: "m8_object", default: -1 },
+          { "name": "m8_object", "default": -1 },
           "old_ctype",
           "frame_percent",
           "box_x0",
           "box_y0",
-          { name: "box_x1", default: -1 },
+          { "name": "box_x1", "default": -1 },
           "box_y1",
           "f_count",
           "caller_id"
@@ -252,7 +252,7 @@ define([], function () {
       "z",
       "graph",
       "flags",
-      { name: "size", default: 100 },
+      { "name": "size", "default": 100 },
       "angle",
       "region",
       "file",
@@ -261,10 +261,10 @@ define([], function () {
       "height",
       "resolution",
       "radius",
-      { name: "m8_wall", default: -1 },
-      { name: "m8_sector", default: -1 },
-      { name: "m8_nextsector", default: -1 },
-      { name: "m8_step", default: 32 }
+      { "name": "m8_wall", "default": -1 },
+      { "name": "m8_sector", "default": -1 },
+      { "name": "m8_nextsector", "default": -1 },
+      { "name": "m8_step", "default": 32 }
     ]
   };
 });

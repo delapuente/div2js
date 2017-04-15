@@ -148,21 +148,21 @@ define([
 
   });
 
-  // TODO: This is currently useless and totally WIP.
   describe('Memory state while running transpiled programs', function () {
-
-    beforeEach(function () {
-    });
-
-    afterEach(function () {
-    });
 
     it('Properly sets all initial values', function () {
       return load('initial-state.prg')
         .then(function (program) {
           return new Promise(function (fulfil, reject) {
-            program.ondebug = withDebugSession(fulfil);
-            program.onfinished = reject;
+            program.ondebug = withDebugSession(function (session) {
+              var program = session.process({ index: 0 });
+              var programId = program.local('reserved.process_id').value;
+              expect(programId).to.equal(program.id);
+              expect(program.local('reserved.status').value).to.equal(2);
+              expect(program.local('reserved.m8_object').value).to.equal(-1);
+              expect(program.local('reserved.box_x1').value).to.equal(-1);
+            });
+            program.onfinished = fulfil;
             program.run();
           });
         });
