@@ -5,6 +5,7 @@ define([], function () {
     hooks = hooks || {};
     this.onyield = hooks.onyield;
     this.onfinished = hooks.onfinished;
+    this.onupdate = hooks.onupdate;
     this._mem = mem;
     this._pmap = processMap;
     this.reset();
@@ -96,11 +97,21 @@ define([], function () {
       if (typeof result.npc !== 'undefined') {
         this.currentExecution.pc = result.npc;
       }
-      return this._call('onyield', result).then(function () {
-        // TODO: Take into account rescheduling flags once added.
+      return this._call('onyield', result).then(this._reschedule.bind(this));
+    },
+
+    _reschedule: function () {
+      // TODO: Take into account rescheduling flags once added.
+      var allUpdated = this._current === this._processList.length;
+      if (allUpdated) {
+        return this._call('onupdate').then(next.bind(this));
+      }
+      return next.call(this);
+
+      function next() {
         this._current++;
-        this._scheduleStep();
-      }.bind(this));
+        this._scheduleStep()
+      }
     },
 
     set _current(v) {

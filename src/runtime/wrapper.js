@@ -15,6 +15,14 @@
     });
   }
 
+  function __yieldCallFunction(npc, functionName, args) {
+    return new rt.Baton('call', {
+      npc: npc,
+      functionName: functionName,
+      args: args
+    })
+  }
+
   var __yieldEnd = new rt.Baton('end');
 
   return { /* Here come the process and memory maps */ };
