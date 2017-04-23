@@ -40,6 +40,18 @@ define([
     };
   }
 
+  function autoResume(callback) {
+    return function (control) {
+      var result = callback.call(this, control);
+      if (result instanceof Promise) {
+        result.then(function () { control.resume(); })
+      }
+      else {
+        control.resume();
+      };
+    };
+  }
+
   describe('Workflow of transpiled programs', function () {
 
     it('The empty program just finishes', function () {
@@ -57,7 +69,7 @@ define([
       return load('debug-invocation.prg')
         .then(function (program) {
           return new Promise(function (fulfil) {
-            program.ondebug = debugSpy;
+            program.ondebug = autoResume(debugSpy);
             program.onfinished = fulfil;
             program.run();
           });
@@ -71,14 +83,14 @@ define([
     function () {
       var program;
       var debugSpy = sinon.spy(function () {
-        program.ondebug = secondSpy;
+        program.ondebug = autoResume(secondSpy);
       });
       var secondSpy = sinon.spy();
       return load('debug-resume.prg')
         .then(function (prg) {
           program = prg;
           return new Promise(function (fulfil) {
-            program.ondebug = debugSpy;
+            program.ondebug = autoResume(debugSpy);
             program.onfinished = fulfil;
             program.run();
           });
@@ -131,12 +143,12 @@ define([
           return new Promise(function (fulfil) {
             var results = [];
             var expected = [];
-            program.ondebug = withDebugSession(function (session) {
+            program.ondebug = autoResume(withDebugSession(function (session) {
               results.push(
                 session.global('text_z').value
               );
               expected.push(expected.length + 1);
-            });
+            }));
             program.onfinished = function () {
               expect(results).to.deep.equal(expected);
               fulfil();
@@ -154,14 +166,14 @@ define([
       return load('initial-state.prg')
         .then(function (program) {
           return new Promise(function (fulfil, reject) {
-            program.ondebug = withDebugSession(function (session) {
+            program.ondebug = autoResume(withDebugSession(function (session) {
               var program = session.process({ index: 0 });
               var programId = program.local('reserved.process_id').value;
               expect(programId).to.equal(program.id);
               expect(program.local('reserved.status').value).to.equal(2);
               expect(program.local('reserved.m8_object').value).to.equal(-1);
               expect(program.local('reserved.box_x1').value).to.equal(-1);
-            });
+            }));
             program.onfinished = fulfil;
             program.run();
           });

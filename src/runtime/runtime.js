@@ -74,7 +74,16 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
     },
 
     _debug: function (baton) {
-      return this._ondebug();
+      this._scheduler.onpause = this._startDebug.bind(this);
+      this._scheduler.pause();
+    },
+
+    _startDebug: function () {
+      //XXX: Notice resume is run right now.
+      this._ondebug({
+        resume: this._scheduler.run.bind(this._scheduler),
+        stop: this._scheduler.stop.bind(this._scheduler)
+      });
     },
 
     _newprocess: function (baton) {

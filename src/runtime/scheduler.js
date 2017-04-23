@@ -1,6 +1,8 @@
 define([], function () {
   'use strict';
 
+  var rAF = window.requestAnimationFrame;
+
   function Scheduler(mem, processMap, hooks) {
     hooks = hooks || {};
     this.onyield = hooks.onyield;
@@ -14,11 +16,20 @@ define([], function () {
   Scheduler.prototype = {
     constructor: Scheduler,
 
+    get currentExecution() {
+      return this._processList[this._current];
+    },
+
     run: function () {
       if (!this._running) {
         this._running = true;
         this._scheduleStep();
       }
+    },
+
+    pause: function () {
+      this.stop();
+      return this._call('onpause');
     },
 
     stop: function () {
@@ -45,9 +56,9 @@ define([], function () {
     },
 
     deleteCurrent: function () {
-      var removed = this._processList.splice(this._current, 1);
-      this._current = this._current;
-      return removed.id;
+      var currentExecution = this._processList[this._current];
+      currentExecution.dead = true;
+      return currentExecution.id;
     },
 
     _add: function (name, base) {
@@ -68,20 +79,32 @@ define([], function () {
     },
 
     _scheduleStep: function () {
-      setTimeout(this._step.bind(this));
+      rAF(this._step.bind(this));
     },
 
     _step: function () {
-      if (!this._running) {
-        return;
+      var processList = this._processList;
+      var processCount = processList.length;
+
+      if (processCount === 0) {
+        return this._end();
       }
-      if (this._processList.length === 0) {
-        this._end();
-      }
-      else {
-        var execution = this.currentExecution;
+
+      while (this._running && this._current < this._processList.length) {
+        var execution = processList[this._current];
         var result = execution.runnable(this._mem, execution);
         this._takeAction(result);
+        if (this._running) { this._current++; }
+      }
+
+      if (this._running) {
+        this._current = 0;
+        this._processList = this._processList.filter(isAlive);
+        this._scheduleStep();
+      }
+
+      function isAlive(execution) {
+        return !execution.dead;
       }
     },
 
@@ -97,48 +120,15 @@ define([], function () {
       if (typeof result.npc !== 'undefined') {
         this.currentExecution.pc = result.npc;
       }
-      return this._call('onyield', result).then(this._reschedule.bind(this));
-    },
-
-    _reschedule: function () {
-      // TODO: Take into account rescheduling flags once added.
-      var allUpdated = this._current === this._processList.length;
-      if (allUpdated) {
-        return this._call('onupdate').then(next.bind(this));
-      }
-      return next.call(this);
-
-      function next() {
-        this._current++;
-        this._scheduleStep()
-      }
-    },
-
-    set _current(v) {
-      if (this._processList.length) {
-        this._currentIndex = v % this._processList.length;
-      } else {
-        this._currentIndex = 0;
-      }
-    },
-
-    get _current() {
-      return this._currentIndex;
-    },
-
-    get currentExecution() {
-      return this._processList[this._current];
+      return this._call('onyield', result);
     },
 
     _call: function (name) {
       var result;
       var target = this[name];
-      var args = Array.prototype.slice.call(arguments, 1);
-      if (typeof target.apply === 'function') {
+      if (target && typeof target.apply === 'function') {
+        var args = Array.prototype.slice.call(arguments, 1);
         result = target.apply(this, args);
-      }
-      if (!(result instanceof Promise)) {
-        result = Promise.resolve(result);
       }
       return result;
     }
