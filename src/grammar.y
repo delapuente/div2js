@@ -281,7 +281,9 @@ declaration
   ;
 
 type
-  : INT_POINTER
+  : /* empty */
+    { $$ = "int"; }
+  | INT_POINTER
     { $$ = "int_pointer"; }
   | INT
     { $$ = "int"; }

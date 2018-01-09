@@ -1,0 +1,32 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "program_with_private"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": {
+      "type": "PrivateDeclarations",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
+            "type": "Identifier",
+            "name": "program_private"
+          },
+          "varInit": null
+        }
+      ]
+    },
+    "body": {
+      "type": "ProcessBody",
+      "sentences": []
+    }
+  },
+  "processes": []
+}
