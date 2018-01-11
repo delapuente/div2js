@@ -12,7 +12,8 @@ define([
   parser.yy = parser.yy || {};
   parser.yy.parseError = parser.parseError;
 
-  function compile(srcText) {
+  function compile(srcText, sourceURL) {
+    sourceURL = sourceURL || '/div-program.js';
     var div2Ast = parser.parse(srcText);
     var context = checker.extractContext(div2Ast);
     var jsAst = translator.translate(div2Ast, context);
@@ -25,7 +26,7 @@ define([
     var memoryOffsetsAst = extractMemoryBindings(jsAst);
     var wrappedAst = wrap(processMapAst, memoryOffsetsAst, memoryMapAst);
     var objText = generator.generate(wrappedAst);
-    return objText;
+    return objText + '\n//@ sourceURL=' + sourceURL;
   }
 
   function extractMemoryBindings(ast) {
