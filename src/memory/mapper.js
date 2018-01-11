@@ -33,19 +33,28 @@ define([], function () {
     constructor: MemoryMap,
 
     get globalSegmentSize() {
-      return this._getSegmentSize('globals') / MemoryMap.ALIGNMENT;
+      return this._getSegmentSize(this.cells['globals']) / MemoryMap.ALIGNMENT;
     },
 
     get localSegmentSize() {
-      return this._getSegmentSize('locals') / MemoryMap.ALIGNMENT;
+      return this._getSegmentSize(this.cells['locals']) / MemoryMap.ALIGNMENT;
     },
 
     get processPoolSize() {
       return this.maxProcess * this.processSize;
     },
 
+    get maxPrivateSegmentSize() {
+      return Math.max.call(
+        Math,
+        Object.keys(this.cells.privates).map(function (processName) {
+          this._getSegmentSize(this.cells.privates[processName]);
+        }, this)
+      );
+    },
+
     get processSize() {
-      var size = this.localSegmentSize; //TODO: Add privateSegmentSize
+      var size = this.localSegmentSize + this.maxPrivateSegmentSize;
       //XXX: Force to be ALWAYS even. In addition to an odd pool offset,
       //it warrants all the process to start in an ODD address so the id
       //is ALWAYS ODD and thus, always TRUE.
@@ -57,8 +66,7 @@ define([], function () {
       return MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize;
     },
 
-    _getSegmentSize: function (segment) {
-      var cells = this.cells[segment];
+    _getSegmentSize: function (cells) {
       return cells.reduce(function (total, cell) {
         return total + cell.size;
       }, 0);
@@ -67,6 +75,11 @@ define([], function () {
     _buildMap: function () {
       this.cells.globals = this._inToCells(this.symbols.globals);
       this.cells.locals = this._inToCells(this.symbols.locals);
+      this.cells.privates = {};
+      Object.keys(this.symbols.privates).forEach(function (processName) {
+        var privateMap = this._inToCells(this.symbols.privates[processName]);
+        this.cells.privates[processName] = privateMap;
+      }, this);
     },
 
     _inToCells: function (symbols) {
@@ -123,6 +136,10 @@ define([], function () {
     process: function (options) {
       var options = options || {};
       var id = options.id;
+      var type = options.type; //TODO: Remove. Now is necessary but in the
+                               //future, the type should be retrieved from the
+                               //local reserved.process_type
+
       //TODO: Check id validity
       if (id) {
         return new ProcessView(this, id);
@@ -131,16 +148,24 @@ define([], function () {
       var poolOffset = this._map.poolOffset;
       var processSize = this._map.processSize;
       var processOffset = poolOffset + index * processSize;
-      return new ProcessView(this, processOffset);
+      return new ProcessView(this, processOffset, type);
     },
 
     setMemory: function (buffer, offset) {
       return this._mem.set(buffer, offset);
     },
 
-    offset: function (segment, name, base) {
+    offset: function (segment, name, base, processName) {
       base = base || (segment === 'globals' ? MemoryMap.GLOBAL_OFFSET : 0);
       var cells = this._map.cells[segment];
+      //TODO: Refactor needed, all this ifs... Privates are special, perhaps
+      // they deserve a special tratment over an unified layer dealing with
+      // somethign lower level than named segments such as the segment array
+      // itself.
+      if (segment === 'privates') {
+        cells = cells[processName];
+        base += this._map.localSegmentSize;
+      }
       var names = name.split('.');
       var offset = this._offset(cells, names);
       if (offset === undefined) {
@@ -184,9 +209,10 @@ define([], function () {
     }
   };
 
-  function ProcessView(browser, base) {
+  function ProcessView(browser, base, type) {
     this._browser = browser;
     this._base = base;
+    this._type = type;
   }
 
   ProcessView.prototype = {
@@ -199,6 +225,12 @@ define([], function () {
     local: function (name) {
       return this._browser.seek(
         this._browser.offset('locals', name, this._base)
+      );
+    },
+
+    private: function (name) {
+      return this._browser.seek(
+        this._browser.offset('privates', name, this._base, this._type)
       );
     },
 

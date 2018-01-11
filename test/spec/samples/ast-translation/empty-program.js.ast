@@ -37,6 +37,24 @@
       "kind": "var"
     },
     {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "P_OFFSET"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 0,
+            "raw": "0"
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
       "type": "FunctionDeclaration",
       "id": {
         "type": "Identifier",

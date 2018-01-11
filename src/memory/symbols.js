@@ -32,6 +32,8 @@ define(['memory/definitions'], function (definitions) {
 
     locals: definitions.wellKnownLocals.map(normalize),
 
+    privates: {},
+
     addGlobal: function (definition) {
       return this._add('globals', definition);
     },
@@ -49,6 +51,20 @@ define(['memory/definitions'], function (definitions) {
       // that in the parser and translation module.
       return name === 'id' ||
              this._isKnown('locals', name.toLowerCase());
+    },
+
+    addPrivate: function (processName, definition) {
+      var normalized = this._normalize(definition);
+      this.privates[processName] = this.privates[processName] || [];
+      this.privates[processName].push(normalized);
+      return normalized;
+    },
+
+    isPrivate: function (processName, name) {
+      var processPrivates = this.privates[processName];
+      return processPrivates && processPrivates.some(function (symbol) {
+        return symbol.name === name;
+      });
     },
 
     _add: function (kind, definition) {

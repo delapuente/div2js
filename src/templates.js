@@ -194,6 +194,10 @@ define(['ast'], function (ast) {
     identifierForLocal: function (names) {
       return new ast.Identifier(['L'].concat(names).join('_').toUpperCase());
     },
+    
+    identifierForPrivate: function (names) {
+      return new ast.Identifier(names.join('_').toLowerCase());
+    },
 
     _localBase: new ast.MemberExpression(
       new ast.Identifier('exec'),

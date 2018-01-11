@@ -87,8 +87,9 @@ define([
     });
     var globals = translateGlobals(context);
     var locals = translateLocals(context);
+    var privateOffset = createPrivateOffset(context);
     return new ast.Program(
-      [globals, locals]
+      [globals, locals, privateOffset]
       .concat([programFunction])
       .concat(processesFunctions)
     );
@@ -103,6 +104,16 @@ define([
 
   function translateLocals(context) {
     return translateSegment('locals', context);
+  }
+
+  function createPrivateOffset(context) {
+    var mmap = context.getMemoryMap();
+    return new ast.VariableDeclaration([
+      new ast.VariableDeclarator(
+        new ast.Identifier('P_OFFSET'),
+        ast.Literal['for'](mmap.localSegmentSize)
+      )
+    ]);
   }
 
   function getGlobalBaseDeclaration(context) {
@@ -123,8 +134,11 @@ define([
     var definitions = [];
     for (var i = 0, cell; (cell = cells[i]); i++) {
       if (!cell.hidden) {
-        var identifierFactory =
-          'identifierFor' + { 'globals': 'Global', 'locals': 'Local' }[segment];
+        var identifierFactory = 'identifierFor' + ({
+          'globals': 'Global',
+          'locals': 'Local',
+          'privates': 'Private'
+        }[segment]);
         prefixes.push(cell.name);
         definitions.push(new ast.VariableDeclarator(
           t[identifierFactory](prefixes),
@@ -152,15 +166,33 @@ define([
 
   translators.Program = function (divProgram, context) {
     var name = divProgram.name.name;
+    context.enterProcess(name);
+    var privates = translatePrivates(name, context);
     var body = translate(divProgram.body, context);
-    return t.programFunction(name, body);
+    var translation = t.programFunction(name, (privates ? [privates] : []).concat(body));
+    context.exitProcess();
+    return translation;
   };
 
   translators.Process = function (divProgram, context) {
     var name = divProgram.name.name;
+    context.enterProcess(name);
+    var privates = translatePrivates(name, context);
     var body = translate(divProgram.body, context);
-    return t.processFunction(name, body);
+    var translation = t.processFunction(name, (privates ? [privates] : []).concat(body));
+    context.exitProcess();
+    return translation;
   };
+
+  function translatePrivates(processName, context) {
+    var mmap = context.getMemoryMap();
+    var privates = mmap.cells.privates[processName];
+    if (!privates) {
+      return null;
+    }
+    var vars = getSegmentDeclarations('privates', [], privates);
+    return new ast.VariableDeclaration(vars);
+  }
 
   translators.ProcessBody = function (divBody, context) {
     context.startLinearization();

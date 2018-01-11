@@ -180,5 +180,19 @@ define([
         });
     });
 
+    it('Properly handle privates', function () {
+      return load('declare-privates.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil, reject) {
+            program.ondebug = autoResume(withDebugSession(function (session) {
+              var program = session.process({ index: 0, type: 'declare_privates' });
+              expect(program.private('private_var').value).to.equal(10);
+            }));
+            program.onfinished = fulfil;
+            program.run();
+          });
+        });
+    });
+
   });
 });

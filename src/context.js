@@ -2,10 +2,10 @@
 define(['ast', 'templates'], function (ast, t) {
   'use strict';
 
-  function Context(ctx) {
-    this._processes = Object.create(null);
-    this._auxNames = Object.create(null);
-    this._currentProcessPrivates = Object.create(null);
+  function Context(ctx){
+    this._processes = {};
+    this._auxNames = {};
+    this._currentProcess = undefined;
 
     for (var key in ctx) {
       if (ctx.hasOwnProperty(key)) {
@@ -26,7 +26,7 @@ define(['ast', 'templates'], function (ast, t) {
     },
 
     startLinearization: function () {
-      this._auxNames = Object.create(null);
+      this._auxNames = {};
       this._currentLinearization = new Linearization();
     },
 
@@ -66,6 +66,14 @@ define(['ast', 'templates'], function (ast, t) {
 
     isProcess: function (name) {
       return name in this._processes;
+    },
+
+    enterProcess: function (name) {
+      this._currentProcess = name;
+    },
+
+    exitProcess: function () {
+      this._currentProcess = undefined;
     },
 
     return: function (expression) {
@@ -130,7 +138,7 @@ define(['ast', 'templates'], function (ast, t) {
       else if (symbols.isLocal(identifier)) {
         scope = 'local';
       }
-      else if (identifier in this._currentProcessPrivates) {
+      else if (symbols.isPrivate(this._currentProcess, identifier)) {
         scope = 'private';
       }
       return scope;
