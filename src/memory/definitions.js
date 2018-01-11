@@ -15,7 +15,7 @@ define([], function () {
   //
   //   * type   - is the type of the cell: byte (1 byte), word (2 bytes), int
   //              (4 bytes, "default" if omitted) and struct.
-  //   * "name"   - is the "name" of the symbol.
+  //   * name   - is the name of the symbol.
   //   * fields - if the type is struct, this is the list of symbols of the
   //              struct.
   //   * length - times to repeat this symbol (1 if omitted)
