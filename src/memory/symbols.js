@@ -1,8 +1,14 @@
 
-define(['memory/definitions'], function (definitions) {
+define([], function () {
   'use strict';
 
-  function normalize(symbol) {
+  function SymbolTable(definitions) {
+    this.globals = definitions.wellKnownGlobals.map(SymbolTable._normalize);
+    this.locals = definitions.wellKnownLocals.map(SymbolTable._normalize);
+    this.privates = {};
+  }
+
+  SymbolTable._normalize = function (symbol) {
     if (typeof symbol === 'string') {
       symbol = { name: symbol };
     }
@@ -18,21 +24,16 @@ define(['memory/definitions'], function (definitions) {
         throw new Error('Bad struct definition:' + symbol.name +
                         '. Struct with no fields.');
       }
-      normalized.fields = symbol.fields.map(normalize);
+      normalized.fields = symbol.fields.map(SymbolTable._normalize);
     }
     else {
       normalized.default = symbol.default || 0;
     }
     return normalized;
-  }
+  };
 
-  // XXX: Not sure if this should be a singleton.
-  return {
-    globals: definitions.wellKnownGlobals.map(normalize),
-
-    locals: definitions.wellKnownLocals.map(normalize),
-
-    privates: {},
+  SymbolTable.prototype = {
+    constructor: SymbolTable,
 
     addGlobal: function (definition) {
       return this._add('globals', definition);
@@ -54,7 +55,7 @@ define(['memory/definitions'], function (definitions) {
     },
 
     addPrivate: function (processName, definition) {
-      var normalized = this._normalize(definition);
+      var normalized = SymbolTable._normalize(definition);
       this.privates[processName] = this.privates[processName] || [];
       this.privates[processName].push(normalized);
       return normalized;
@@ -68,15 +69,17 @@ define(['memory/definitions'], function (definitions) {
     },
 
     _add: function (kind, definition) {
-      return (this[kind] = this._normalize(definition));
+      return (this[kind] = SymbolTable._normalize(definition));
     },
-
-    _normalize: normalize,
 
     _isKnown: function (kind, name) {
       return this[kind].some(function (symbol) {
         return symbol.name === name;
       });
     }
+  };
+
+  return {
+    SymbolTable: SymbolTable
   };
 });

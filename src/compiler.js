@@ -4,18 +4,24 @@ define([
   'div2checker',
   'div2trans',
   'ast',
+  'memory/symbols',
+  'memory/definitions',
   'memory/mapper',
   'lib/escodegen'
-], function (parser, checker, translator, ast, mapper, generator) {
+], function (
+  parser, checker, translator, ast, symbols, definitions, mapper, generator) {
   'use strict';
+
+  var SymbolTable = symbols.SymbolTable;
 
   parser.yy = parser.yy || {};
   parser.yy.parseError = parser.parseError;
 
   function compile(srcText, sourceURL) {
     sourceURL = sourceURL || '/div-program.js';
+    var symbolTable = new SymbolTable(definitions);
     var div2Ast = parser.parse(srcText);
-    var context = checker.extractContext(div2Ast);
+    var context = checker.extractContext(div2Ast, symbolTable);
     var jsAst = translator.translate(div2Ast, context);
     //TODO: When implementing non debug mode, the memory map can be omitted
     // although segment sizes and other relevant runtime variables are still

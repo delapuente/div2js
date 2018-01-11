@@ -1,9 +1,8 @@
 
 define([
-  'context',
   'ast',
   'templates',
-], function (ctx, ast, t) {
+], function (ast, t) {
   'use strict';
 
   var translators = Object.create(null);

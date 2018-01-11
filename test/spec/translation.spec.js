@@ -1,53 +1,31 @@
 /* global fetch */
 
 define([
-  '/src/context.js',
   '/src/ast.js',
   '/src/templates.js',
-  '/src/memory/mapper.js'
-], function (ctx, ast, templates, mapper) {
+  '/src/context.js',
+  '/src/memory/mapper.js',
+  '/src/memory/symbols.js'
+], function (ast, templates, ctx, mapper, symbols) {
   'use strict';
 
-  var testDefinitions = {
-    wellKnownGlobals: [
-      "text_z"
-    ],
-    wellKnownLocals: []
+  var SymbolTable = symbols.SymbolTable;
+
+  var simpleDefinitions = {
+    wellKnownGlobals: ['text_z'],
+    wellKnownLocals: ['x', 'y']
   };
 
   var context = newContext({
     'context': ctx,
     'ast': ast,
     'templates': templates,
-    'memory/definitions': testDefinitions
+    'memory/mapper': mapper
   });
 
   describe('AST translation from DIV2 to JavaScript', function () {
 
-    var translate, symbols;
-
-    function setupTranslationContext() {
-      var prototype = ctx.Context.prototype;
-      var isProcessStub = sinon.stub(prototype, 'isProcess');
-      var getScopeStub = sinon.stub(prototype, 'getScope');
-      isProcessStub.withArgs('p1').returns(true);
-      isProcessStub.withArgs('f1').returns(false);
-      getScopeStub.withArgs('text_z').returns('global');
-      getScopeStub.withArgs('x').returns('local');
-      getScopeStub.withArgs('y').returns('local');
-      getScopeStub.withArgs('id').returns('local');
-      getScopeStub.withArgs('i').returns('private');
-      getScopeStub.withArgs('j').returns('private');
-      getScopeStub.withArgs('a').returns('private');
-      getScopeStub.withArgs('b').returns('private');
-      getScopeStub.withArgs('c').returns('private');
-    }
-
-    function restoreTranslationContext() {
-      var prototype = ctx.Context.prototype;
-      prototype.isProcess.restore();
-      prototype.getScope.restore();
-    }
+    var translate, checker;
 
     function samplePath(name) {
       return '/test/spec/samples/ast-translation/' + name + '.ast';
@@ -64,23 +42,18 @@ define([
     }
 
     beforeEach(function (done) {
-      setupTranslationContext();
       context([
         '/src/div2trans.js',
-        '/src/memory/symbols.js'
-      ], function (trans, syms) {
-        symbols = syms;
-        translate = trans.translate;
+        '/src/div2checker.js'
+      ], function (translateModule, checkerModule) {
+        checker = checkerModule;
+        translate = translateModule.translate;
         done();
       });
     });
 
-    afterEach(function () {
-      restoreTranslationContext();
-    });
-
     var programs = [
-      'assignment.prg',
+      'assignment-to-local.prg',
       'assignment-to-global.prg',
       'assignment-to-private.prg',
       'empty-program.prg', // TODO: This case is special and we should implement
@@ -92,6 +65,8 @@ define([
       'loop-block.prg',
       'loop-empty-block.prg',
       'loop-nested-block.prg',
+      'private-empty.prg',
+      'private.prg',
       'repeat-block.prg',
       'repeat-empty-block.prg',
       'repeat-nested-block.prg',
@@ -132,9 +107,10 @@ define([
           get(targetAst)
         ])
         .then(function (abstractSyntaxTrees) {
-          var translationContext = new ctx.Context();
-          translationContext.setMemoryMap(new mapper.MemoryMap(symbols));
-          ast = translate(abstractSyntaxTrees[0], translationContext);
+          var divAst = abstractSyntaxTrees[0];
+          var symbolTable = new SymbolTable(simpleDefinitions);
+          var translationContext = checker.extractContext(divAst, symbolTable);
+          ast = translate(divAst, translationContext);
           expectedAst = abstractSyntaxTrees[1];
           expect(ast.pojo()).to.be.deep.equal(expectedAst);
         })
