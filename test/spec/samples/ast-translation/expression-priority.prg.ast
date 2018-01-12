@@ -1,111 +1,147 @@
 {
-  "type": "ProcessBody",
-  "sentences": [
-    {
-      "type": "ExpressionSentence",
-      "expression": {
-        "type": "AssignmentExpression",
-        "operator": "=",
-        "left": {
-          "type": "Identifier",
-          "name": "a"
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "test"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": {
+      "type": "PrivateDeclarations",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "varInit": null
         },
-        "right": {
-          "type": "AssignmentExpression",
-          "operator": "+=",
-          "left": {
+        {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
             "type": "Identifier",
             "name": "b"
           },
-          "right": {
-            "type": "RelationalExpression",
-            "operator": "<=",
+          "varInit": null
+        }
+      ]
+    },
+    "body": {
+      "type": "ProcessBody",
+      "sentences": [
+        {
+          "type": "ExpressionSentence",
+          "expression": {
+            "type": "AssignmentExpression",
+            "operator": "=",
             "left": {
-              "type": "RelationalExpression",
-              "operator": "<",
-              "left": {
-                "type": "Literal",
-                "value": 1,
-                "raw": "1"
-              },
-              "right": {
-                "type": "Literal",
-                "value": 2,
-                "raw": "2"
-              }
+              "type": "Identifier",
+              "name": "a"
             },
             "right": {
-              "type": "LogicalExpression",
-              "operator": "^",
+              "type": "AssignmentExpression",
+              "operator": "+=",
               "left": {
-                "type": "LogicalExpression",
-                "operator": "||",
-                "left": {
-                  "type": "Literal",
-                  "value": 3,
-                  "raw": "3"
-                },
-                "right": {
-                  "type": "Literal",
-                  "value": 4,
-                  "raw": "4"
-                }
+                "type": "Identifier",
+                "name": "b"
               },
               "right": {
-                "type": "BinaryExpression",
-                "operator": ">>",
+                "type": "RelationalExpression",
+                "operator": "<=",
                 "left": {
-                  "type": "BinaryExpression",
-                  "operator": "<<",
+                  "type": "RelationalExpression",
+                  "operator": "<",
                   "left": {
                     "type": "Literal",
-                    "value": 5,
-                    "raw": "5"
+                    "value": 1,
+                    "raw": "1"
                   },
                   "right": {
                     "type": "Literal",
-                    "value": 6,
-                    "raw": "6"
+                    "value": 2,
+                    "raw": "2"
                   }
                 },
                 "right": {
-                  "type": "BinaryExpression",
-                  "operator": "-",
+                  "type": "LogicalExpression",
+                  "operator": "^",
                   "left": {
-                    "type": "BinaryExpression",
-                    "operator": "+",
+                    "type": "LogicalExpression",
+                    "operator": "||",
                     "left": {
                       "type": "Literal",
-                      "value": 7,
-                      "raw": "7"
+                      "value": 3,
+                      "raw": "3"
                     },
                     "right": {
                       "type": "Literal",
-                      "value": 8,
-                      "raw": "8"
+                      "value": 4,
+                      "raw": "4"
                     }
                   },
                   "right": {
                     "type": "BinaryExpression",
-                    "operator": "/",
+                    "operator": ">>",
                     "left": {
                       "type": "BinaryExpression",
-                      "operator": "*",
+                      "operator": "<<",
                       "left": {
                         "type": "Literal",
-                        "value": 9,
-                        "raw": "9"
+                        "value": 5,
+                        "raw": "5"
                       },
                       "right": {
                         "type": "Literal",
-                        "value": 10,
-                        "raw": "10"
+                        "value": 6,
+                        "raw": "6"
                       }
                     },
                     "right": {
-                      "type": "Literal",
-                      "value": 11,
-                      "raw": "11"
+                      "type": "BinaryExpression",
+                      "operator": "-",
+                      "left": {
+                        "type": "BinaryExpression",
+                        "operator": "+",
+                        "left": {
+                          "type": "Literal",
+                          "value": 7,
+                          "raw": "7"
+                        },
+                        "right": {
+                          "type": "Literal",
+                          "value": 8,
+                          "raw": "8"
+                        }
+                      },
+                      "right": {
+                        "type": "BinaryExpression",
+                        "operator": "/",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "operator": "*",
+                          "left": {
+                            "type": "Literal",
+                            "value": 9,
+                            "raw": "9"
+                          },
+                          "right": {
+                            "type": "Literal",
+                            "value": 10,
+                            "raw": "10"
+                          }
+                        },
+                        "right": {
+                          "type": "Literal",
+                          "value": 11,
+                          "raw": "11"
+                        }
+                      }
                     }
                   }
                 }
@@ -113,7 +149,8 @@
             }
           }
         }
-      }
+      ]
     }
-  ]
+  },
+  "processes": [] 
 }

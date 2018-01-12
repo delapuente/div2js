@@ -1,0 +1,22 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "test"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": {
+      "type": "PrivateDeclarations",
+      "declarations": []
+    },
+    "body": {
+      "type": "ProcessBody",
+      "sentences": []
+    }
+  },
+  "processes": [] 
+}

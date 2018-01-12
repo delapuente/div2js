@@ -1,52 +1,139 @@
 {
-  "type": "WhileStatement",
-  "test": {
-    "type": "Literal",
-    "value": true,
-    "raw": "true"
-  },
-  "body": {
-    "type": "BlockStatement",
-    "body": [{
-      "type": "SwitchStatement",
-      "discriminant": {
-        "type": "MemberExpression",
-        "computed": false,
-        "object": {
+  "type": "Program",
+  "body": [
+    {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "G_BASE"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 1,
+            "raw": "1"
+          }
+        },
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "G_TEXT_Z"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 0,
+            "raw": "0"
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "L_X"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 0,
+            "raw": "0"
+          }
+        },
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "L_Y"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 1,
+            "raw": "1"
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
+      "type": "VariableDeclaration",
+      "declarations": [
+        {
+          "type": "VariableDeclarator",
+          "id": {
+            "type": "Identifier",
+            "name": "P_OFFSET"
+          },
+          "init": {
+            "type": "Literal",
+            "value": 2,
+            "raw": "2"
+          }
+        }
+      ],
+      "kind": "var"
+    },
+    {
+      "type": "FunctionDeclaration",
+      "id": {
+        "type": "Identifier",
+        "name": "program_test"
+      },
+      "params": [
+        {
+          "type": "Identifier",
+          "name": "mem"
+        },
+        {
           "type": "Identifier",
           "name": "exec"
         },
-        "property": {
+        {
           "type": "Identifier",
-          "name": "pc"
+          "name": "args"
         }
-      },
-      "cases": [{
-        "type": "SwitchCase",
-        "test": {
-          "type": "Literal",
-          "value": 1,
-          "raw": "1"
-        },
-        "consequent": [{
-          "type": "ExpressionStatement",
-          "expression": {
-            "type": "AssignmentExpression",
-            "operator": "=",
-            "left": {
-              "type": "MemberExpression",
-              "computed": true,
-              "object": {
-                "type": "Identifier",
-                "name": "mem"
-              },
-              "property": {
-                "type": "BinaryExpression",
-                "operator": "+",
-                "left": {
-                  "type": "BinaryExpression",
-                  "operator": "+",
-                  "left": {
+      ],
+      "defaults": [],
+      "body": {
+        "type": "BlockStatement",
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "id": {
+                  "type": "Identifier",
+                  "name": "a"
+                },
+                "init": {
+                  "type": "Literal",
+                  "value": 0,
+                  "raw": "0"
+                }
+              }
+            ],
+            "kind": "var"
+          },
+          {
+            "type": "WhileStatement",
+            "test": {
+              "type": "Literal",
+              "value": true,
+              "raw": "true"
+            },
+            "body": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "SwitchStatement",
+                  "discriminant": {
                     "type": "MemberExpression",
                     "computed": false,
                     "object": {
@@ -55,34 +142,84 @@
                     },
                     "property": {
                       "type": "Identifier",
-                      "name": "base"
+                      "name": "pc"
                     }
                   },
-                  "right": {
-                    "type": "Identifier",
-                    "name": "P_OFFSET"
-                  }
-                },
-                "right": {
-                  "type": "Identifier",
-                  "name": "a"
+                  "cases": [
+                    {
+                      "type": "SwitchCase",
+                      "test": {
+                        "type": "Literal",
+                        "value": 1,
+                        "raw": "1"
+                      },
+                      "consequent": [
+                        {
+                          "type": "ExpressionStatement",
+                          "expression": {
+                            "type": "AssignmentExpression",
+                            "operator": "=",
+                            "left": {
+                              "type": "MemberExpression",
+                              "computed": true,
+                              "object": {
+                                "type": "Identifier",
+                                "name": "mem"
+                              },
+                              "property": {
+                                "type": "BinaryExpression",
+                                "operator": "+",
+                                "left": {
+                                  "type": "BinaryExpression",
+                                  "operator": "+",
+                                  "left": {
+                                    "type": "MemberExpression",
+                                    "computed": false,
+                                    "object": {
+                                      "type": "Identifier",
+                                      "name": "exec"
+                                    },
+                                    "property": {
+                                      "type": "Identifier",
+                                      "name": "base"
+                                    }
+                                  },
+                                  "right": {
+                                    "type": "Identifier",
+                                    "name": "P_OFFSET"
+                                  }
+                                },
+                                "right": {
+                                  "type": "Identifier",
+                                  "name": "a"
+                                }
+                              }
+                            },
+                            "right": {
+                              "type": "Literal",
+                              "value": 1,
+                              "raw": "1"
+                            }
+                          }
+                        },
+                        {
+                          "type": "ReturnStatement",
+                          "argument": {
+                            "type": "Identifier",
+                            "name": "__yieldEnd"
+                          }
+                        }
+                      ]
+                    }
+                  ]
                 }
-              }
-            },
-            "right": {
-              "type": "Literal",
-              "value": 1,
-              "raw": "1"
+              ]
             }
           }
-        }, {
-          "type": "ReturnStatement",
-          "argument": {
-            "type": "Identifier",
-            "name": "__yieldEnd"
-          }
-        }]
-      }]
-    }]
-  }
+        ]
+      },
+      "generator": false,
+      "expression": false
+    }
+  ]
 }

@@ -1,95 +1,148 @@
 {
-  "type": "ProcessBody",
-  "sentences": [
-    {
-      "type": "ForSentence",
-      "inits": [
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": {
+      "type": "PrivateDeclarations",
+      "declarations": [
         {
-          "type": "AssignmentExpression",
-          "operator": "=",
-          "left": {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
             "type": "Identifier",
             "name": "i"
           },
-          "right": {
-            "type": "Literal",
-            "value": 0, 
-            "raw": "0"
-          }
+          "varInit": null
         },
         {
-          "type": "AssignmentExpression",
-          "operator": "=",
-          "left": {
+          "type": "VariableDeclarator",
+          "varType": "int",
+          "varName": {
             "type": "Identifier",
             "name": "j"
           },
-          "right": {
-            "type": "Literal",
-            "value": 0, 
-            "raw": "0"
-          }
+          "varInit": null
         }
-      ],
-      "tests": [
+      ]
+    },
+    "body": {
+      "type": "ProcessBody",
+      "sentences": [
         {
-          "type": "Identifier",
-          "name": "i"
+          "type": "ForSentence",
+          "inits": [
+            {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "Identifier",
+                "name": "i"
+              },
+              "right": {
+                "type": "Literal",
+                "value": 0,
+                "raw": "0"
+              }
+            },
+            {
+              "type": "AssignmentExpression",
+              "operator": "=",
+              "left": {
+                "type": "Identifier",
+                "name": "j"
+              },
+              "right": {
+                "type": "Literal",
+                "value": 0,
+                "raw": "0"
+              }
+            }
+          ],
+          "tests": [
+            {
+              "type": "Identifier",
+              "name": "i"
+            },
+            {
+              "type": "Identifier",
+              "name": "j"
+            }
+          ],
+          "updates": [
+            {
+              "type": "AssignmentExpression",
+              "operator": "+=",
+              "left": {
+                "type": "Identifier",
+                "name": "i"
+              },
+              "right": {
+                "type": "Literal",
+                "value": 1,
+                "raw": "1"
+              }
+            },
+            {
+              "type": "AssignmentExpression",
+              "operator": "+=",
+              "left": {
+                "type": "Identifier",
+                "name": "j"
+              },
+              "right": {
+                "type": "Literal",
+                "value": 1,
+                "raw": "1"
+              }
+            }
+          ],
+          "body": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "ExpressionSentence",
+                "expression": {
+                  "type": "AssignmentExpression",
+                  "operator": "=",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "text_z"
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 4,
+                    "raw": "4"
+                  }
+                }
+              }
+            ]
+          }
         },
         {
-          "type": "Identifier",
-          "name": "j"
-        }
-      ],
-      "updates": [
-        {
-          "type": "AssignmentExpression",
-          "operator": "+=",
-          "left": {
-            "type": "Identifier",
-            "name": "i"
-          },
-          "right": {
-            "type": "Literal",
-            "value": 1, 
-            "raw": "1"
-          }
-        },
-        {
-          "type": "AssignmentExpression",
-          "operator": "+=",
-          "left": {
-            "type": "Identifier",
-            "name": "j"
-          },
-          "right": {
-            "type": "Literal",
-            "value": 1, 
-            "raw": "1"
-          }
-        }
-      ],
-      "body": {
-        "type": "SentenceBlock",
-        "sentences": [
-          {
-            "type": "ExpressionSentence",
-            "expression": {
+          "type": "ExpressionSentence",
+          "expression": {
+            "type": "AssignmentExpression",
+            "operator": "=",
+            "left": {
+              "type": "Identifier",
+              "name": "text_z"
+            },
+            "right": {
               "type": "Literal",
-              "value": 4,
-              "raw": "4"
+              "value": 8,
+              "raw": "8"
             }
           }
-        ]
-      }
-    },
-    {
-      "type": "ExpressionSentence",
-      "expression": {
-        "type": "Literal",
-        "value": 8,
-        "raw": "8"
-      }
+        }
+      ]
     }
-  ]
+  },
+  "processes": []
 }

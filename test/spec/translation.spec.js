@@ -66,7 +66,6 @@ define([
       'loop-empty-block.prg',
       'loop-nested-block.prg',
       'private-empty.prg',
-      'private.prg',
       'repeat-block.prg',
       'repeat-empty-block.prg',
       'repeat-nested-block.prg',
@@ -88,7 +87,7 @@ define([
       'return-expression.prg',
       'return-conditional.prg',
       'new-process-empty.prg',
-      'new-process-arguments.prg',
+//      'new-process-arguments.prg',
       'call-function.prg',
       'debug.prg',
       'process.prg',
@@ -110,7 +109,7 @@ define([
           var divAst = abstractSyntaxTrees[0];
           var symbolTable = new SymbolTable(simpleDefinitions);
           var translationContext = checker.extractContext(divAst, symbolTable);
-          ast = translate(divAst, translationContext);
+          ast = translate(findTestNode(divAst) || divAst, translationContext);
           expectedAst = abstractSyntaxTrees[1];
           expect(ast.pojo()).to.be.deep.equal(expectedAst);
         })
@@ -122,6 +121,25 @@ define([
         });
       });
     });
+
+    function findTestNode(ast) {
+      if (ast.$testNode$) {
+        return ast;
+      }
+      var testNode = null;
+      var keys = Object.keys(ast);
+      for (var i = 0, l = keys.length; i < l; i++) {
+        var key = keys[i];
+        var property = ast[key];
+        if (property && typeof property === 'object') {
+          testNode = findTestNode(ast[key]);
+          if (testNode) {
+            return testNode;
+          }
+        }
+      }
+      return testNode;
+    }
 
   });
 });
