@@ -33,10 +33,16 @@ define([
       if (processAst && processAst.privates) {
         processAst.privates.declarations.forEach(function (declarationAst) {
           var processName = processAst.name.name;
-          symbolTable.addPrivate(
-            processName,
-            definitionFromAst(declarationAst)
-          );
+          var varName = declarationAst.varName.name;
+          if (!symbolTable.isPrivate(processName, varName)) {
+            symbolTable.addPrivate(
+              processName,
+              definitionFromAst(declarationAst)
+            );
+          } else {
+            throw new Error(
+              'The private ' + varName + ' has been already declared.')
+          }
         });
       }
     });
