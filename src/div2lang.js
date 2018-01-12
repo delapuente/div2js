@@ -328,7 +328,7 @@ case 79:
         type: "LoopSentence",
         body: {
           type: "SentenceBlock",
-          sentences: []
+          sentences: $$[$0]
         }
       };
     

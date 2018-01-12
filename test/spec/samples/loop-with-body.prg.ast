@@ -1,0 +1,32 @@
+{
+  "type": "Unit",
+  "program": {
+    "type": "Program",
+    "name": {
+      "type": "Identifier",
+      "name": "basic"
+    },
+    "consts": null,
+    "globals": null,
+    "locals": null,
+    "privates": null,
+    "body": {
+      "type": "ProcessBody",
+      "sentences": [
+        {
+          "type": "LoopSentence",
+          "body": {
+            "type": "SentenceBlock",
+            "sentences": [
+              {
+                "type": "FrameSentence",
+                "argument": null
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "processes": [] 
+}

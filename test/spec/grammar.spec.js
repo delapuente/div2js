@@ -54,7 +54,8 @@ define([
       'debug.prg',
       'process.prg',
       'expression.prg',
-      'parenthesised-expression.prg'
+      'parenthesised-expression.prg',
+      'loop-with-body.prg'
     ];
 
     programs.forEach(function (programName) {

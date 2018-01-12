@@ -562,7 +562,7 @@ loop_sentence
         type: "LoopSentence",
         body: {
           type: "SentenceBlock",
-          sentences: []
+          sentences: $2
         }
       };
     }
