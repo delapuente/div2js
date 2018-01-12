@@ -3,6 +3,10 @@
 
   /* Here comes the offset declarations */
 
+  function __yieldFrame(npc, completion) {
+    return new rt.Baton('frame', { npc: npc, completion: completion });
+  }
+
   function __yieldDebug(npc) {
     return new rt.Baton('debug', { npc: npc });
   }

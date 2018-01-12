@@ -5,6 +5,13 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
   var Scheduler = scheduler.Scheduler;
   var MemoryManager = memory.MemoryManager;
 
+  function Environment() {
+    this.video = {
+      width: 320,
+      height: 200
+    };
+  }
+
   //TODO: Runtime should be passed with a light version of the memory map,
   // enough to be able of allocating the needed memory.
   function Runtime(processMap, memorySymbols) {
@@ -12,9 +19,11 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
     this._onfinished = null;
     this._systems = [];
     this._memoryManager = new MemoryManager(memorySymbols);
+    this._environment = new Environment();
     var memory = this._memoryManager.getMemory();
     this._scheduler = new Scheduler(memory, processMap, {
       onyield: this._schedule.bind(this),
+      //XXX: Update means after all processes have run entirely
       onupdate: this._runSystems.bind(this)
     });
   }
@@ -23,9 +32,8 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
     constructor: Runtime,
 
     registerSystem: function (system) {
-      if (system.initialize()) {
-        this._systems.push(system);
-      }
+      system.initialize();
+      this._systems.push(system);
     },
 
     getMemoryBrowser: function () {
@@ -60,8 +68,9 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
 
     _runSystems: function () {
       var memoryBrowser = this.getMemoryBrowser();
+      var environment = this._environment;
       this._systems.forEach(function (system) {
-        system.run(memoryBrowser);
+        system.run(memoryBrowser, environment);
       });
     },
 
@@ -97,7 +106,11 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
 
     },
 
-    // TODO: Consider passing the id through the batton
+    _frame: function (baton) {
+
+    },
+
+    // TODO: Consider passing the id through the baton
     _end: function (baton) {
       var currentProcessId = this._scheduler.currentExecution.id;
       this._memoryManager.freeProcess(currentProcessId);

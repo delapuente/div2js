@@ -137,6 +137,7 @@ module.exports = function(grunt) {
                 '/test/spec/samples',
                 connect.static('test/spec/samples')
               ),
+              connect().use('/demos', connect.static('test/demos')),
               connect.static('test')
             ];
           }

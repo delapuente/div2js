@@ -98,6 +98,7 @@ define([], function () {
       }
 
       if (this._running) {
+        this._call('onupdate');
         this._current = 0;
         this._processList = this._processList.filter(isAlive);
         this._scheduleStep();
