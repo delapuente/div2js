@@ -1,8 +1,9 @@
 
 define([
   'div2lang',
-  'div2trans'
-], function (parser, translator) {
+  'div2trans',
+  'compiler'
+], function (parser, translator, compiler) {
   'use strict';
 
   parser.yy = parser.yy || {};
@@ -10,7 +11,8 @@ define([
 
   return {
     parser: parser,
-    translator: translator
+    translator: translator,
+    compile: compiler.compile
   };
 
 });
