@@ -1,4 +1,6 @@
-var expect = chai.expect;
+import './spec/grammar.spec';
+
+/* var expect = chai.expect;
 mocha.setup('bdd');
 
 requirejs.config({
@@ -11,4 +13,4 @@ requirejs([
   'spec/execution.spec.js'
 ], function () {
   mocha.run();
-});
+}); */
