@@ -5,7 +5,7 @@ module.exports = function (config) {
     basePath: '../',
     frameworks: ['mocha', 'sinon-chai'],
     files: [
-      { pattern: 'tests/spec_runner.js', watched: false },
+      { pattern: 'tests/index.js', watched: false },
       { pattern: 'tests/spec/samples/**/*', included: false },
       { pattern: 'src/div2lang.js', included: false, served: false },
     ],

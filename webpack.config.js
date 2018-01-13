@@ -1,12 +1,12 @@
 const path = require('path');
 
 module.exports = {
-  entry: ['./src/index.ts'],
+  entry: ['./src/div2js.js'],
   output: {
-    filename: 'div-files.js',
+    filename: 'div2js.js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: 'dist',
-    library: 'div',
+    library: 'div2',
     libraryTarget: 'umd'
   },
   resolve: {

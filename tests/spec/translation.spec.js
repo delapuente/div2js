@@ -73,7 +73,6 @@ describe('AST translation from DIV2 to JavaScript', function () {
     var targetAst = sourceAst.replace('.prg', '.js');
 
     it('Translates `' + sourceAst + '`', function () {
-      console.log('Translation for `' + sourceAst + '`');
       var ast, expectedAst;
       return Promise.all([
         get(sourceAst),
@@ -86,12 +85,6 @@ describe('AST translation from DIV2 to JavaScript', function () {
         ast = translate(findTestNode(divAst) || divAst, translationContext);
         expectedAst = abstractSyntaxTrees[1];
         expect(ast.pojo()).to.be.deep.equal(expectedAst);
-      })
-      .catch(function (error) {
-        console.error('Failed!');
-        console.log('given', JSON.stringify(ast, undefined, 2));
-        console.log('expec', JSON.stringify(expectedAst, undefined, 2));
-        throw error;
       });
     });
   });

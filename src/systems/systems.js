@@ -1,7 +1,5 @@
-define(['systems/rendering/wgl2'], function (wgl2) {
-  'use strict';
+import wgl2 from './rendering/wgl2';
 
-  return {
-    DefaultRender: wgl2
-  };
-});
+export {
+  wgl2 as DefaultRender
+};

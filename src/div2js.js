@@ -1,18 +1,17 @@
+import * as parser from './div2lang';
+import * as loader from './loader';
+import * as translator from './div2trans';
+import * as compiler from './compiler';
 
-define([
-  'div2lang',
-  'div2trans',
-  'compiler'
-], function (parser, translator, compiler) {
-  'use strict';
+parser.yy = parser.yy || {};
+parser.yy.parseError = parser.parseError;
 
-  parser.yy = parser.yy || {};
-  parser.yy.parseError = parser.parseError;
+let compile = compiler.compile;
+let load = loader.load;
 
-  return {
-    parser: parser,
-    translator: translator,
-    compile: compiler.compile
-  };
-
-});
+export {
+  parser,
+  translator,
+  compile,
+  load
+};

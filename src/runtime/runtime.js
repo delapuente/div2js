@@ -1,6 +1,5 @@
-
-define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
-  'use strict';
+import * as memory from './memory';
+import * as scheduler from './scheduler';
 
   var Scheduler = scheduler.Scheduler;
   var MemoryManager = memory.MemoryManager;
@@ -118,8 +117,9 @@ define(['runtime/memory', 'runtime/scheduler'], function (memory, scheduler) {
     }
   };
 
-  return {
-    Runtime: Runtime,
-    Baton: scheduler.Baton
+  var Baton = scheduler.Baton;
+
+  export {
+    Runtime,
+    Baton
   };
-});

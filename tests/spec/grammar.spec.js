@@ -57,7 +57,6 @@ describe('DIV2 parser', function () {
   programs.forEach(function (programName) {
     var path = samplePath(programName);
     it('parses `' + path + '`', function () {
-      console.log('AST for `' + path + '`');
       var ast, expectedAst;
       return Promise.all([
         fetch(path),
@@ -72,11 +71,6 @@ describe('DIV2 parser', function () {
         ast = parser.parse(sources[0]);
         expectedAst = JSON.parse(sources[1]);
         expect(ast).to.deep.equal(expectedAst);
-      })
-      .catch(function (error) {
-        console.log('given', JSON.stringify(ast, undefined, 2));
-        console.log('expec', JSON.stringify(expectedAst, undefined, 2));
-        throw error;
       });
     });
   });
