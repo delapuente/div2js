@@ -1,145 +1,118 @@
-/* global fetch */
+import * as translator from '../../src/div2trans';
+import * as checker from '../../src/div2checker';
+import * as mapper from '../../src/memory/mapper';
+import { SymbolTable } from '../../src/memory/symbols';
 
-define([
-  '/src/ast.js',
-  '/src/templates.js',
-  '/src/context.js',
-  '/src/memory/mapper.js',
-  '/src/memory/symbols.js'
-], function (ast, templates, ctx, mapper, symbols) {
-  'use strict';
+var simpleDefinitions = {
+  wellKnownGlobals: ['text_z'],
+  wellKnownLocals: ['x', 'y']
+};
 
-  var SymbolTable = symbols.SymbolTable;
+describe('AST translation from DIV2 to JavaScript', function () {
 
-  var simpleDefinitions = {
-    wellKnownGlobals: ['text_z'],
-    wellKnownLocals: ['x', 'y']
-  };
+  var translate = translator.translate;
 
-  var context = newContext({
-    'context': ctx,
-    'ast': ast,
-    'templates': templates,
-    'memory/mapper': mapper
-  });
+  function samplePath(name) {
+    return 'base/tests/spec/samples/ast-translation/' + name + '.ast';
+  }
 
-  describe('AST translation from DIV2 to JavaScript', function () {
-
-    var translate, checker;
-
-    function samplePath(name) {
-      return '/test/spec/samples/ast-translation/' + name + '.ast';
-    }
-
-    function get(path) {
-      return fetch(path)
-      .then(function (response) {
-        if (response.status === 404) {
-          throw new Error(path + ' does not exist.');
-        }
-        return response.json();
-      });
-    }
-
-    beforeEach(function (done) {
-      context([
-        '/src/div2trans.js',
-        '/src/div2checker.js'
-      ], function (translateModule, checkerModule) {
-        checker = checkerModule;
-        translate = translateModule.translate;
-        done();
-      });
+  function get(path) {
+    return fetch(path)
+    .then(function (response) {
+      if (response.status === 404) {
+        throw new Error(path + ' does not exist.');
+      }
+      return response.json();
     });
+  }
 
-    var programs = [
-      'assignment-to-local.prg',
-      'assignment-to-global.prg',
-      'assignment-to-private.prg',
-      'empty-program.prg', // TODO: This case is special and we should implement
-                           //a less specific test, agnostic from the memory map.
-      'straight-block.prg',
-      'while-block.prg',
-      'while-empty-block.prg',
-      'while-nested-block.prg',
-      'loop-block.prg',
-      'loop-empty-block.prg',
-      'loop-nested-block.prg',
-      'private-empty.prg',
-      'repeat-block.prg',
-      'repeat-empty-block.prg',
-      'repeat-nested-block.prg',
-      'from-block.prg',
-      'from-empty-block.prg',
-      'from-nested-block.prg',
-      'for-block.prg',
-      'for-empty-block.prg',
-      'for-nested-block.prg',
-      'if-block.prg',
-      'if-else-block.prg',
-      'switch-block.prg',
-      'switch-empty-block.prg',
-      'switch-nested-block.prg',
-      'clone.prg',
-      'frame.prg',
-      'frame-expression.prg',
-      'return.prg',
-      'return-expression.prg',
-      'return-conditional.prg',
-      'new-process-empty.prg',
+  var programs = [
+    'assignment-to-local.prg',
+    'assignment-to-global.prg',
+    'assignment-to-private.prg',
+    'empty-program.prg', // TODO: This case is special and we should implement
+                          //a less specific test, agnostic from the memory map.
+    'straight-block.prg',
+    'while-block.prg',
+    'while-empty-block.prg',
+    'while-nested-block.prg',
+    'loop-block.prg',
+    'loop-empty-block.prg',
+    'loop-nested-block.prg',
+    'private-empty.prg',
+    'repeat-block.prg',
+    'repeat-empty-block.prg',
+    'repeat-nested-block.prg',
+    'from-block.prg',
+    'from-empty-block.prg',
+    'from-nested-block.prg',
+    'for-block.prg',
+    'for-empty-block.prg',
+    'for-nested-block.prg',
+    'if-block.prg',
+    'if-else-block.prg',
+    'switch-block.prg',
+    'switch-empty-block.prg',
+    'switch-nested-block.prg',
+    'clone.prg',
+    'frame.prg',
+    'frame-expression.prg',
+    'return.prg',
+    'return-expression.prg',
+    'return-conditional.prg',
+    'new-process-empty.prg',
 //      'new-process-arguments.prg',
-      'call-function.prg',
-      'debug.prg',
-      'process.prg',
-      'expression-priority.prg'
-    ];
+    'call-function.prg',
+    'debug.prg',
+    'process.prg',
+    'expression-priority.prg'
+  ];
 
-    programs.forEach(function (programName) {
-      var sourceAst = samplePath(programName);
-      var targetAst = sourceAst.replace('.prg', '.js');
+  programs.forEach(function (programName) {
+    var sourceAst = samplePath(programName);
+    var targetAst = sourceAst.replace('.prg', '.js');
 
-      it('Translates `' + sourceAst + '`', function () {
-        console.log('Translation for `' + sourceAst + '`');
-        var ast, expectedAst;
-        return Promise.all([
-          get(sourceAst),
-          get(targetAst)
-        ])
-        .then(function (abstractSyntaxTrees) {
-          var divAst = abstractSyntaxTrees[0];
-          var symbolTable = new SymbolTable(simpleDefinitions);
-          var translationContext = checker.extractContext(divAst, symbolTable);
-          ast = translate(findTestNode(divAst) || divAst, translationContext);
-          expectedAst = abstractSyntaxTrees[1];
-          expect(ast.pojo()).to.be.deep.equal(expectedAst);
-        })
-        .catch(function (error) {
-          console.error('Failed!');
-          console.log('given', JSON.stringify(ast, undefined, 2));
-          console.log('expec', JSON.stringify(expectedAst, undefined, 2));
-          throw error;
-        });
+    it('Translates `' + sourceAst + '`', function () {
+      console.log('Translation for `' + sourceAst + '`');
+      var ast, expectedAst;
+      return Promise.all([
+        get(sourceAst),
+        get(targetAst)
+      ])
+      .then(function (abstractSyntaxTrees) {
+        var divAst = abstractSyntaxTrees[0];
+        var symbolTable = new SymbolTable(simpleDefinitions);
+        var translationContext = checker.extractContext(divAst, symbolTable);
+        ast = translate(findTestNode(divAst) || divAst, translationContext);
+        expectedAst = abstractSyntaxTrees[1];
+        expect(ast.pojo()).to.be.deep.equal(expectedAst);
+      })
+      .catch(function (error) {
+        console.error('Failed!');
+        console.log('given', JSON.stringify(ast, undefined, 2));
+        console.log('expec', JSON.stringify(expectedAst, undefined, 2));
+        throw error;
       });
     });
+  });
 
-    function findTestNode(ast) {
-      if (ast.$testNode$) {
-        return ast;
-      }
-      var testNode = null;
-      var keys = Object.keys(ast);
-      for (var i = 0, l = keys.length; i < l; i++) {
-        var key = keys[i];
-        var property = ast[key];
-        if (property && typeof property === 'object') {
-          testNode = findTestNode(ast[key]);
-          if (testNode) {
-            return testNode;
-          }
+  function findTestNode(ast) {
+    if (ast.$testNode$) {
+      return ast;
+    }
+    var testNode = null;
+    var keys = Object.keys(ast);
+    for (var i = 0, l = keys.length; i < l; i++) {
+      var key = keys[i];
+      var property = ast[key];
+      if (property && typeof property === 'object') {
+        testNode = findTestNode(ast[key]);
+        if (testNode) {
+          return testNode;
         }
       }
-      return testNode;
     }
+    return testNode;
+  }
 
-  });
 });

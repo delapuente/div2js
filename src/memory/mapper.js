@@ -1,6 +1,3 @@
-
-define([], function () {
-
   function MemoryMap(symbols) {
     // TODO: In DIV, the binary has process pool and globals in the data segment
     // but in this implementation we are allocating that memory at the beginning
@@ -243,10 +240,11 @@ define([], function () {
     }
   };
 
-  return {
-    MemoryMap: MemoryMap,
-    MemoryBrowser: MemoryBrowser,
-    exportToJson: MemoryMap.exportToJson,
-    importFromJson: MemoryMap.importFromJson
+  let { exportToJson, importFromJson } = MemoryMap;
+
+  export {
+    MemoryMap,
+    MemoryBrowser,
+    exportToJson,
+    importFromJson
   };
-});

@@ -1,4 +1,5 @@
 import './spec/grammar.spec';
+import './spec/translation.spec';
 
 /* var expect = chai.expect;
 mocha.setup('bdd');

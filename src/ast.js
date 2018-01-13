@@ -1,7 +1,4 @@
 
-define([], function () {
-  'use strict';
-
   function Node() {}
 
   Node.prototype.pojo = function () {
@@ -229,29 +226,28 @@ define([], function () {
     }
   }
 
-  return {
-    AssignmentExpression: AssignmentExpression,
-    ArrayExpression: ArrayExpression,
-    BinaryExpression: BinaryExpression,
-    BlockStatement: BlockStatement,
-    BreakStatement: BreakStatement,
-    CallExpression: CallExpression,
-    ConditionalExpression: ConditionalExpression,
-    ExpressionStatement: ExpressionStatement,
-    FunctionDeclaration: FunctionDeclaration,
-    Identifier: Identifier,
-    Literal: Literal,
-    LogicalExpression: LogicalExpression,
-    MemberExpression: MemberExpression,
-    ObjectExpression: ObjectExpression,
-    Program: Program,
-    ReturnStatement: ReturnStatement,
-    SwitchCase: SwitchCase,
-    SwitchStatement: SwitchStatement,
-    UnaryExpression: UnaryExpression,
-    VariableDeclaration: VariableDeclaration,
-    VariableDeclarator: VariableDeclarator,
-    WhileStatement: WhileStatement,
-    fromJson: fromJson
+  export {
+    AssignmentExpression,
+    ArrayExpression,
+    BinaryExpression,
+    BlockStatement,
+    BreakStatement,
+    CallExpression,
+    ConditionalExpression,
+    ExpressionStatement,
+    FunctionDeclaration,
+    Identifier,
+    Literal,
+    LogicalExpression,
+    MemberExpression,
+    ObjectExpression,
+    Program,
+    ReturnStatement,
+    SwitchCase,
+    SwitchStatement,
+    UnaryExpression,
+    VariableDeclaration,
+    VariableDeclarator,
+    WhileStatement,
+    fromJson
   };
-});

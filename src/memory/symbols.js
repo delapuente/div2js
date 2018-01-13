@@ -1,7 +1,4 @@
 
-define([], function () {
-  'use strict';
-
   function SymbolTable(definitions) {
     this.globals = definitions.wellKnownGlobals.map(SymbolTable._normalize);
     this.locals = definitions.wellKnownLocals.map(SymbolTable._normalize);
@@ -79,7 +76,6 @@ define([], function () {
     }
   };
 
-  return {
-    SymbolTable: SymbolTable
+  export {
+    SymbolTable
   };
-});
