@@ -2,7 +2,7 @@
 import * as ast from './ast';
 import t from './templates';
 
-function Context(ctx){
+function Context(ctx?){
   this._processes = {};
   this._auxNames = {};
   this._currentProcess = undefined;
@@ -377,7 +377,7 @@ Linearization.prototype = {
   }
 };
 
-function Label(n) { this.label = n; }
+function Label(n?) { this.label = n; }
 
 Label.prototype = {
   constructor: Label,

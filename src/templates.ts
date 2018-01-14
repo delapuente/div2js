@@ -259,7 +259,7 @@ export default {
   programFunction: function (name, body) {
     return new ast.FunctionDeclaration(
       new ast.Identifier('program_' + name),
-      this.processParameters, null,
+      this.processParameters, undefined,
       body
     );
   },
@@ -267,7 +267,7 @@ export default {
   processFunction: function (name, body) {
     return new ast.FunctionDeclaration(
       new ast.Identifier('process_' + name),
-      this.processParameters, null,
+      this.processParameters, undefined,
       body
     );
   },

@@ -1,4 +1,5 @@
-import * as parser from './div2lang';
+
+import parser from './div2lang';
 import * as checker from './div2checker';
 import * as translator from './div2trans';
 import * as ast from './ast';
@@ -12,8 +13,7 @@ var SymbolTable = symbols.SymbolTable;
 parser.yy = parser.yy || {};
 parser.yy.parseError = parser.parseError;
 
-function compile(srcText, sourceURL) {
-  sourceURL = sourceURL || '/div-program.js';
+function compile(srcText, sourceURL='/div-program.js') {
   var symbolTable = new SymbolTable(definitions);
   var div2Ast = parser.parse(srcText);
   var context = checker.extractContext(div2Ast, symbolTable);

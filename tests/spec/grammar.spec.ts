@@ -1,4 +1,4 @@
-import * as div2lang from '../../src/div2lang';
+import div2lang from '../../src/div2lang';
 import { expect } from 'chai';
 
 div2lang.yy = div2lang.yy || {};

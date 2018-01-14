@@ -43,7 +43,7 @@ translators.LogicalExpression = function (divLogical, context) {
     default:
       throw new Error('Logical operator unknown: ' + divLogical.operator);
   }
-  return new t.callWith(logicalFunction, [
+  return t.callWith(logicalFunction, [
       translate(divLogical.left, context),
       translate(divLogical.right, context)
   ]);
@@ -412,8 +412,7 @@ function translate(divAst, context) {
   return translators[divAst.type](divAst, context);
 }
 
-function translateBody(divBodySentence, context, bodyProperty) {
-  bodyProperty = bodyProperty || 'body';
+function translateBody(divBodySentence, context, bodyProperty='body') {
   return divBodySentence[bodyProperty].sentences.map(function (sentence) {
     return translate(sentence, context);
   });

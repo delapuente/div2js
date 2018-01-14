@@ -1,12 +1,12 @@
 
-  function Node() {}
+  class Node {
+    pojo() {
+      return JSON.parse(JSON.stringify(this));
+    };
+  
+  }
 
-  Node.prototype.pojo = function () {
-    return JSON.parse(JSON.stringify(this));
-  };
-
-  function AssignmentExpression(left, right, operator) {
-    operator = operator || '=';
+  function AssignmentExpression(left, right, operator='=') {
     this.type = 'AssignmentExpression';
     this.operator = operator;
     this.left = left;
@@ -35,16 +35,16 @@
   }
   inherits(BlockStatement, Node);
 
-  function BreakStatement(label) {
+  function BreakStatement(label=null) {
     this.type = 'BreakStatement';
-    this.label = label || null;
+    this.label = label;
   }
   inherits(BreakStatement, Node);
 
-  function CallExpression(callee, args) {
+  function CallExpression(callee, args=[]) {
     this.type = 'CallExpression';
     this.callee = callee;
-    this.arguments = args || [];
+    this.arguments = args;
   }
   inherits(CallExpression, Node);
 
@@ -63,15 +63,15 @@
   inherits(ExpressionStatement, Node);
 
   /* jshint maxparams: 6 */
-  function FunctionDeclaration(id, params, defaults, body,
-                               generator, expression) {
+  function FunctionDeclaration(id=null, params=[], defaults=[], body,
+                               generator=false, expression=false) {
     this.type = 'FunctionDeclaration';
-    this.id = id || null;
-    this.params = params || [];
-    this.defaults = defaults || [];
+    this.id = id;
+    this.params = params;
+    this.defaults = defaults;
     this.body = new BlockStatement(body);
-    this.generator = generator || false;
-    this.expression = expression || false;
+    this.generator = generator;
+    this.expression = expression;
   }
   inherits(FunctionDeclaration, Node);
 
@@ -81,26 +81,34 @@
   }
   inherits(Identifier, Node);
 
-  function Literal(value) {
-    if (typeof value === 'number' && value < 0) {
-      throw new Error(
-        'Can not construct negative literals. Negative literals are ' +
-        'formed by negating a positive literal. Use `Literal.for()` which ' +
-        'return either a literal or an expression for a negative literal.'
-      );
-    }
-    this.type = 'Literal';
-    this.value = value;
-    this.raw = JSON.stringify(value);
-  }
-  inherits(Literal, Node);
+  class Literal extends Node {
 
-  Literal.for = function (value) {
-    if (typeof value === 'number' && value < 0) {
-      return new UnaryExpression(new Literal(Math.abs(value)), '-');
+    type;
+
+    value;
+
+    raw;
+
+    constructor(value) {
+      super()
+      if (typeof value === 'number' && value < 0) {
+        throw new Error(
+          'Can not construct negative literals. Negative literals are ' +
+          'formed by negating a positive literal. Use `Literal.for()` which ' +
+          'return either a literal or an expression for a negative literal.'
+        );
+      }
+      this.type = 'Literal';
+      this.value = value;
+      this.raw = JSON.stringify(value);
     }
-    return new Literal(value);
-  };
+    static for(value) {
+      if (typeof value === 'number' && value < 0) {
+        return new UnaryExpression(new Literal(Math.abs(value)), '-');
+      }
+      return new Literal(value);
+    }
+  }
 
   function LogicalExpression(left, right, operator) {
     this.type = 'LogicalExpression';
@@ -110,9 +118,9 @@
   }
   inherits(LogicalExpression, Node);
 
-  function MemberExpression(object, property, computed) {
-    this.type = 'MemberExpression',
-    this.computed = computed || false;
+  function MemberExpression(object, property, computed=false) {
+    this.type = 'MemberExpression';
+    this.computed = computed;
     this.object = object;
     this.property = property;
   }
@@ -136,10 +144,10 @@
   }
   inherits(ReturnStatement, Node);
 
-  function SwitchCase(test, sentences) {
+  function SwitchCase(test, sentences=[]) {
     this.type = 'SwitchCase';
     this.test = test;
-    this.consequent = sentences || [];
+    this.consequent = sentences;
   }
   inherits(SwitchCase, Node);
 
@@ -150,19 +158,19 @@
   }
   inherits(SwitchStatement, Node);
 
-  function UnaryExpression(argument, operator, prefix) {
+  function UnaryExpression(argument, operator, prefix=true) {
     this.type = 'UnaryExpression';
     this.operator = operator;
     this.argument = argument;
-    this.prefix = typeof prefix === 'undefined' ? true : prefix;
+    this.prefix = prefix;
   }
   inherits(UnaryExpression, Node);
 
-  function VariableDeclaration(declarations, kind) {
+  function VariableDeclaration(declarations, kind='var') {
     if (!Array.isArray(declarations)) { declarations = [declarations]; }
     this.type = 'VariableDeclaration';
     this.declarations = declarations;
-    this.kind = kind || 'var';
+    this.kind = kind;
   }
   inherits(VariableDeclaration, Node);
 

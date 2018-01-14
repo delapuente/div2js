@@ -2,6 +2,7 @@ import * as translator from '../../src/div2trans';
 import * as checker from '../../src/div2checker';
 import * as mapper from '../../src/memory/mapper';
 import { SymbolTable } from '../../src/memory/symbols';
+import { expect } from 'chai';
 
 var simpleDefinitions = {
   wellKnownGlobals: ['text_z'],

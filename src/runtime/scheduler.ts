@@ -113,7 +113,7 @@ Scheduler.prototype = {
 
   _takeAction: function (result) {
     if (!(result instanceof Baton)) {
-      throw Error('Execution returned an unknown result:', result);
+      throw Error('Execution returned an unknown result:' + result);
     }
     if (typeof result.npc !== 'undefined') {
       this.currentExecution.pc = result.npc;

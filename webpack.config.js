@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: ['./src/div2js.js'],
+  entry: ['./src/div2js.ts'],
   output: {
     filename: 'div2js.js',
     path: path.resolve(__dirname, 'dist'),
@@ -32,5 +32,8 @@ module.exports = {
     contentBase: [path.resolve(__dirname), path.resolve(__dirname, 'assets')],
     watchContentBase: true,
     disableHostCheck: true
+  },
+  node: {
+    'fs': 'empty'
   }
 };

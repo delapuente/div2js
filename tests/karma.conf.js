@@ -5,12 +5,12 @@ module.exports = function (config) {
     basePath: '../',
     frameworks: ['mocha', 'sinon-chai'],
     files: [
-      { pattern: 'tests/index.js', watched: false },
+      { pattern: 'tests/index.ts', watched: false },
       { pattern: 'tests/spec/samples/**/*', included: false },
       { pattern: 'src/div2lang.js', included: false, served: false },
     ],
     preprocessors: {
-      'tests/**/*.js': ['webpack']
+      'tests/**/*.ts': ['webpack']
     },
     webpack,
     browsers: ['Firefox', 'Chrome'],
@@ -22,6 +22,7 @@ module.exports = function (config) {
       reports: [ 'text-summary', 'html' ],
       fixWebpackSourcePaths: true
     },
-    reporters: ['mocha', 'coverage-istanbul']
+    reporters: ['mocha', 'coverage-istanbul'],
+    mime: { 'text/x-typescript': ['ts'] }
   });
 };

@@ -1,9 +1,10 @@
 import { assert } from 'chai';
-import sinon from 'sinon';
+import * as sinon from 'sinon';
 
 import * as compiler from '../../src/compiler';
 import * as loader from '../../src/loader';
 import * as dbgr from '../../src/debugger';
+import { expect } from 'chai';
 
 function samplePath(name) {
   return '/base/tests/spec/samples/execution/' + name;

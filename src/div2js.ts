@@ -1,4 +1,4 @@
-import * as parser from './div2lang';
+import parser from './div2lang';
 import * as loader from './loader';
 import * as translator from './div2trans';
 import * as compiler from './compiler';
