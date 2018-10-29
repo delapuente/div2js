@@ -11,3 +11,6 @@ coverage/
 *.out
 *.pid
 *.gz
+
+.tmp
+.vscode
