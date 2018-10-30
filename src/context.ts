@@ -2,12 +2,12 @@
 import * as ast from './ast';
 import t from './templates';
 
-function Context(ctx?){
+function Context (ctx?) {
   this._processes = {};
   this._auxNames = {};
   this._currentProcess = undefined;
 
-  for (var key in ctx) {
+  for (let key in ctx) {
     if (ctx.hasOwnProperty(key)) {
       this[key] = ctx[key];
     }
@@ -81,13 +81,13 @@ Context.prototype = {
   },
 
   newAux: function (name, initializer) {
-    var nameCount = this._auxNames[name] || 0;
-    var suffix = this._auxNames[name] = nameCount + 1;
+    let nameCount = this._auxNames[name] || 0;
+    let suffix = this._auxNames[name] = nameCount + 1;
     if (nameCount > 0) {
       name += suffix;
     }
-    var identifier = new ast.Identifier(name);
-    var declaration = new ast.VariableDeclaration(
+    let identifier = new ast.Identifier(name);
+    let declaration = new ast.VariableDeclaration(
       new ast.VariableDeclarator(identifier, initializer)
     );
     return {
@@ -126,15 +126,15 @@ Context.prototype = {
   },
 
   getScope: function (identifier) {
-    var scope;
-    var symbols = this._mmap.symbols;
+    let scope;
+    let symbols = this._mmap.symbols;
     if (symbols.isGlobal(identifier)) {
       scope = 'global';
     }
-    //TODO: What about id? it is not a local but a special keyword with
-    //identifier semantics to avoid assignation on it. Should be translated
-    //as a local but identified like a special token and translated in a
-    //special way.
+    // TODO: What about id? it is not a local but a special keyword with
+    // identifier semantics to avoid assignation on it. Should be translated
+    // as a local but identified like a special token and translated in a
+    // special way.
     else if (symbols.isLocal(identifier)) {
       scope = 'local';
     }
@@ -145,7 +145,7 @@ Context.prototype = {
   }
 };
 
-function Linearization() {
+function Linearization () {
   this._pc = -1;
   this._sentences = [];
 }
@@ -154,13 +154,16 @@ Linearization.prototype = {
   constructor: Linearization,
 
   getCases: function () {
-    var cases = [];
-    var sentences = this._sentences;
-    var currentCase = null;
-    var caseIsFinished = false;
-    var isReturn, isLabel, consequent;
+    let cases = [];
+    let sentences = this._sentences;
+    let currentCase = null;
+    let caseIsFinished = false;
+    let isReturn;
+    let isLabel;
+    let consequent;
 
-    for (var i = 0, wrapper; (wrapper = sentences[i]); i++) {
+    for (let i = 0, l = sentences.length; i < l; i++) {
+      let wrapper = sentences[i];
       isLabel = wrapper instanceof Label;
       isReturn = wrapper.type === 'Return';
 
@@ -183,7 +186,7 @@ Linearization.prototype = {
   },
 
   label: function (label) {
-    var lastSentence = this._sentences[this._sentences.length - 1];
+    let lastSentence = this._sentences[this._sentences.length - 1];
     if (lastSentence instanceof Label) {
       label.proxy(lastSentence);
     }
@@ -245,10 +248,10 @@ Linearization.prototype = {
   },
 
   _goToIf: function (testAst, labelIfTrue, labelIfFalse) {
-    var _this = this;
+    let _this = this;
     return {
       type: 'GoToIf',
-      get sentences() {
+      get sentences () {
         return [_this._programCounterBranch(
           testAst,
           labelIfTrue.label,
@@ -259,10 +262,10 @@ Linearization.prototype = {
   },
 
   _goTo: function (label) {
-    var _this = this;
+    let _this = this;
     return {
       type: 'GoTo',
-      get sentences() {
+      get sentences () {
         return [
           _this._programCounterSet(label.label),
           new ast.BreakStatement()
@@ -272,13 +275,13 @@ Linearization.prototype = {
   },
 
   _select: function (evaluation, options, defaultLabel) {
-    var _this = this;
+    let _this = this;
     return {
       type: 'Select',
-      get sentences() {
-        var defaultExpression = _this._programCounterSet(defaultLabel.label);
-        var cases = options.map(function (option) {
-          var tests = option.tests;
+      get sentences () {
+        let defaultExpression = _this._programCounterSet(defaultLabel.label);
+        let cases = options.map(function (option) {
+          let tests = option.tests;
           return _this._programCounterBranch(
             t.some(evaluation, tests),
             option.label.label
@@ -294,17 +297,17 @@ Linearization.prototype = {
   _end: function () {
     return {
       type: 'End',
-      get sentences() {
+      get sentences () {
         return [t.processEnd];
       }
     };
   },
 
   _call: function (kind, resumeLabel, name, argList) {
-    var type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
+    let type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
     return {
       type: type,
-      get sentences() {
+      get sentences () {
         return [t.call(kind, resumeLabel.label + 1, name, argList)];
       }
     };
@@ -313,7 +316,7 @@ Linearization.prototype = {
   _clone: function (childLabel, parentLabel) {
     return {
       type: 'Clone',
-      get sentences() {
+      get sentences () {
         return [t.processClone(childLabel.label + 1, parentLabel.label + 1)];
       }
     };
@@ -322,7 +325,7 @@ Linearization.prototype = {
   _frame: function (resumeLabel, expression) {
     return {
       type: 'Frame',
-      get sentences() {
+      get sentences () {
         return [t.processFrame(resumeLabel.label + 1, expression)];
       }
     };
@@ -331,7 +334,7 @@ Linearization.prototype = {
   _debug: function (resumeLabel) {
     return {
       type: 'Debug',
-      get sentences() {
+      get sentences () {
         return [t.processDebug(resumeLabel.label + 1)];
       }
     };
@@ -340,7 +343,7 @@ Linearization.prototype = {
   _return: function (expression) {
     return {
       type: 'Return',
-      get sentences() {
+      get sentences () {
         return [t.processReturn(expression)];
       }
     };
@@ -377,7 +380,7 @@ Linearization.prototype = {
   }
 };
 
-function Label(n?) { this.label = n; }
+function Label (n?) { this.label = n; }
 
 Label.prototype = {
   constructor: Label,
@@ -389,7 +392,7 @@ Label.prototype = {
     }});
   },
 
-  get sentences() {
+  get sentences () {
     return [];
   }
 };

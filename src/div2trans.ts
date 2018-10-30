@@ -1,7 +1,7 @@
 import * as ast from './ast';
 import t from './templates';
 
-var translators = Object.create(null);
+let translators = Object.create(null);
 
 // TODO: Consider switching these to MemortBrowser-based assignment and read
 // so the JS code can be optimized and inlined later. This would decouple
@@ -27,7 +27,7 @@ translators.BinaryExpression = function (divBinary, context) {
 translators.RelationalExpression = translators.BinaryExpression;
 
 translators.LogicalExpression = function (divLogical, context) {
-  var logicalFunction;
+  let logicalFunction;
   switch (divLogical.operator) {
     case '&':
     case '&&':
@@ -44,21 +44,21 @@ translators.LogicalExpression = function (divLogical, context) {
       throw new Error('Logical operator unknown: ' + divLogical.operator);
   }
   return t.callWith(logicalFunction, [
-      translate(divLogical.left, context),
-      translate(divLogical.right, context)
+    translate(divLogical.left, context),
+    translate(divLogical.right, context)
   ]);
 };
 
 translators.CallExpression = function (divCall, context) {
-  var parameters = new ast.ArrayExpression(
+  let parameters = new ast.ArrayExpression(
     divCall.arguments.map(function (arg) {
       return translate(arg, context);
     })
   );
-  var id = divCall.callee.name;
-  var isProcess = context.isProcess(id);
-  var afterCallLabel = context.newLabel();
-  var callKind = isProcess ? 'newProcess' : 'callFunction';
+  let id = divCall.callee.name;
+  let isProcess = context.isProcess(id);
+  let afterCallLabel = context.newLabel();
+  let callKind = isProcess ? 'newProcess' : 'callFunction';
   // Isolate as a subexpression (impicitely stored in the results queue)
   context[callKind](afterCallLabel, id, parameters);
   context.label(afterCallLabel);
@@ -67,8 +67,8 @@ translators.CallExpression = function (divCall, context) {
 };
 
 translators.CloneSentence = function (divClone, context) {
-  var insideCloneLabel = context.newLabel();
-  var afterCloneLabel = context.newLabel();
+  let insideCloneLabel = context.newLabel();
+  let afterCloneLabel = context.newLabel();
   context.clone(insideCloneLabel, afterCloneLabel);
   context.label(insideCloneLabel);
   translateBody(divClone, context);
@@ -76,13 +76,13 @@ translators.CloneSentence = function (divClone, context) {
 };
 
 translators.Unit = function (divUnit, context) {
-  var programFunction = translate(divUnit.program, context);
-  var processesFunctions = divUnit.processes.map(function (divProcess) {
+  let programFunction = translate(divUnit.program, context);
+  let processesFunctions = divUnit.processes.map(function (divProcess) {
     return translate(divProcess, context);
   });
-  var globals = translateGlobals(context);
-  var locals = translateLocals(context);
-  var privateOffset = createPrivateOffset(context);
+  let globals = translateGlobals(context);
+  let locals = translateLocals(context);
+  let privateOffset = createPrivateOffset(context);
   return new ast.Program(
     [globals, locals, privateOffset]
     .concat([programFunction])
@@ -90,19 +90,19 @@ translators.Unit = function (divUnit, context) {
   );
 };
 
-function translateGlobals(context) {
-  var globalBase = getGlobalBaseDeclaration(context);
-  var globalDeclarations = translateSegment('globals', context);
+function translateGlobals (context) {
+  let globalBase = getGlobalBaseDeclaration(context);
+  let globalDeclarations = translateSegment('globals', context);
   globalDeclarations.declarations.unshift(globalBase);
   return globalDeclarations;
 }
 
-function translateLocals(context) {
+function translateLocals (context) {
   return translateSegment('locals', context);
 }
 
-function createPrivateOffset(context) {
-  var mmap = context.getMemoryMap();
+function createPrivateOffset (context) {
+  let mmap = context.getMemoryMap();
   return new ast.VariableDeclaration([
     new ast.VariableDeclarator(
       new ast.Identifier('P_OFFSET'),
@@ -111,25 +111,26 @@ function createPrivateOffset(context) {
   ]);
 }
 
-function getGlobalBaseDeclaration(context) {
-  var offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
+function getGlobalBaseDeclaration (context) {
+  let offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
   return new ast.VariableDeclarator(
     t.globalBaseIdentifier,
     ast.Literal['for'](offset)
   );
 }
 
-function translateSegment(segment, context) {
-  var mmap = context.getMemoryMap();
-  var vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
+function translateSegment (segment, context) {
+  let mmap = context.getMemoryMap();
+  let vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
   return new ast.VariableDeclaration(vars);
 }
 
-function getSegmentDeclarations(segment, prefixes, cells) {
-  var definitions = [];
-  for (var i = 0, cell; (cell = cells[i]); i++) {
+function getSegmentDeclarations (segment, prefixes, cells) {
+  let definitions = [];
+  for (let i = 0, l = cells.length; i < l; i++) {
+    let cell = cells[i];
     if (!cell.hidden) {
-      var identifierFactory = 'identifierFor' + ({
+      let identifierFactory = 'identifierFor' + ({
         'globals': 'Global',
         'locals': 'Local',
         'privates': 'Private'
@@ -149,7 +150,7 @@ function getSegmentDeclarations(segment, prefixes, cells) {
   }
   return flat(definitions);
 
-  function flat(list) {
+  function flat (list) {
     return list.reduce(function (flat, item) {
       if (!Array.isArray(item)) {
         item = [item];
@@ -160,32 +161,32 @@ function getSegmentDeclarations(segment, prefixes, cells) {
 }
 
 translators.Program = function (divProgram, context) {
-  var name = divProgram.name.name;
+  let name = divProgram.name.name;
   context.enterProcess(name);
-  var privates = translatePrivates(name, context);
-  var body = translate(divProgram.body, context);
-  var translation = t.programFunction(name, (privates ? [privates] : []).concat(body));
+  let privates = translatePrivates(name, context);
+  let body = translate(divProgram.body, context);
+  let translation = t.programFunction(name, (privates ? [privates] : []).concat(body));
   context.exitProcess();
   return translation;
 };
 
 translators.Process = function (divProgram, context) {
-  var name = divProgram.name.name;
+  let name = divProgram.name.name;
   context.enterProcess(name);
-  var privates = translatePrivates(name, context);
-  var body = translate(divProgram.body, context);
-  var translation = t.processFunction(name, (privates ? [privates] : []).concat(body));
+  let privates = translatePrivates(name, context);
+  let body = translate(divProgram.body, context);
+  let translation = t.processFunction(name, (privates ? [privates] : []).concat(body));
   context.exitProcess();
   return translation;
 };
 
-function translatePrivates(processName, context) {
-  var mmap = context.getMemoryMap();
-  var privates = mmap.cells.privates[processName];
+function translatePrivates (processName, context) {
+  let mmap = context.getMemoryMap();
+  let privates = mmap.cells.privates[processName];
   if (!privates) {
     return null;
   }
-  var vars = getSegmentDeclarations('privates', [], privates);
+  let vars = getSegmentDeclarations('privates', [], privates);
   return new ast.VariableDeclaration(vars);
 }
 
@@ -195,24 +196,24 @@ translators.ProcessBody = function (divBody, context) {
     translate(sentence, context);
   });
   context.end();
-  var bodyCases = context.getLinearizationCases();
+  let bodyCases = context.getLinearizationCases();
   return t.concurrentBody(bodyCases);
 };
 
 translators.Identifier = function (divIdentifier, context) {
-  var name = divIdentifier.name;
-  var scope = context.getScope(name);
+  let name = divIdentifier.name;
+  let scope = context.getScope(name);
   if (!scope) { throw new Error('Unknown name ' + name); }
-  var scopeTranslator = 'memory' + scope[0].toUpperCase() + scope.substr(1);
+  let scopeTranslator = 'memory' + scope[0].toUpperCase() + scope.substr(1);
   if (!(scopeTranslator in t)) { throw new Error('Unknown scope ' + scope); }
   return t[scopeTranslator](name);
 };
 
 translators.IfSentence = function (divIf, context) {
-  var consequentLabel = context.newLabel();
-  var alternateLabel = context.newLabel();
+  let consequentLabel = context.newLabel();
+  let alternateLabel = context.newLabel();
 
-  var test = t.toBool(translate(divIf.test, context));
+  let test = t.toBool(translate(divIf.test, context));
   context.goToIf(test, consequentLabel, alternateLabel);
   context.label(consequentLabel);
   translateBody(divIf, context, 'consequent');
@@ -223,7 +224,7 @@ translators.IfSentence = function (divIf, context) {
 };
 
 translators.ExpressionSentence = function (divExpression, context) {
-  var expression = translate(divExpression.expression, context);
+  let expression = translate(divExpression.expression, context);
   context.verbatim(new ast.ExpressionStatement(expression));
 };
 
@@ -232,9 +233,9 @@ translators.Literal = function (divLiteral) {
 };
 
 translators.WhileSentence = function (divWhile, context) {
-  var loopStartLabel = context.newLabel();
-  var afterLoopLabel = context.newLabel();
-  var testLabel = context.newLabel();
+  let loopStartLabel = context.newLabel();
+  let afterLoopLabel = context.newLabel();
+  let testLabel = context.newLabel();
 
   context.label(testLabel);
   context.goToIf(
@@ -251,8 +252,8 @@ translators.WhileSentence = function (divWhile, context) {
 };
 
 translators.LoopSentence = function (divLoop, context) {
-  var loopStartLabel = context.newLabel();
-  var afterLoopLabel = context.newLabel();
+  let loopStartLabel = context.newLabel();
+  let afterLoopLabel = context.newLabel();
 
   context.label(loopStartLabel);
   translateBody(divLoop, context);
@@ -262,8 +263,8 @@ translators.LoopSentence = function (divLoop, context) {
 };
 
 translators.RepeatSentence = function (divRepeat, context) {
-  var loopStartLabel = context.newLabel();
-  var afterLoopLabel = context.newLabel();
+  let loopStartLabel = context.newLabel();
+  let afterLoopLabel = context.newLabel();
 
   context.label(loopStartLabel);
   translateBody(divRepeat, context);
@@ -277,7 +278,7 @@ translators.RepeatSentence = function (divRepeat, context) {
 };
 
 translators.ReturnSentence = function (divReturn, context) {
-  var returnArgument = divReturn.argument;
+  let returnArgument = divReturn.argument;
   if (!returnArgument) {
     returnArgument = t.defaultReturnArgument;
   }
@@ -285,17 +286,17 @@ translators.ReturnSentence = function (divReturn, context) {
 };
 
 translators.SwitchSentence = function (divSwitch, context) {
-  var afterSwitchLabel = context.newLabel();
-  var defaultCaseLabel = context.newLabel();
+  let afterSwitchLabel = context.newLabel();
+  let defaultCaseLabel = context.newLabel();
 
-  var cases = divSwitch.cases;
-  var lastCase = cases[cases.length - 1];
-  var hasDefault = lastCase && lastCase.tests === null;
+  let cases = divSwitch.cases;
+  let lastCase = cases[cases.length - 1];
+  let hasDefault = lastCase && lastCase.tests === null;
   if (hasDefault) { cases.pop(); }
 
-  var discriminant = translate(divSwitch.discriminant, context);
-  var aux = context.newAux('_switch', discriminant);
-  var choices = generateChoices(cases, context);
+  let discriminant = translate(divSwitch.discriminant, context);
+  let aux = context.newAux('_switch', discriminant);
+  let choices = generateChoices(cases, context);
 
   context.verbatim(aux.declaration);
   context.select(
@@ -308,7 +309,7 @@ translators.SwitchSentence = function (divSwitch, context) {
     context.goTo(afterSwitchLabel);
   });
   if (hasDefault) {
-    var defaultCase = lastCase;
+    let defaultCase = lastCase;
     context.label(defaultCaseLabel);
     translateBody(defaultCase, context, 'consequent');
     context.goTo(afterSwitchLabel);
@@ -316,7 +317,7 @@ translators.SwitchSentence = function (divSwitch, context) {
   context.label(afterSwitchLabel);
 };
 
-function generateChoices(cases, context) {
+function generateChoices (cases, context) {
   return cases.map(function (caseClause) {
     return {
       label: context.newLabel(),
@@ -328,39 +329,38 @@ function generateChoices(cases, context) {
   });
 }
 
-
 translators.FrameSentence = function (divFrame, context) {
-  var resumeLabel = context.newLabel();
-  var argument = divFrame.argument || t.defaultFrameArgument;
+  let resumeLabel = context.newLabel();
+  let argument = divFrame.argument || t.defaultFrameArgument;
   context.frame(resumeLabel, translate(argument, context));
   context.label(resumeLabel);
 };
 
 translators.DebugSentence = function (divDebug, context) {
-  var resumeLabel = context.newLabel();
+  let resumeLabel = context.newLabel();
   context.debug(resumeLabel);
   context.label(resumeLabel);
 };
 
 translators.FromSentence = function (divFrom, context) {
-  var initValue = divFrom.init.value;
-  var limitValue = divFrom.limit.value;
-  var isAscendant = initValue < limitValue;
-  var defaultStep = isAscendant ? 1 : -1;
-  var step = divFrom.step ? divFrom.step.value : defaultStep;
-  var identifier = divFrom.identifier.name;
+  let initValue = divFrom.init.value;
+  let limitValue = divFrom.limit.value;
+  let isAscendant = initValue < limitValue;
+  let defaultStep = isAscendant ? 1 : -1;
+  let step = divFrom.step ? divFrom.step.value : defaultStep;
+  let identifier = divFrom.identifier.name;
 
-  var init = t.fromInitilizator(identifier, initValue);
-  var test = t.fromTest(identifier, limitValue, isAscendant);
-  var update = t.fromIncrement(identifier, step);
+  let init = t.fromInitilizator(identifier, initValue);
+  let test = t.fromTest(identifier, limitValue, isAscendant);
+  let update = t.fromIncrement(identifier, step);
 
   translateForLikeLoop(divFrom, [init], [test], [update], context);
 };
 
 translators.ForSentence = function (divFor, context) {
-  var inits = divFor.inits;
-  var tests = divFor.tests;
-  var updates = divFor.updates;
+  let inits = divFor.inits;
+  let tests = divFor.tests;
+  let updates = divFor.updates;
   translateForLikeLoop(divFor, inits, tests, updates, context);
 };
 
@@ -371,15 +371,15 @@ translators.Range = function (divRange) {
 /**
  * All parameters here must be DIV2 AST.
  */
-function translateForLikeLoop(loop, inits, tests, updates, context) {
-  var test = t.every(tests.map(function (test) {
+function translateForLikeLoop (loop, inits, tests, updates, context) {
+  let test = t.every(tests.map(function (test) {
     return t.toBool(translate(test, context));
   }));
 
-  var testLabel = context.newLabel();
-  var loopStartLabel = context.newLabel();
-  var afterLoopLabel = context.newLabel();
-  var updatesLabel = context.newLabel();
+  let testLabel = context.newLabel();
+  let loopStartLabel = context.newLabel();
+  let afterLoopLabel = context.newLabel();
+  let updatesLabel = context.newLabel();
 
   inits.forEach(verbatim);
 
@@ -397,14 +397,14 @@ function translateForLikeLoop(loop, inits, tests, updates, context) {
 
   context.label(afterLoopLabel);
 
-  function verbatim(divExpression) {
+  function verbatim (divExpression) {
     context.verbatim(new ast.ExpressionStatement(
       translate(divExpression, context)
     ));
   }
 }
 
-function translate(divAst, context) {
+function translate (divAst, context) {
   if (!divAst || !divAst.type) { throw new Error('Invalid DIV2 AST'); }
   if (!(divAst.type in translators)) {
     throw new Error('Translation unavailable for ' + divAst.type + ' AST');
@@ -412,7 +412,7 @@ function translate(divAst, context) {
   return translators[divAst.type](divAst, context);
 }
 
-function translateBody(divBodySentence, context, bodyProperty='body') {
+function translateBody (divBodySentence, context, bodyProperty= 'body') {
   return divBodySentence[bodyProperty].sentences.map(function (sentence) {
     return translate(sentence, context);
   });

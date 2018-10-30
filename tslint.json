@@ -1,3 +1,8 @@
 {
-  "extends": "tslint-config-semistandard"
+  "extends": "tslint-config-semistandard",
+  "rules": {
+    "one-line": [true, "check-open-brace", "check-whitespace"],
+    "brace-style": [true, "stroustup", {"allowSingleLine": true}],
+    "one-variable-per-declaration": [true, "ignore-for-loop"]
+  }
 }

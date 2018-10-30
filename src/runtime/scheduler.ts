@@ -1,6 +1,6 @@
-var rAF = window.requestAnimationFrame;
+let rAF = window.requestAnimationFrame;
 
-function Scheduler(mem, processMap, hooks) {
+function Scheduler (mem, processMap, hooks) {
   hooks = hooks || {};
   this.onyield = hooks.onyield;
   this.onfinished = hooks.onfinished;
@@ -13,7 +13,7 @@ function Scheduler(mem, processMap, hooks) {
 Scheduler.prototype = {
   constructor: Scheduler,
 
-  get currentExecution() {
+  get currentExecution () {
     return this._processList[this._current];
   },
 
@@ -53,14 +53,14 @@ Scheduler.prototype = {
   },
 
   deleteCurrent: function () {
-    var currentExecution = this._processList[this._current];
+    let currentExecution = this._processList[this._current];
     currentExecution.dead = true;
     return currentExecution.id;
   },
 
   _add: function (name, base) {
-    var runnable = this._pmap[name];
-    var processEnvironment = this._newProcessEnvironment(runnable, base);
+    let runnable = this._pmap[name];
+    let processEnvironment = this._newProcessEnvironment(runnable, base);
     // XXX: Will be replaced by sorted insertion
     this._processList.push(processEnvironment);
   },
@@ -80,16 +80,16 @@ Scheduler.prototype = {
   },
 
   _step: function () {
-    var processList = this._processList;
-    var processCount = processList.length;
+    let processList = this._processList;
+    let processCount = processList.length;
 
     if (processCount === 0) {
       return this._end();
     }
 
     while (this._running && this._current < this._processList.length) {
-      var execution = processList[this._current];
-      var result = execution.runnable(this._mem, execution);
+      let execution = processList[this._current];
+      let result = execution.runnable(this._mem, execution);
       this._takeAction(result);
       if (this._running) { this._current++; }
     }
@@ -101,7 +101,7 @@ Scheduler.prototype = {
       this._scheduleStep();
     }
 
-    function isAlive(execution) {
+    function isAlive (execution) {
       return !execution.dead;
     }
   },
@@ -122,17 +122,17 @@ Scheduler.prototype = {
   },
 
   _call: function (name) {
-    var result;
-    var target = this[name];
+    let result;
+    let target = this[name];
     if (target && typeof target.apply === 'function') {
-      var args = Array.prototype.slice.call(arguments, 1);
+      let args = Array.prototype.slice.call(arguments, 1);
       result = target.apply(this, args);
     }
     return result;
   }
 };
 
-function Baton(type, data) {
+function Baton (type, data) {
   data = data || {};
   this.type = type;
   Object.keys(data).forEach(function (key) {
@@ -140,7 +140,7 @@ function Baton(type, data) {
   }.bind(this));
 }
 
-function ReturnValuesQueue() {
+function ReturnValuesQueue () {
   this._data = [];
 }
 

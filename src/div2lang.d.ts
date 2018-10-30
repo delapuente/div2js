@@ -1,13 +1,13 @@
 declare module 'fs';
 
 declare class Parser {
-    yy: any;
+  yy: any;
 
-    parse: (input: string) => any;
+  parse: (input: string) => any;
 
-    parseError: (stri: string, hash: string) => any;
+  parseError: (stri: string, hash: string) => any;
 }
 
-declare const parser : Parser;
+declare const parser: Parser;
 
 export default parser;

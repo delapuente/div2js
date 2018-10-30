@@ -1,5 +1,5 @@
 
-function WebGL2RenderSystem(canvas) {
+function WebGL2RenderSystem (canvas) {
   this._canvas = canvas;
 }
 
@@ -12,13 +12,13 @@ WebGL2RenderSystem.prototype = {
   },
 
   run: function (memory, environment) {
-    var videoMode = environment.video;
+    let videoMode = environment.video;
     this._updateVideoMode(videoMode);
   },
 
   _updateVideoMode: function (videoMode) {
-    var width = this._videoMode.width;
-    var height = this._videoMode.height;
+    let width = this._videoMode.width;
+    let height = this._videoMode.height;
     if (width === videoMode.width && height === videoMode.height) {
       return;
     }
@@ -34,8 +34,8 @@ WebGL2RenderSystem.prototype = {
   },
 
   _setCamera: function (videoMode) {
-    var gl = this._gl;
-    
+    let gl = this._gl;
+
   }
 };
 

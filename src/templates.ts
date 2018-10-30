@@ -10,8 +10,8 @@ export default {
   },
 
   concurrentBody: function (cases) {
-    var programCounter = this.programCounter;
-    var switchStatement = new ast.SwitchStatement(programCounter, cases);
+    let programCounter = this.programCounter;
+    let switchStatement = new ast.SwitchStatement(programCounter, cases);
     return this.infiniteLoop(switchStatement);
   },
 
@@ -19,7 +19,7 @@ export default {
     return new ast.SwitchCase(ast.Literal.for(label));
   },
 
-  get endToken() {
+  get endToken () {
     return {
       type: 'Identifier',
       name: '__yieldEnd'
@@ -27,7 +27,7 @@ export default {
   },
 
   every: function (tests) {
-    var _this = this;
+    let _this = this;
     return tests.reduce(function (chain, test) {
       return chain === null ? test :
               new ast.LogicalExpression(chain, test, '&&');
@@ -106,11 +106,11 @@ export default {
    * @return a DIV2 comparison expression.
    * TODO: Maybe a set of DIV2 constructors is actually needed.
    */
-  get defaultFrameArgument() {
+  get defaultFrameArgument () {
     return {
-      type: "Literal",
+      type: 'Literal',
       value: 100,
-      raw: "100"
+      raw: '100'
     };
   },
 
@@ -120,10 +120,10 @@ export default {
    * @return a DIV2 comparison expression.
    * TODO: Maybe a set of DIV2 constructors is actually needed.
    */
-  get defaultReturnArgument() {
+  get defaultReturnArgument () {
     return {
-      type: "Identifier",
-      name: "id"
+      type: 'Identifier',
+      name: 'id'
     };
   },
 
@@ -192,7 +192,7 @@ export default {
   identifierForLocal: function (names) {
     return new ast.Identifier(['L'].concat(names).join('_').toUpperCase());
   },
-  
+
   identifierForPrivate: function (names) {
     return new ast.Identifier(names.join('_').toLowerCase());
   },
@@ -209,12 +209,12 @@ export default {
     return this.callWith('__range', [min, max]);
   },
 
-  get processEnd() {
+  get processEnd () {
     return new ast.ReturnStatement(this.endToken);
   },
 
   call: function (kind, resume, name, argList) {
-    var yieldType = {
+    let yieldType = {
       'function': '__yieldCallFunction',
       'process': '__yieldNewProcess'
     }[kind];
@@ -273,7 +273,7 @@ export default {
   },
 
   // TODO: Maybe mem, exec & args should be supplied by div2trans
-  get processParameters() {
+  get processParameters () {
     return [
       new ast.Identifier('mem'),
       new ast.Identifier('exec'),
@@ -292,14 +292,14 @@ export default {
     );
   },
 
-  get programCounter() {
+  get programCounter () {
     return new ast.MemberExpression(
       new ast.Identifier('exec'),
       new ast.Identifier('pc')
     );
   },
 
-  get dequeueReturnValue() {
+  get dequeueReturnValue () {
     return new ast.CallExpression(
       new ast.MemberExpression(
         new ast.MemberExpression(
@@ -319,7 +319,7 @@ export default {
     return this.callWith('__bool', ast);
   },
 
-  get trueLiteral() {
+  get trueLiteral () {
     return ast.Literal.for(true);
   }
 
