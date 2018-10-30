@@ -3,14 +3,16 @@
   "version": "0.0.1",
   "description": "A DIV2 transpiler for the modern web",
   "scripts": {
-    "build": "webpack",
-    "demos": "webpack-dev-server",
+    "build": "npm run embed-wrapper && webpack",
+    "demos": "npm run embed-wrapper && webpack-dev-server",
     "dev": "concurrently \"npm run watch\" \"karma start ./tests/karma.conf.js\"",
+    "embed-wrapper": "node scripts/embed-wrapper.js",
     "linter": "tslint -c tslint.json 'src/**/*.ts'",
     "parser": "jison src/grammar.y --module-type commonjs --outfile src/div2lang.js",
     "test": "karma start ./tests/karma.conf.js --single-run",
-    "watch": "concurrently \"npm run watch:grammar\"",
-    "watch:grammar": "watch-run -p 'src/grammar.y' npm run parser"
+    "watch": "concurrently \"npm run watch:grammar\" \"npm run watch:wrapper\"",
+    "watch:grammar": "watch-run -p 'src/grammar.y' npm run parser",
+    "watch:wrapper": "watch-run -p 'src/runtime/wrapper.js.in' npm run embed-wrapper"
   },
   "repository": {
     "type": "git",

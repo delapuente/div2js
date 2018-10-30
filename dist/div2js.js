@@ -599,7 +599,6 @@ class Node {
     pojo() {
         return JSON.parse(JSON.stringify(this));
     }
-    ;
 }
 function AssignmentExpression(left, right, operator = '=') {
     this.type = 'AssignmentExpression';
@@ -760,14 +759,14 @@ function inherits(klass, base) {
     klass.prototype.constructor = klass;
 }
 function fromJson(json) {
-    var type = typeof json;
-    var isJsonSerializable = ['function', 'undefined'].indexOf(type) === -1;
+    let type = typeof json;
+    let isJsonSerializable = ['function', 'undefined'].indexOf(type) === -1;
     if (!isJsonSerializable) {
         return undefined;
     }
     if (Array.isArray(json)) {
-        var elements = json.map(function (item) {
-            var value = fromJson(item);
+        let elements = json.map(function (item) {
+            let value = fromJson(item);
             if (typeof value === 'undefined') {
                 return new Literal(null);
             }
@@ -776,9 +775,9 @@ function fromJson(json) {
         return new ArrayExpression(elements);
     }
     else if (type === 'object') {
-        var properties = Object.keys(json)
+        let properties = Object.keys(json)
             .map(function (key) {
-            var value = fromJson(json[key]);
+            let value = fromJson(json[key]);
             if (typeof value === 'undefined') {
                 return undefined;
             }
@@ -842,10 +841,10 @@ class MemoryMap {
         }, this));
     }
     get processSize() {
-        var size = this.localSegmentSize + this.maxPrivateSegmentSize;
-        //XXX: Force to be ALWAYS even. In addition to an odd pool offset,
-        //it warrants all the process to start in an ODD address so the id
-        //is ALWAYS ODD and thus, always TRUE.
+        let size = this.localSegmentSize + this.maxPrivateSegmentSize;
+        // XXX: Force to be ALWAYS even. In addition to an odd pool offset,
+        // it warrants all the process to start in an ODD address so the id
+        // is ALWAYS ODD and thus, always TRUE.
         if (size % 2 !== 0) {
             return size + 1;
         }
@@ -853,6 +852,12 @@ class MemoryMap {
     }
     get poolOffset() {
         return MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize;
+    }
+    static exportToJson(map) {
+        return map.symbols;
+    }
+    static importFromJson(json) {
+        return new MemoryMap(json);
     }
     _getSegmentSize(cells) {
         return cells.reduce(function (total, cell) {
@@ -864,15 +869,15 @@ class MemoryMap {
         this.cells.locals = this._inToCells(this.symbols.locals);
         this.cells.privates = {};
         Object.keys(this.symbols.privates).forEach(function (processName) {
-            var privateMap = this._inToCells(this.symbols.privates[processName]);
+            let privateMap = this._inToCells(this.symbols.privates[processName]);
             this.cells.privates[processName] = privateMap;
         }, this);
     }
     _inToCells(symbols) {
-        var offset = 0;
-        var cells = [];
+        let offset = 0;
+        let cells = [];
         symbols.forEach(function (symbol) {
-            var cell = Object.create(symbol);
+            let cell = Object.create(symbol);
             cell.size = this._sizeOf(symbol);
             cell.offset = offset;
             if (symbol.type === 'struct') {
@@ -884,7 +889,7 @@ class MemoryMap {
         return cells;
     }
     _sizeOf(symbol) {
-        var individualSize;
+        let individualSize;
         if (symbol.type !== 'struct') {
             individualSize = MemoryMap.SIZE_IN_BYTES[symbol.type];
         }
@@ -895,14 +900,8 @@ class MemoryMap {
         }
         return individualSize * symbol.length;
     }
-    static exportToJson(map) {
-        return map.symbols;
-    }
-    static importFromJson(json) {
-        return new MemoryMap(json);
-    }
 }
-//TODO: Perhaps we are lacking the concept of cell size or addressable word
+// TODO: Perhaps we are lacking the concept of cell size or addressable word
 // as the minimum number of bytes addressable. In the case of DIV2, this
 // number is 4 which matches the ALIGNMENT.
 MemoryMap.ALIGNMENT = 4; // 4 bytes
@@ -914,7 +913,7 @@ MemoryMap.SIZE_IN_BYTES = {
     'word': 2,
     'int': 4
 };
-//TODO: Consider to move to its own module.
+// TODO: Consider to move to its own module.
 class MemoryBrowser {
     constructor(mem, map) {
         this._mem = mem;
@@ -924,19 +923,19 @@ class MemoryBrowser {
         return this.seek(this.offset('globals', name));
     }
     process(options) {
-        var options = options || {};
-        var id = options.id;
-        var type = options.type; /* TODO: Remove. Now is necessary but in the
+        options = options || {};
+        let id = options.id;
+        let type = options.type; /* TODO: Remove. Now is necessary but in the
                                     future, the type should be retrieved from the
                                     local reserved.process_type */
-        //TODO: Check id validity
+        // TODO: Check id validity
         if (id) {
             return new ProcessView(this, id, type);
         }
-        var index = options.index || 0;
-        var poolOffset = this._map.poolOffset;
-        var processSize = this._map.processSize;
-        var processOffset = poolOffset + index * processSize;
+        let index = options.index || 0;
+        let poolOffset = this._map.poolOffset;
+        let processSize = this._map.processSize;
+        let processOffset = poolOffset + index * processSize;
         return new ProcessView(this, processOffset, type);
     }
     setMemory(buffer, offset) {
@@ -944,8 +943,8 @@ class MemoryBrowser {
     }
     offset(segment, name, base = 0, processName) {
         base = segment === 'globals' ? MemoryMap.GLOBAL_OFFSET : base;
-        var cells = this._map.cells[segment];
-        //TODO: Refactor needed, all this ifs... Privates are special, perhaps
+        let cells = this._map.cells[segment];
+        // TODO: Refactor needed, all this ifs... Privates are special, perhaps
         // they deserve a special tratment over an unified layer dealing with
         // somethign lower level than named segments such as the segment array
         // itself.
@@ -953,8 +952,8 @@ class MemoryBrowser {
             cells = cells[processName];
             base += this._map.localSegmentSize;
         }
-        var names = name.split('.');
-        var offset = this._offset(cells, names);
+        let names = name.split('.');
+        let offset = this._offset(cells, names);
         if (offset === undefined) {
             throw new Error('Can not get the offset for ' + name);
         }
@@ -964,9 +963,9 @@ class MemoryBrowser {
         return new MemView(this._mem, offset);
     }
     _offset(cells, names) {
-        var offset;
-        var name = names[0];
-        var cell = cells.find(function (cell) {
+        let offset;
+        let name = names[0];
+        let cell = cells.find(function (cell) {
             return cell.name === name;
         });
         if (!cell) {
@@ -975,7 +974,7 @@ class MemoryBrowser {
         if (cell.type !== 'struct') {
             return cell.offset;
         }
-        var fieldOffset = this._offset(cell.fields, names.slice(1));
+        let fieldOffset = this._offset(cell.fields, names.slice(1));
         if (fieldOffset === undefined) {
             return undefined;
         }
@@ -2559,7 +2558,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__templates__ = __webpack_require__(6);
 
 
-var translators = Object.create(null);
+let translators = Object.create(null);
 // TODO: Consider switching these to MemortBrowser-based assignment and read
 // so the JS code can be optimized and inlined later. This would decouple
 // translation from memory layout.
@@ -2573,7 +2572,7 @@ translators.BinaryExpression = function (divBinary, context) {
 };
 translators.RelationalExpression = translators.BinaryExpression;
 translators.LogicalExpression = function (divLogical, context) {
-    var logicalFunction;
+    let logicalFunction;
     switch (divLogical.operator) {
         case '&':
         case '&&':
@@ -2595,13 +2594,13 @@ translators.LogicalExpression = function (divLogical, context) {
     ]);
 };
 translators.CallExpression = function (divCall, context) {
-    var parameters = new __WEBPACK_IMPORTED_MODULE_0__ast__["a" /* ArrayExpression */](divCall.arguments.map(function (arg) {
+    let parameters = new __WEBPACK_IMPORTED_MODULE_0__ast__["a" /* ArrayExpression */](divCall.arguments.map(function (arg) {
         return translate(arg, context);
     }));
-    var id = divCall.callee.name;
-    var isProcess = context.isProcess(id);
-    var afterCallLabel = context.newLabel();
-    var callKind = isProcess ? 'newProcess' : 'callFunction';
+    let id = divCall.callee.name;
+    let isProcess = context.isProcess(id);
+    let afterCallLabel = context.newLabel();
+    let callKind = isProcess ? 'newProcess' : 'callFunction';
     // Isolate as a subexpression (impicitely stored in the results queue)
     context[callKind](afterCallLabel, id, parameters);
     context.label(afterCallLabel);
@@ -2609,28 +2608,28 @@ translators.CallExpression = function (divCall, context) {
     return __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].dequeueReturnValue;
 };
 translators.CloneSentence = function (divClone, context) {
-    var insideCloneLabel = context.newLabel();
-    var afterCloneLabel = context.newLabel();
+    let insideCloneLabel = context.newLabel();
+    let afterCloneLabel = context.newLabel();
     context.clone(insideCloneLabel, afterCloneLabel);
     context.label(insideCloneLabel);
     translateBody(divClone, context);
     context.label(afterCloneLabel);
 };
 translators.Unit = function (divUnit, context) {
-    var programFunction = translate(divUnit.program, context);
-    var processesFunctions = divUnit.processes.map(function (divProcess) {
+    let programFunction = translate(divUnit.program, context);
+    let processesFunctions = divUnit.processes.map(function (divProcess) {
         return translate(divProcess, context);
     });
-    var globals = translateGlobals(context);
-    var locals = translateLocals(context);
-    var privateOffset = createPrivateOffset(context);
+    let globals = translateGlobals(context);
+    let locals = translateLocals(context);
+    let privateOffset = createPrivateOffset(context);
     return new __WEBPACK_IMPORTED_MODULE_0__ast__["m" /* Program */]([globals, locals, privateOffset]
         .concat([programFunction])
         .concat(processesFunctions));
 };
 function translateGlobals(context) {
-    var globalBase = getGlobalBaseDeclaration(context);
-    var globalDeclarations = translateSegment('globals', context);
+    let globalBase = getGlobalBaseDeclaration(context);
+    let globalDeclarations = translateSegment('globals', context);
     globalDeclarations.declarations.unshift(globalBase);
     return globalDeclarations;
 }
@@ -2638,25 +2637,26 @@ function translateLocals(context) {
     return translateSegment('locals', context);
 }
 function createPrivateOffset(context) {
-    var mmap = context.getMemoryMap();
+    let mmap = context.getMemoryMap();
     return new __WEBPACK_IMPORTED_MODULE_0__ast__["q" /* VariableDeclaration */]([
         new __WEBPACK_IMPORTED_MODULE_0__ast__["r" /* VariableDeclarator */](new __WEBPACK_IMPORTED_MODULE_0__ast__["i" /* Identifier */]('P_OFFSET'), __WEBPACK_IMPORTED_MODULE_0__ast__["j" /* Literal */]['for'](mmap.localSegmentSize))
     ]);
 }
 function getGlobalBaseDeclaration(context) {
-    var offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
+    let offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
     return new __WEBPACK_IMPORTED_MODULE_0__ast__["r" /* VariableDeclarator */](__WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].globalBaseIdentifier, __WEBPACK_IMPORTED_MODULE_0__ast__["j" /* Literal */]['for'](offset));
 }
 function translateSegment(segment, context) {
-    var mmap = context.getMemoryMap();
-    var vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
+    let mmap = context.getMemoryMap();
+    let vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
     return new __WEBPACK_IMPORTED_MODULE_0__ast__["q" /* VariableDeclaration */](vars);
 }
 function getSegmentDeclarations(segment, prefixes, cells) {
-    var definitions = [];
-    for (var i = 0, cell; (cell = cells[i]); i++) {
+    let definitions = [];
+    for (let i = 0, l = cells.length; i < l; i++) {
+        let cell = cells[i];
         if (!cell.hidden) {
-            var identifierFactory = 'identifierFor' + ({
+            let identifierFactory = 'identifierFor' + ({
                 'globals': 'Global',
                 'locals': 'Local',
                 'privates': 'Private'
@@ -2680,30 +2680,30 @@ function getSegmentDeclarations(segment, prefixes, cells) {
     }
 }
 translators.Program = function (divProgram, context) {
-    var name = divProgram.name.name;
+    let name = divProgram.name.name;
     context.enterProcess(name);
-    var privates = translatePrivates(name, context);
-    var body = translate(divProgram.body, context);
-    var translation = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].programFunction(name, (privates ? [privates] : []).concat(body));
+    let privates = translatePrivates(name, context);
+    let body = translate(divProgram.body, context);
+    let translation = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].programFunction(name, (privates ? [privates] : []).concat(body));
     context.exitProcess();
     return translation;
 };
 translators.Process = function (divProgram, context) {
-    var name = divProgram.name.name;
+    let name = divProgram.name.name;
     context.enterProcess(name);
-    var privates = translatePrivates(name, context);
-    var body = translate(divProgram.body, context);
-    var translation = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].processFunction(name, (privates ? [privates] : []).concat(body));
+    let privates = translatePrivates(name, context);
+    let body = translate(divProgram.body, context);
+    let translation = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].processFunction(name, (privates ? [privates] : []).concat(body));
     context.exitProcess();
     return translation;
 };
 function translatePrivates(processName, context) {
-    var mmap = context.getMemoryMap();
-    var privates = mmap.cells.privates[processName];
+    let mmap = context.getMemoryMap();
+    let privates = mmap.cells.privates[processName];
     if (!privates) {
         return null;
     }
-    var vars = getSegmentDeclarations('privates', [], privates);
+    let vars = getSegmentDeclarations('privates', [], privates);
     return new __WEBPACK_IMPORTED_MODULE_0__ast__["q" /* VariableDeclaration */](vars);
 }
 translators.ProcessBody = function (divBody, context) {
@@ -2712,25 +2712,25 @@ translators.ProcessBody = function (divBody, context) {
         translate(sentence, context);
     });
     context.end();
-    var bodyCases = context.getLinearizationCases();
+    let bodyCases = context.getLinearizationCases();
     return __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].concurrentBody(bodyCases);
 };
 translators.Identifier = function (divIdentifier, context) {
-    var name = divIdentifier.name;
-    var scope = context.getScope(name);
+    let name = divIdentifier.name;
+    let scope = context.getScope(name);
     if (!scope) {
         throw new Error('Unknown name ' + name);
     }
-    var scopeTranslator = 'memory' + scope[0].toUpperCase() + scope.substr(1);
+    let scopeTranslator = 'memory' + scope[0].toUpperCase() + scope.substr(1);
     if (!(scopeTranslator in __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */])) {
         throw new Error('Unknown scope ' + scope);
     }
     return __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */][scopeTranslator](name);
 };
 translators.IfSentence = function (divIf, context) {
-    var consequentLabel = context.newLabel();
-    var alternateLabel = context.newLabel();
-    var test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].toBool(translate(divIf.test, context));
+    let consequentLabel = context.newLabel();
+    let alternateLabel = context.newLabel();
+    let test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].toBool(translate(divIf.test, context));
     context.goToIf(test, consequentLabel, alternateLabel);
     context.label(consequentLabel);
     translateBody(divIf, context, 'consequent');
@@ -2740,16 +2740,16 @@ translators.IfSentence = function (divIf, context) {
     }
 };
 translators.ExpressionSentence = function (divExpression, context) {
-    var expression = translate(divExpression.expression, context);
+    let expression = translate(divExpression.expression, context);
     context.verbatim(new __WEBPACK_IMPORTED_MODULE_0__ast__["g" /* ExpressionStatement */](expression));
 };
 translators.Literal = function (divLiteral) {
     return __WEBPACK_IMPORTED_MODULE_0__ast__["j" /* Literal */].for(divLiteral.value);
 };
 translators.WhileSentence = function (divWhile, context) {
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
-    var testLabel = context.newLabel();
+    let loopStartLabel = context.newLabel();
+    let afterLoopLabel = context.newLabel();
+    let testLabel = context.newLabel();
     context.label(testLabel);
     context.goToIf(translate(divWhile.test, context), loopStartLabel, afterLoopLabel);
     context.label(loopStartLabel);
@@ -2758,40 +2758,40 @@ translators.WhileSentence = function (divWhile, context) {
     context.label(afterLoopLabel);
 };
 translators.LoopSentence = function (divLoop, context) {
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
+    let loopStartLabel = context.newLabel();
+    let afterLoopLabel = context.newLabel();
     context.label(loopStartLabel);
     translateBody(divLoop, context);
     context.goTo(loopStartLabel);
     context.label(afterLoopLabel);
 };
 translators.RepeatSentence = function (divRepeat, context) {
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
+    let loopStartLabel = context.newLabel();
+    let afterLoopLabel = context.newLabel();
     context.label(loopStartLabel);
     translateBody(divRepeat, context);
     context.goToIf(translate(divRepeat.test, context), afterLoopLabel, loopStartLabel);
     context.label(afterLoopLabel);
 };
 translators.ReturnSentence = function (divReturn, context) {
-    var returnArgument = divReturn.argument;
+    let returnArgument = divReturn.argument;
     if (!returnArgument) {
         returnArgument = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].defaultReturnArgument;
     }
     context.return(translate(returnArgument, context));
 };
 translators.SwitchSentence = function (divSwitch, context) {
-    var afterSwitchLabel = context.newLabel();
-    var defaultCaseLabel = context.newLabel();
-    var cases = divSwitch.cases;
-    var lastCase = cases[cases.length - 1];
-    var hasDefault = lastCase && lastCase.tests === null;
+    let afterSwitchLabel = context.newLabel();
+    let defaultCaseLabel = context.newLabel();
+    let cases = divSwitch.cases;
+    let lastCase = cases[cases.length - 1];
+    let hasDefault = lastCase && lastCase.tests === null;
     if (hasDefault) {
         cases.pop();
     }
-    var discriminant = translate(divSwitch.discriminant, context);
-    var aux = context.newAux('_switch', discriminant);
-    var choices = generateChoices(cases, context);
+    let discriminant = translate(divSwitch.discriminant, context);
+    let aux = context.newAux('_switch', discriminant);
+    let choices = generateChoices(cases, context);
     context.verbatim(aux.declaration);
     context.select(aux.identifier, choices, hasDefault ? defaultCaseLabel : afterSwitchLabel);
     choices.forEach(function (choice) {
@@ -2800,7 +2800,7 @@ translators.SwitchSentence = function (divSwitch, context) {
         context.goTo(afterSwitchLabel);
     });
     if (hasDefault) {
-        var defaultCase = lastCase;
+        let defaultCase = lastCase;
         context.label(defaultCaseLabel);
         translateBody(defaultCase, context, 'consequent');
         context.goTo(afterSwitchLabel);
@@ -2819,32 +2819,32 @@ function generateChoices(cases, context) {
     });
 }
 translators.FrameSentence = function (divFrame, context) {
-    var resumeLabel = context.newLabel();
-    var argument = divFrame.argument || __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].defaultFrameArgument;
+    let resumeLabel = context.newLabel();
+    let argument = divFrame.argument || __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].defaultFrameArgument;
     context.frame(resumeLabel, translate(argument, context));
     context.label(resumeLabel);
 };
 translators.DebugSentence = function (divDebug, context) {
-    var resumeLabel = context.newLabel();
+    let resumeLabel = context.newLabel();
     context.debug(resumeLabel);
     context.label(resumeLabel);
 };
 translators.FromSentence = function (divFrom, context) {
-    var initValue = divFrom.init.value;
-    var limitValue = divFrom.limit.value;
-    var isAscendant = initValue < limitValue;
-    var defaultStep = isAscendant ? 1 : -1;
-    var step = divFrom.step ? divFrom.step.value : defaultStep;
-    var identifier = divFrom.identifier.name;
-    var init = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromInitilizator(identifier, initValue);
-    var test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromTest(identifier, limitValue, isAscendant);
-    var update = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromIncrement(identifier, step);
+    let initValue = divFrom.init.value;
+    let limitValue = divFrom.limit.value;
+    let isAscendant = initValue < limitValue;
+    let defaultStep = isAscendant ? 1 : -1;
+    let step = divFrom.step ? divFrom.step.value : defaultStep;
+    let identifier = divFrom.identifier.name;
+    let init = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromInitilizator(identifier, initValue);
+    let test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromTest(identifier, limitValue, isAscendant);
+    let update = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].fromIncrement(identifier, step);
     translateForLikeLoop(divFrom, [init], [test], [update], context);
 };
 translators.ForSentence = function (divFor, context) {
-    var inits = divFor.inits;
-    var tests = divFor.tests;
-    var updates = divFor.updates;
+    let inits = divFor.inits;
+    let tests = divFor.tests;
+    let updates = divFor.updates;
     translateForLikeLoop(divFor, inits, tests, updates, context);
 };
 translators.Range = function (divRange) {
@@ -2854,13 +2854,13 @@ translators.Range = function (divRange) {
  * All parameters here must be DIV2 AST.
  */
 function translateForLikeLoop(loop, inits, tests, updates, context) {
-    var test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].every(tests.map(function (test) {
+    let test = __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].every(tests.map(function (test) {
         return __WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].toBool(translate(test, context));
     }));
-    var testLabel = context.newLabel();
-    var loopStartLabel = context.newLabel();
-    var afterLoopLabel = context.newLabel();
-    var updatesLabel = context.newLabel();
+    let testLabel = context.newLabel();
+    let loopStartLabel = context.newLabel();
+    let afterLoopLabel = context.newLabel();
+    let updatesLabel = context.newLabel();
     inits.forEach(verbatim);
     context.label(testLabel);
     if (test) {
@@ -2908,8 +2908,8 @@ function translateBody(divBodySentence, context, bodyProperty = 'body') {
         return new __WEBPACK_IMPORTED_MODULE_0__ast__["e" /* CallExpression */](new __WEBPACK_IMPORTED_MODULE_0__ast__["i" /* Identifier */](name), args);
     },
     concurrentBody: function (cases) {
-        var programCounter = this.programCounter;
-        var switchStatement = new __WEBPACK_IMPORTED_MODULE_0__ast__["p" /* SwitchStatement */](programCounter, cases);
+        let programCounter = this.programCounter;
+        let switchStatement = new __WEBPACK_IMPORTED_MODULE_0__ast__["p" /* SwitchStatement */](programCounter, cases);
         return this.infiniteLoop(switchStatement);
     },
     concurrentLabel: function (label) {
@@ -2922,7 +2922,7 @@ function translateBody(divBodySentence, context, bodyProperty = 'body') {
         };
     },
     every: function (tests) {
-        var _this = this;
+        let _this = this;
         return tests.reduce(function (chain, test) {
             return chain === null ? test :
                 new __WEBPACK_IMPORTED_MODULE_0__ast__["k" /* LogicalExpression */](chain, test, '&&');
@@ -2999,9 +2999,9 @@ function translateBody(divBodySentence, context, bodyProperty = 'body') {
      */
     get defaultFrameArgument() {
         return {
-            type: "Literal",
+            type: 'Literal',
             value: 100,
-            raw: "100"
+            raw: '100'
         };
     },
     /**
@@ -3012,8 +3012,8 @@ function translateBody(divBodySentence, context, bodyProperty = 'body') {
      */
     get defaultReturnArgument() {
         return {
-            type: "Identifier",
-            name: "id"
+            type: 'Identifier',
+            name: 'id'
         };
     },
     infiniteLoop: function (body) {
@@ -3065,7 +3065,7 @@ function translateBody(divBodySentence, context, bodyProperty = 'body') {
         return new __WEBPACK_IMPORTED_MODULE_0__ast__["n" /* ReturnStatement */](this.endToken);
     },
     call: function (kind, resume, name, argList) {
-        var yieldType = {
+        let yieldType = {
             'function': '__yieldCallFunction',
             'process': '__yieldNewProcess'
         }[kind];
@@ -4274,17 +4274,18 @@ var substr = 'ab'.substr(-1) === 'b'
 
 
 function load(objText) {
-    var unit = eval(objText)(__WEBPACK_IMPORTED_MODULE_0__runtime_runtime__, __WEBPACK_IMPORTED_MODULE_1__systems_systems__);
-    var processMap = unit.pmap;
-    var memoryMap = unit.mmap;
-    var program = new __WEBPACK_IMPORTED_MODULE_0__runtime_runtime__["Runtime"](processMap, memoryMap);
-    //TODO: Let's think how to register new systems in a configurable way
+    // tslint:disable-next-line:no-eval
+    let unit = eval(objText)(__WEBPACK_IMPORTED_MODULE_0__runtime_runtime__, __WEBPACK_IMPORTED_MODULE_1__systems_systems__);
+    let processMap = unit.pmap;
+    let memoryMap = unit.mmap;
+    let program = new __WEBPACK_IMPORTED_MODULE_0__runtime_runtime__["Runtime"](processMap, memoryMap);
+    // TODO: Let's think how to register new systems in a configurable way
     registerRenderSystem(program);
     return Promise.resolve(program);
 }
 function registerRenderSystem(program) {
     if (window && window.document) {
-        var canvas = document.createElement('CANVAS');
+        let canvas = document.createElement('CANVAS');
         canvas.id = 'div-monitor';
         document.body.appendChild(canvas);
         program.registerSystem(new __WEBPACK_IMPORTED_MODULE_1__systems_systems__["DefaultRender"](canvas));
@@ -4305,15 +4306,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__scheduler__ = __webpack_require__(19);
 
 
-var Scheduler = __WEBPACK_IMPORTED_MODULE_1__scheduler__["b" /* Scheduler */];
-var MemoryManager = __WEBPACK_IMPORTED_MODULE_0__memory__["a" /* MemoryManager */];
+let Scheduler = __WEBPACK_IMPORTED_MODULE_1__scheduler__["b" /* Scheduler */];
+let MemoryManager = __WEBPACK_IMPORTED_MODULE_0__memory__["a" /* MemoryManager */];
 function Environment() {
     this.video = {
         width: 320,
         height: 200
     };
 }
-//TODO: Runtime should be passed with a light version of the memory map,
+// TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
 function Runtime(processMap, memorySymbols) {
     this._ondebug = null;
@@ -4321,10 +4322,10 @@ function Runtime(processMap, memorySymbols) {
     this._systems = [];
     this._memoryManager = new MemoryManager(memorySymbols);
     this._environment = new Environment();
-    var memory = this._memoryManager.getMemory();
+    let memory = this._memoryManager.getMemory();
     this._scheduler = new Scheduler(memory, processMap, {
         onyield: this._schedule.bind(this),
-        //XXX: Update means after all processes have run entirely
+        // XXX: Update means after all processes have run entirely
         onupdate: this._runSystems.bind(this)
     });
 }
@@ -4354,19 +4355,19 @@ Runtime.prototype = {
     run: function () {
         this._scheduler.reset();
         this._memoryManager.reset();
-        var id = this._memoryManager.allocateProcess();
+        let id = this._memoryManager.allocateProcess();
         this._scheduler.addProgram(id);
         this._scheduler.run();
     },
     _runSystems: function () {
-        var memoryBrowser = this.getMemoryBrowser();
-        var environment = this._environment;
+        let memoryBrowser = this.getMemoryBrowser();
+        let environment = this._environment;
         this._systems.forEach(function (system) {
             system.run(memoryBrowser, environment);
         });
     },
     _schedule: function (baton) {
-        var name = '_' + baton.type;
+        let name = '_' + baton.type;
         if (!(name in this)) {
             throw Error('Unknown execution message: ' + baton.type);
         }
@@ -4377,15 +4378,15 @@ Runtime.prototype = {
         this._scheduler.pause();
     },
     _startDebug: function () {
-        //XXX: Notice resume is run right now.
+        // XXX: Notice resume is run right now.
         this._ondebug({
             resume: this._scheduler.run.bind(this._scheduler),
             stop: this._scheduler.stop.bind(this._scheduler)
         });
     },
     _newprocess: function (baton) {
-        var name = baton.processName;
-        var id = this._memoryManager.allocateProcess();
+        let name = baton.processName;
+        let id = this._memoryManager.allocateProcess();
         if (!id) {
             throw new Error('Max number of process reached!');
         }
@@ -4397,12 +4398,12 @@ Runtime.prototype = {
     },
     // TODO: Consider passing the id through the baton
     _end: function (baton) {
-        var currentProcessId = this._scheduler.currentExecution.id;
+        let currentProcessId = this._scheduler.currentExecution.id;
         this._memoryManager.freeProcess(currentProcessId);
         this._scheduler.deleteCurrent();
     }
 };
-var Baton = __WEBPACK_IMPORTED_MODULE_1__scheduler__["a" /* Baton */];
+let Baton = __WEBPACK_IMPORTED_MODULE_1__scheduler__["a" /* Baton */];
 
 
 
@@ -4414,8 +4415,8 @@ var Baton = __WEBPACK_IMPORTED_MODULE_1__scheduler__["a" /* Baton */];
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MemoryManager; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__memory_mapper__ = __webpack_require__(2);
 
-var MemoryMap = __WEBPACK_IMPORTED_MODULE_0__memory_mapper__["b" /* MemoryMap */];
-var MemoryBrowser = __WEBPACK_IMPORTED_MODULE_0__memory_mapper__["a" /* MemoryBrowser */];
+let MemoryMap = __WEBPACK_IMPORTED_MODULE_0__memory_mapper__["b" /* MemoryMap */];
+let MemoryBrowser = __WEBPACK_IMPORTED_MODULE_0__memory_mapper__["a" /* MemoryBrowser */];
 function MemoryManager(symbols) {
     this._map = new MemoryMap(symbols);
     this._allocateMemory();
@@ -4431,16 +4432,16 @@ MemoryManager.prototype = {
     },
     reset: function () {
         this._mem.fill(0);
-        //TODO: Add globals
-        for (var index = 0, l = this._map.maxProcess; index < l; index++) {
-            var process = this._browser.process({ index: index });
+        // TODO: Add globals
+        for (let index = 0, l = this._map.maxProcess; index < l; index++) {
+            let process = this._browser.process({ index: index });
             process.local('reserved.process_id').value = process.offset;
         }
     },
     allocateProcess: function () {
-        for (var index = 0, l = this._map.maxProcess; index < l; index++) {
-            var process = this._browser.process({ index: index });
-            var isFree = process.local('reserved.status').value === 0;
+        for (let index = 0, l = this._map.maxProcess; index < l; index++) {
+            let process = this._browser.process({ index: index });
+            let isFree = process.local('reserved.status').value === 0;
             if (isFree) {
                 this._initializeProcessMemory(process);
                 return process.id;
@@ -4449,30 +4450,30 @@ MemoryManager.prototype = {
         return undefined;
     },
     freeProcess: function (processId) {
-        var process = this._browser.process({ id: processId });
+        let process = this._browser.process({ id: processId });
         process.local('reserved.status').value = 0;
     },
     _allocateMemory: function () {
-        var memorySize = this._map.globalSegmentSize + this._map.processPoolSize;
+        let memorySize = this._map.globalSegmentSize + this._map.processPoolSize;
         this._mem = new Int32Array(memorySize);
         this._browser = new MemoryBrowser(this._mem, this._map);
     },
     _initializeProcessMemory: function (process) {
-        var id = process.id;
+        let id = process.id;
         process.setMemory(this._processTemplate);
         process.local('reserved.process_id').value = id; // restore Id
     },
     _createProcessTemplate: function () {
-        var locals = this._map.cells['locals'];
+        let locals = this._map.cells['locals'];
         this._processTemplate = new Int32Array(this._map.processSize);
         copyDefaults(this._processTemplate, locals, 0);
-        //TODO: Add privates
+        // TODO: Add privates
         function copyDefaults(buffer, cells, base) {
             cells.forEach(function (cell) {
-                var length = cell.length;
-                var itemSize = cell.size / cell.length;
-                for (var i = 0, l = cell.length; i < l; i++) {
-                    var itemOffset = base + (i * itemSize);
+                let length = cell.length;
+                let itemSize = cell.size / cell.length;
+                for (let i = 0, l = cell.length; i < l; i++) {
+                    let itemOffset = base + (i * itemSize);
                     if (cell.type !== 'struct') {
                         buffer[itemOffset + cell.offset] = cell.default;
                     }
@@ -4494,7 +4495,7 @@ MemoryManager.prototype = {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return Scheduler; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Baton; });
-var rAF = window.requestAnimationFrame;
+let rAF = window.requestAnimationFrame;
 function Scheduler(mem, processMap, hooks) {
     hooks = hooks || {};
     this.onyield = hooks.onyield;
@@ -4538,13 +4539,13 @@ Scheduler.prototype = {
         this._add('process_' + name, base);
     },
     deleteCurrent: function () {
-        var currentExecution = this._processList[this._current];
+        let currentExecution = this._processList[this._current];
         currentExecution.dead = true;
         return currentExecution.id;
     },
     _add: function (name, base) {
-        var runnable = this._pmap[name];
-        var processEnvironment = this._newProcessEnvironment(runnable, base);
+        let runnable = this._pmap[name];
+        let processEnvironment = this._newProcessEnvironment(runnable, base);
         // XXX: Will be replaced by sorted insertion
         this._processList.push(processEnvironment);
     },
@@ -4561,14 +4562,14 @@ Scheduler.prototype = {
         rAF(this._step.bind(this));
     },
     _step: function () {
-        var processList = this._processList;
-        var processCount = processList.length;
+        let processList = this._processList;
+        let processCount = processList.length;
         if (processCount === 0) {
             return this._end();
         }
         while (this._running && this._current < this._processList.length) {
-            var execution = processList[this._current];
-            var result = execution.runnable(this._mem, execution);
+            let execution = processList[this._current];
+            let result = execution.runnable(this._mem, execution);
             this._takeAction(result);
             if (this._running) {
                 this._current++;
@@ -4598,10 +4599,10 @@ Scheduler.prototype = {
         return this._call('onyield', result);
     },
     _call: function (name) {
-        var result;
-        var target = this[name];
+        let result;
+        let target = this[name];
         if (target && typeof target.apply === 'function') {
-            var args = Array.prototype.slice.call(arguments, 1);
+            let args = Array.prototype.slice.call(arguments, 1);
             result = target.apply(this, args);
         }
         return result;
@@ -4656,12 +4657,12 @@ WebGL2RenderSystem.prototype = {
         this._videoMode = {};
     },
     run: function (memory, environment) {
-        var videoMode = environment.video;
+        let videoMode = environment.video;
         this._updateVideoMode(videoMode);
     },
     _updateVideoMode: function (videoMode) {
-        var width = this._videoMode.width;
-        var height = this._videoMode.height;
+        let width = this._videoMode.width;
+        let height = this._videoMode.height;
         if (width === videoMode.width && height === videoMode.height) {
             return;
         }
@@ -4675,7 +4676,7 @@ WebGL2RenderSystem.prototype = {
         this._canvas.height = videoMode.height;
     },
     _setCamera: function (videoMode) {
-        var gl = this._gl;
+        let gl = this._gl;
     }
 };
 /* harmony default export */ __webpack_exports__["a"] = (WebGL2RenderSystem);
@@ -4705,24 +4706,24 @@ WebGL2RenderSystem.prototype = {
 
 
 
-var SymbolTable = __WEBPACK_IMPORTED_MODULE_4__memory_symbols__["a" /* SymbolTable */];
+let SymbolTable = __WEBPACK_IMPORTED_MODULE_4__memory_symbols__["a" /* SymbolTable */];
 __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.yy = __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.yy || {};
 __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.yy.parseError = __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.parseError;
 function compile(srcText, sourceURL = '/div-program.js') {
-    var symbolTable = new SymbolTable(__WEBPACK_IMPORTED_MODULE_5__memory_definitions__["a" /* default */]);
-    var div2Ast = __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.parse(srcText);
-    var context = __WEBPACK_IMPORTED_MODULE_1__div2checker__["a" /* extractContext */](div2Ast, symbolTable);
-    var jsAst = __WEBPACK_IMPORTED_MODULE_2__div2trans__["translate"](div2Ast, context);
-    //TODO: When implementing non debug mode, the memory map can be omitted
+    let symbolTable = new SymbolTable(__WEBPACK_IMPORTED_MODULE_5__memory_definitions__["a" /* default */]);
+    let div2Ast = __WEBPACK_IMPORTED_MODULE_0__div2lang___default.a.parse(srcText);
+    let context = __WEBPACK_IMPORTED_MODULE_1__div2checker__["a" /* extractContext */](div2Ast, symbolTable);
+    let jsAst = __WEBPACK_IMPORTED_MODULE_2__div2trans__["translate"](div2Ast, context);
+    // TODO: When implementing non debug mode, the memory map can be omitted
     // although segment sizes and other relevant runtime variables are still
     // needed.
-    var mmap = context.getMemoryMap();
-    var memoryMapAst = generateMemoryMap(mmap);
-    var processMapAst = generateProcessMap(jsAst);
-    var memoryOffsetsAst = extractMemoryBindings(jsAst);
-    var wrappedAst = wrap(processMapAst, memoryOffsetsAst, memoryMapAst);
-    var objText = __WEBPACK_IMPORTED_MODULE_7_escodegen__["generate"](wrappedAst);
-    return objText + '\n//@ sourceURL=' + sourceURL;
+    let mmap = context.getMemoryMap();
+    let memoryMapAst = generateMemoryMap(mmap);
+    let processMapAst = generateProcessMap(jsAst);
+    let memoryOffsetsAst = extractMemoryBindings(jsAst);
+    let wrappedAst = wrap(processMapAst, memoryOffsetsAst, memoryMapAst);
+    let objText = __WEBPACK_IMPORTED_MODULE_7_escodegen__["generate"](wrappedAst);
+    return objText + '\n//# sourceURL=' + sourceURL;
 }
 function extractMemoryBindings(ast) {
     return ast.body.filter(function (statement) {
@@ -4730,11 +4731,11 @@ function extractMemoryBindings(ast) {
     });
 }
 function generateMemoryMap(mmap) {
-    var jsonMmap = __WEBPACK_IMPORTED_MODULE_6__memory_mapper__["c" /* exportToJson */](mmap);
+    let jsonMmap = __WEBPACK_IMPORTED_MODULE_6__memory_mapper__["c" /* exportToJson */](mmap);
     return new __WEBPACK_IMPORTED_MODULE_3__ast__["g" /* ExpressionStatement */](__WEBPACK_IMPORTED_MODULE_3__ast__["t" /* fromJson */](jsonMmap));
 }
 function generateProcessMap(ast) {
-    var mapAst = {
+    let mapAst = {
         type: 'ExpressionStatement',
         expression: {
             type: 'ObjectExpression',
@@ -4749,10 +4750,10 @@ function generateProcessMap(ast) {
     return mapAst;
 }
 function wrap(processMapAst, memoryOffsetsAst, memoryMapAst) {
-    var wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
-    var body = wrapper.body[0].expression.body.body;
+    let wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
+    let body = wrapper.body[0].expression.body.body;
     body.splice.apply(body, [1, 0].concat(memoryOffsetsAst));
-    var ret = body[body.length - 1];
+    let ret = body[body.length - 1];
     ret.argument.properties.push(entryForPMap(processMapAst.expression));
     if (memoryMapAst) {
         ret.argument.properties.push(entryForMMap(memoryMapAst.expression));
@@ -4766,7 +4767,7 @@ function entryForMMap(expression) {
     return propertyEntry('mmap', expression);
 }
 function newEntry(functionDeclaration) {
-    var functionExpression = Object.create(functionDeclaration);
+    let functionExpression = Object.create(functionDeclaration);
     functionExpression.type = 'FunctionExpression';
     return propertyEntry(getName(functionExpression), functionExpression);
 }
@@ -4785,7 +4786,7 @@ function propertyEntry(name, value) {
     };
 }
 function getName(functionExpression) {
-    var functionId = functionExpression.id.name;
+    let functionId = functionExpression.id.name;
     if (startsWith(functionId, 'program_')) {
         return 'program';
     }
@@ -4795,8 +4796,9 @@ function startsWith(str, prefix) {
     return str.substr(0, prefix.length) === prefix;
 }
 // XXX: This is the AST for runtime/wrapper.js
-// XXX: It is kept in sync with the command grunt embed-wrapper
-var wrapperTemplate = { "type": "Program", "body": [{ "type": "ExpressionStatement", "expression": { "type": "FunctionExpression", "id": null, "params": [{ "type": "Identifier", "name": "rt" }], "body": { "type": "BlockStatement", "body": [{ "type": "ExpressionStatement", "expression": { "type": "Literal", "value": "use strict", "raw": "'use strict'" }, "directive": "use strict" }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldFrame" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "completion" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "frame", "raw": "'frame'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "completion" }, "computed": false, "value": { "type": "Identifier", "name": "completion" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldDebug" }, "params": [{ "type": "Identifier", "name": "npc" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "debug", "raw": "'debug'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldNewProcess" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "processName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "newprocess", "raw": "'newprocess'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "processName" }, "computed": false, "value": { "type": "Identifier", "name": "processName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldCallFunction" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "functionName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "call", "raw": "'call'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "functionName" }, "computed": false, "value": { "type": "Identifier", "name": "functionName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "VariableDeclaration", "declarations": [{ "type": "VariableDeclarator", "id": { "type": "Identifier", "name": "__yieldEnd" }, "init": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "end", "raw": "'end'" }] } }], "kind": "var" }, { "type": "ReturnStatement", "argument": { "type": "ObjectExpression", "properties": [] } }] }, "generator": false, "expression": false } }], "sourceType": "script" };
+// XXX: It is kept in sync with the command `npm run embed-wrapper`
+// tslint:disable-next-line:quotemark object-curly-spacing whitespace
+let wrapperTemplate = { "type": "Program", "body": [{ "type": "ExpressionStatement", "expression": { "type": "FunctionExpression", "id": null, "params": [{ "type": "Identifier", "name": "rt" }], "body": { "type": "BlockStatement", "body": [{ "type": "ExpressionStatement", "expression": { "type": "Literal", "value": "use strict", "raw": "'use strict'" }, "directive": "use strict" }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldFrame" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "completion" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "frame", "raw": "'frame'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "completion" }, "computed": false, "value": { "type": "Identifier", "name": "completion" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldDebug" }, "params": [{ "type": "Identifier", "name": "npc" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "debug", "raw": "'debug'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldNewProcess" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "processName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "newprocess", "raw": "'newprocess'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "processName" }, "computed": false, "value": { "type": "Identifier", "name": "processName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldCallFunction" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "functionName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "call", "raw": "'call'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "functionName" }, "computed": false, "value": { "type": "Identifier", "name": "functionName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false }, { "type": "VariableDeclaration", "declarations": [{ "type": "VariableDeclarator", "id": { "type": "Identifier", "name": "__yieldEnd" }, "init": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "end", "raw": "'end'" }] } }], "kind": "var" }, { "type": "ReturnStatement", "argument": { "type": "ObjectExpression", "properties": [] } }] }, "generator": false, "expression": false } }], "sourceType": "script" };
 
 
 
@@ -4814,13 +4816,13 @@ function extractContext(div2ast, symbolTable) {
     if (div2ast.type !== 'Unit') {
         console.warn('Extracting context from a partial AST.');
     }
-    var context = new __WEBPACK_IMPORTED_MODULE_0__context__["a" /* Context */]();
+    let context = new __WEBPACK_IMPORTED_MODULE_0__context__["a" /* Context */]();
     declareProcesses(context, div2ast.processes);
-    //TODO: Find and add custom globals to symbols
-    //TODO: Find and add custom locals to symbols
+    // TODO: Find and add custom globals to symbols
+    // TODO: Find and add custom locals to symbols
     declarePrivates(symbolTable, [div2ast.program]);
     declarePrivates(symbolTable, div2ast.processes);
-    var mmap = new __WEBPACK_IMPORTED_MODULE_1__memory_mapper__["b" /* MemoryMap */](symbolTable);
+    let mmap = new __WEBPACK_IMPORTED_MODULE_1__memory_mapper__["b" /* MemoryMap */](symbolTable);
     context.setMemoryMap(mmap);
     return context;
 }
@@ -4833,8 +4835,8 @@ function declarePrivates(symbolTable, processes) {
     (processes || []).forEach(function (processAst) {
         if (processAst && processAst.privates) {
             processAst.privates.declarations.forEach(function (declarationAst) {
-                var processName = processAst.name.name;
-                var varName = declarationAst.varName.name;
+                let processName = processAst.name.name;
+                let varName = declarationAst.varName.name;
                 if (!symbolTable.isPrivate(processName, varName)) {
                     symbolTable.addPrivate(processName, definitionFromAst(declarationAst));
                 }
@@ -4846,7 +4848,7 @@ function declarePrivates(symbolTable, processes) {
     });
 }
 function definitionFromAst(declarationAst) {
-    //TODO: add support for structs and arrays. 
+    // TODO: add support for structs and arrays.
     return {
         name: declarationAst.varName.name,
         type: declarationAst.varType
@@ -4870,7 +4872,7 @@ function Context(ctx) {
     this._processes = {};
     this._auxNames = {};
     this._currentProcess = undefined;
-    for (var key in ctx) {
+    for (let key in ctx) {
         if (ctx.hasOwnProperty(key)) {
             this[key] = ctx[key];
         }
@@ -4927,13 +4929,13 @@ Context.prototype = {
         return this._currentLinearization.return(expression);
     },
     newAux: function (name, initializer) {
-        var nameCount = this._auxNames[name] || 0;
-        var suffix = this._auxNames[name] = nameCount + 1;
+        let nameCount = this._auxNames[name] || 0;
+        let suffix = this._auxNames[name] = nameCount + 1;
         if (nameCount > 0) {
             name += suffix;
         }
-        var identifier = new __WEBPACK_IMPORTED_MODULE_0__ast__["i" /* Identifier */](name);
-        var declaration = new __WEBPACK_IMPORTED_MODULE_0__ast__["q" /* VariableDeclaration */](new __WEBPACK_IMPORTED_MODULE_0__ast__["r" /* VariableDeclarator */](identifier, initializer));
+        let identifier = new __WEBPACK_IMPORTED_MODULE_0__ast__["i" /* Identifier */](name);
+        let declaration = new __WEBPACK_IMPORTED_MODULE_0__ast__["q" /* VariableDeclaration */](new __WEBPACK_IMPORTED_MODULE_0__ast__["r" /* VariableDeclarator */](identifier, initializer));
         return {
             identifier: identifier,
             declaration: declaration
@@ -4959,15 +4961,15 @@ Context.prototype = {
         return this._currentLinearization.select(evaluation, options, defaultLabel);
     },
     getScope: function (identifier) {
-        var scope;
-        var symbols = this._mmap.symbols;
+        let scope;
+        let symbols = this._mmap.symbols;
         if (symbols.isGlobal(identifier)) {
             scope = 'global';
         }
-        //TODO: What about id? it is not a local but a special keyword with
-        //identifier semantics to avoid assignation on it. Should be translated
-        //as a local but identified like a special token and translated in a
-        //special way.
+        // TODO: What about id? it is not a local but a special keyword with
+        // identifier semantics to avoid assignation on it. Should be translated
+        // as a local but identified like a special token and translated in a
+        // special way.
         else if (symbols.isLocal(identifier)) {
             scope = 'local';
         }
@@ -4984,12 +4986,15 @@ function Linearization() {
 Linearization.prototype = {
     constructor: Linearization,
     getCases: function () {
-        var cases = [];
-        var sentences = this._sentences;
-        var currentCase = null;
-        var caseIsFinished = false;
-        var isReturn, isLabel, consequent;
-        for (var i = 0, wrapper; (wrapper = sentences[i]); i++) {
+        let cases = [];
+        let sentences = this._sentences;
+        let currentCase = null;
+        let caseIsFinished = false;
+        let isReturn;
+        let isLabel;
+        let consequent;
+        for (let i = 0, l = sentences.length; i < l; i++) {
+            let wrapper = sentences[i];
             isLabel = wrapper instanceof Label;
             isReturn = wrapper.type === 'Return';
             if (caseIsFinished && !isLabel) {
@@ -5009,7 +5014,7 @@ Linearization.prototype = {
         return new Label();
     },
     label: function (label) {
-        var lastSentence = this._sentences[this._sentences.length - 1];
+        let lastSentence = this._sentences[this._sentences.length - 1];
         if (lastSentence instanceof Label) {
             label.proxy(lastSentence);
         }
@@ -5058,7 +5063,7 @@ Linearization.prototype = {
         };
     },
     _goToIf: function (testAst, labelIfTrue, labelIfFalse) {
-        var _this = this;
+        let _this = this;
         return {
             type: 'GoToIf',
             get sentences() {
@@ -5067,7 +5072,7 @@ Linearization.prototype = {
         };
     },
     _goTo: function (label) {
-        var _this = this;
+        let _this = this;
         return {
             type: 'GoTo',
             get sentences() {
@@ -5079,13 +5084,13 @@ Linearization.prototype = {
         };
     },
     _select: function (evaluation, options, defaultLabel) {
-        var _this = this;
+        let _this = this;
         return {
             type: 'Select',
             get sentences() {
-                var defaultExpression = _this._programCounterSet(defaultLabel.label);
-                var cases = options.map(function (option) {
-                    var tests = option.tests;
+                let defaultExpression = _this._programCounterSet(defaultLabel.label);
+                let cases = options.map(function (option) {
+                    let tests = option.tests;
                     return _this._programCounterBranch(__WEBPACK_IMPORTED_MODULE_1__templates__["a" /* default */].some(evaluation, tests), option.label.label);
                 });
                 return [defaultExpression]
@@ -5103,7 +5108,7 @@ Linearization.prototype = {
         };
     },
     _call: function (kind, resumeLabel, name, argList) {
-        var type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
+        let type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
         return {
             type: type,
             get sentences() {
@@ -5185,46 +5190,11 @@ class SymbolTable {
         this.locals = definitions.wellKnownLocals.map(SymbolTable._normalize);
         this.privates = {};
     }
-    addGlobal(definition) {
-        return this._add('globals', definition);
-    }
-    addLocal(definition) {
-        return this._add('locals', definition);
-    }
-    isGlobal(name) {
-        return this._isKnown('globals', name.toLowerCase());
-    }
-    isLocal(name) {
-        //TODO: Actually, id is a special token, non an identifier. Let's fix
-        // that in the parser and translation module.
-        return name === 'id' ||
-            this._isKnown('locals', name.toLowerCase());
-    }
-    addPrivate(processName, definition) {
-        var normalized = SymbolTable._normalize(definition);
-        this.privates[processName] = this.privates[processName] || [];
-        this.privates[processName].push(normalized);
-        return normalized;
-    }
-    isPrivate(processName, name) {
-        var processPrivates = this.privates[processName];
-        return processPrivates && processPrivates.some(function (symbol) {
-            return symbol.name === name;
-        });
-    }
-    _add(kind, definition) {
-        return (this[kind] = SymbolTable._normalize(definition));
-    }
-    _isKnown(kind, name) {
-        return this[kind].some(function (symbol) {
-            return symbol.name === name;
-        });
-    }
     static _normalize(symbol) {
         if (typeof symbol === 'string') {
             symbol = { name: symbol };
         }
-        var normalized = {};
+        let normalized = {};
         normalized.name = symbol.name;
         if (!normalized.name) {
             throw new Error('Symbol has no name!');
@@ -5244,8 +5214,42 @@ class SymbolTable {
         }
         return normalized;
     }
+    addGlobal(definition) {
+        return this._add('globals', definition);
+    }
+    addLocal(definition) {
+        return this._add('locals', definition);
+    }
+    isGlobal(name) {
+        return this._isKnown('globals', name.toLowerCase());
+    }
+    isLocal(name) {
+        // TODO: Actually, id is a special token, non an identifier. Let's fix
+        // that in the parser and translation module.
+        return name === 'id' ||
+            this._isKnown('locals', name.toLowerCase());
+    }
+    addPrivate(processName, definition) {
+        let normalized = SymbolTable._normalize(definition);
+        this.privates[processName] = this.privates[processName] || [];
+        this.privates[processName].push(normalized);
+        return normalized;
+    }
+    isPrivate(processName, name) {
+        let processPrivates = this.privates[processName];
+        return processPrivates && processPrivates.some(function (symbol) {
+            return symbol.name === name;
+        });
+    }
+    _add(kind, definition) {
+        return (this[kind] = SymbolTable._normalize(definition));
+    }
+    _isKnown(kind, name) {
+        return this[kind].some(function (symbol) {
+            return symbol.name === name;
+        });
+    }
 }
-;
 
 
 
@@ -5285,236 +5289,236 @@ class SymbolTable {
 // values preserve the offsets, I chose the one closest to what is
 // documented.
 /* harmony default export */ __webpack_exports__["a"] = ({
-    "wellKnownGlobals": [
+    'wellKnownGlobals': [
         {
-            "type": "struct",
-            "name": "mouse",
-            "fields": [
-                { "name": "x", "default": 160 },
-                { "name": "y", "default": 100 },
-                { "name": "z", "default": -512 },
-                "file",
-                "graph",
-                "angle",
-                { "name": "size", "default": 100 },
-                "flags",
-                "region",
-                "left",
-                "middle",
-                "right",
-                "cursor",
-                { "name": "speed", "default": 2 }
+            'type': 'struct',
+            'name': 'mouse',
+            'fields': [
+                { 'name': 'x', 'default': 160 },
+                { 'name': 'y', 'default': 100 },
+                { 'name': 'z', 'default': -512 },
+                'file',
+                'graph',
+                'angle',
+                { 'name': 'size', 'default': 100 },
+                'flags',
+                'region',
+                'left',
+                'middle',
+                'right',
+                'cursor',
+                { 'name': 'speed', 'default': 2 }
             ]
         },
         {
-            "type": "struct",
-            "name": "scroll",
-            "fields": [
-                { "name": "z", "default": 512 },
-                "camera",
-                { "name": "ratio", "default": 200 },
-                "speed",
-                { "name": "region1", "default": -1 },
-                { "name": "region2", "default": -1 },
-                "x0", "y0",
-                "x1", "y1"
+            'type': 'struct',
+            'name': 'scroll',
+            'fields': [
+                { 'name': 'z', 'default': 512 },
+                'camera',
+                { 'name': 'ratio', 'default': 200 },
+                'speed',
+                { 'name': 'region1', 'default': -1 },
+                { 'name': 'region2', 'default': -1 },
+                'x0', 'y0',
+                'x1', 'y1'
             ],
-            "length": 10
+            'length': 10
         },
         {
-            "type": "struct",
-            "name": "m7",
-            "fields": [
-                { "name": "z", "default": 256 },
-                "camera",
-                { "name": "height", "default": 32 },
-                { "name": "distance", "default": 64 },
-                "horizon",
-                { "name": "focus", "default": 256 },
-                "color"
+            'type': 'struct',
+            'name': 'm7',
+            'fields': [
+                { 'name': 'z', 'default': 256 },
+                'camera',
+                { 'name': 'height', 'default': 32 },
+                { 'name': 'distance', 'default': 64 },
+                'horizon',
+                { 'name': 'focus', 'default': 256 },
+                'color'
             ],
-            "length": 10
+            'length': 10
         },
         {
-            "type": "struct",
-            "name": "joy",
-            "fields": [
-                "button1",
-                "button2",
-                "button3",
-                "button4",
-                "left",
-                "right",
-                "up",
-                "down"
+            'type': 'struct',
+            'name': 'joy',
+            'fields': [
+                'button1',
+                'button2',
+                'button3',
+                'button4',
+                'left',
+                'right',
+                'up',
+                'down'
             ]
         },
         {
-            "type": "struct",
-            "name": "setup",
-            "fields": [
-                "card",
-                "port",
-                "irq",
-                "dma",
-                "dma2",
-                "master",
-                "sound_fx",
-                "cd_audio",
-                "mixer",
-                "rate",
-                "bits"
+            'type': 'struct',
+            'name': 'setup',
+            'fields': [
+                'card',
+                'port',
+                'irq',
+                'dma',
+                'dma2',
+                'master',
+                'sound_fx',
+                'cd_audio',
+                'mixer',
+                'rate',
+                'bits'
             ]
         },
         {
-            "type": "struct",
-            "name": "net",
-            "fields": [
-                "device",
-                "com",
-                "speed",
-                "number",
-                "init",
-                "mode",
-                "server",
-                "max_players",
-                "num_players"
+            'type': 'struct',
+            'name': 'net',
+            'fields': [
+                'device',
+                'com',
+                'speed',
+                'number',
+                'init',
+                'mode',
+                'server',
+                'max_players',
+                'num_players'
             ]
         },
         {
-            "type": "struct",
-            "name": "m8",
-            "fields": [
-                { "name": "z", "default": 256 },
-                "camera",
-                "height",
-                "angle"
+            'type': 'struct',
+            'name': 'm8',
+            'fields': [
+                { 'name': 'z', 'default': 256 },
+                'camera',
+                'height',
+                'angle'
             ],
-            "length": 10
+            'length': 10
         },
         {
-            "type": "struct",
-            "name": "dirinfo",
-            "fields": [
-                "files",
-                { "type": "int", "length": 1025, "name": "name" }
+            'type': 'struct',
+            'name': 'dirinfo',
+            'fields': [
+                'files',
+                { 'type': 'int', 'length': 1025, 'name': 'name' }
             ]
         },
         {
-            "type": "struct",
-            "name": "fileinfo",
-            "fields": [
+            'type': 'struct',
+            'name': 'fileinfo',
+            'fields': [
                 // No idea why these *_fix are here:
                 // https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h#L187
-                { "type": "int", "name": "fullpath_fix", "hidden": true },
-                { "type": "byte", "length": 256, "name": "fullpath" },
-                "drive",
-                { "type": "int", "name": "length_fix", "hidden": true },
-                { "type": "byte", "length": 256, "name": "dir" },
-                { "type": "int", "name": "name_fix", "hidden": true },
-                { "type": "byte", "length": 12, "name": "name" },
-                { "type": "int", "name": "ext_fix", "hidden": true },
-                { "type": "byte", "length": 8, "name": "ext" },
-                "size",
-                "day",
-                "month",
-                "year",
-                "hour",
-                "min",
-                "sec",
-                "attrib"
+                { 'type': 'int', 'name': 'fullpath_fix', 'hidden': true },
+                { 'type': 'byte', 'length': 256, 'name': 'fullpath' },
+                'drive',
+                { 'type': 'int', 'name': 'length_fix', 'hidden': true },
+                { 'type': 'byte', 'length': 256, 'name': 'dir' },
+                { 'type': 'int', 'name': 'name_fix', 'hidden': true },
+                { 'type': 'byte', 'length': 12, 'name': 'name' },
+                { 'type': 'int', 'name': 'ext_fix', 'hidden': true },
+                { 'type': 'byte', 'length': 8, 'name': 'ext' },
+                'size',
+                'day',
+                'month',
+                'year',
+                'hour',
+                'min',
+                'sec',
+                'attrib'
             ]
         },
         {
-            "type": "struct",
-            "name": "video_modes",
-            "fields": [
-                "wide",
-                "height",
-                "mode"
+            'type': 'struct',
+            'name': 'video_modes',
+            'fields': [
+                'wide',
+                'height',
+                'mode'
             ],
-            "length": 32
+            'length': 32
         },
         {
-            "name": "timer",
-            "length": 10
+            'name': 'timer',
+            'length': 10
         },
-        { "name": "text_z", "default": -256 },
-        "fading",
-        "shift_status",
-        "ascii",
-        "scan_code",
-        { "name": "joy_filter", "default": 10 },
-        { "name": "joy_status", "default": 1 },
-        { "name": "restore_type", "default": 1 },
-        { "name": "dump_type", "default": 1 },
-        { "name": "max_process_time", "default": 500 },
-        "fps",
-        "argc",
+        { 'name': 'text_z', 'default': -256 },
+        'fading',
+        'shift_status',
+        'ascii',
+        'scan_code',
+        { 'name': 'joy_filter', 'default': 10 },
+        { 'name': 'joy_status', 'default': 1 },
+        { 'name': 'restore_type', 'default': 1 },
+        { 'name': 'dump_type', 'default': 1 },
+        { 'name': 'max_process_time', 'default': 500 },
+        'fps',
+        'argc',
         {
-            "name": "argv",
-            "length": 10
+            'name': 'argv',
+            'length': 10
         },
         {
-            "name": "channel",
-            "length": 32
+            'name': 'channel',
+            'length': 32
         },
-        "vsync",
-        { "name": "draw_z", "default": -255 },
-        { "name": "num_video_modes", "default": 14 },
-        { "name": "unit_size", "default": 4 }
+        'vsync',
+        { 'name': 'draw_z', 'default': -255 },
+        { 'name': 'num_video_modes', 'default': 14 },
+        { 'name': 'unit_size', 'default': 4 }
     ],
-    "wellKnownLocals": [
+    'wellKnownLocals': [
         {
-            "type": "struct",
-            "name": "reserved",
-            "fields": [
-                "process_id",
-                "id_scan",
-                "process_type",
-                "type_scan",
-                { "name": "status", "default": 2 },
-                "parameters",
-                "param_offset",
-                "program_index",
-                "stack_pointer",
-                "is_executed",
-                "is_painted",
-                { "name": "m8_object", "default": -1 },
-                "old_ctype",
-                "frame_percent",
-                "box_x0",
-                "box_y0",
-                { "name": "box_x1", "default": -1 },
-                "box_y1",
-                "f_count",
-                "caller_id"
+            'type': 'struct',
+            'name': 'reserved',
+            'fields': [
+                'process_id',
+                'id_scan',
+                'process_type',
+                'type_scan',
+                { 'name': 'status', 'default': 2 },
+                'parameters',
+                'param_offset',
+                'program_index',
+                'stack_pointer',
+                'is_executed',
+                'is_painted',
+                { 'name': 'm8_object', 'default': -1 },
+                'old_ctype',
+                'frame_percent',
+                'box_x0',
+                'box_y0',
+                { 'name': 'box_x1', 'default': -1 },
+                'box_y1',
+                'f_count',
+                'caller_id'
             ]
         },
-        "father",
-        "son",
-        "smallbro",
-        "bigbro",
-        "priority",
-        "ctype",
-        "x",
-        "y",
-        "z",
-        "graph",
-        "flags",
-        { "name": "size", "default": 100 },
-        "angle",
-        "region",
-        "file",
-        "xgraph",
-        "cnumber",
-        "height",
-        "resolution",
-        "radius",
-        { "name": "m8_wall", "default": -1 },
-        { "name": "m8_sector", "default": -1 },
-        { "name": "m8_nextsector", "default": -1 },
-        { "name": "m8_step", "default": 32 }
+        'father',
+        'son',
+        'smallbro',
+        'bigbro',
+        'priority',
+        'ctype',
+        'x',
+        'y',
+        'z',
+        'graph',
+        'flags',
+        { 'name': 'size', 'default': 100 },
+        'angle',
+        'region',
+        'file',
+        'xgraph',
+        'cnumber',
+        'height',
+        'resolution',
+        'radius',
+        { 'name': 'm8_wall', 'default': -1 },
+        { 'name': 'm8_sector', 'default': -1 },
+        { 'name': 'm8_nextsector', 'default': -1 },
+        { 'name': 'm8_step', 'default': 32 }
     ]
 });
 
