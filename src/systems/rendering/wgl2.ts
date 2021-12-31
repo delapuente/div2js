@@ -6,6 +6,7 @@ out vec2 v_texcoord;
 
 void main() {
   gl_Position = a_position;
+  // Convert from origin at bottom left (-1, -1) to origin at top left (0, 0).
   v_texcoord = a_position.xy * vec2(0.5, -0.5) + 0.5;
 }`;
 
@@ -20,13 +21,18 @@ out vec4 color;
 uniform sampler2D u_framebuffer;
 uniform sampler2D u_palette;
 
-const float COLOR_INTENSITY_NORM_FACTOR = 255.0/63.0;
+// DIV palettes have colors with intensities ranging from 0 to 63.
+// We need to convert them to 0 to 255.
+const float COLOR_INTENSITY_FACTOR = 255.0/63.0;
 
 void main() {
+  // Obtain the palette color index from the framebuffer.
   float index = texture(u_framebuffer, v_texcoord).a * 255.0;
+
+  // Obtain the actual color from the palette.
   color =
     texture(u_palette, vec2((index + 0.5)/256.0, 0.5)) *
-    COLOR_INTENSITY_NORM_FACTOR;
+    COLOR_INTENSITY_FACTOR;
 }`;
 
 function createShader(gl, type, source) {
