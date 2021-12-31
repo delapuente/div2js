@@ -14,9 +14,12 @@ function load (objText) {
 
 function registerRenderSystem (program) {
   if (window && window.document) {
-    let canvas = document.createElement('CANVAS');
-    canvas.id = 'div-monitor';
-    document.body.appendChild(canvas);
+    if (!document.querySelector('#div-monitor')) {
+      const canvas = document.createElement('CANVAS');
+      canvas.id = 'div-monitor';
+      document.body.appendChild(canvas);
+    }
+    const canvas = document.querySelector('#div-monitor');
     program.registerSystem(new systems.DefaultRender(canvas));
   }
 }
