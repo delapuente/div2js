@@ -21,7 +21,7 @@ function registerRenderSystem (program) {
       document.body.appendChild(canvas);
     }
     const canvas = document.querySelector('#div-monitor');
-    program.registerSystem(new systems.DefaultRender(canvas));
+    program.registerSystem(new systems.DefaultRender(canvas), 'video');
   }
 }
 

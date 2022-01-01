@@ -193,3 +193,23 @@ describe('Memory state while running transpiled programs', function () {
   });
 
 });
+
+describe('Graphic operations', function () {
+
+  it('Not setting a video mode defaults in m320x200', function () {
+    return load('default-video-mode.prg')
+      .then(function (program) {
+        return new Promise(function (fulfil) {
+          program.onfinished = withDebugSession(function (session) {
+            const screen = session.screen;
+            expect(screen.width).to.equal(320);
+            expect(screen.height).to.equal(200);
+            expect(screen.buffer.length).to.equal(320 * 200);
+            fulfil(void 0);
+          })
+          program.run();
+        });
+      });
+  })
+
+})

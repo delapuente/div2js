@@ -17,6 +17,7 @@ function Runtime (processMap, memorySymbols) {
   this._ondebug = null;
   this._onfinished = null;
   this._systems = [];
+  this._systemMap = {};
   this._memoryManager = new MemoryManager(memorySymbols);
   this._environment = new Environment();
   let memory = this._memoryManager.getMemory();
@@ -30,9 +31,19 @@ function Runtime (processMap, memorySymbols) {
 Runtime.prototype = {
   constructor: Runtime,
 
-  registerSystem: function (system) {
+  registerSystem: function (system, name) {
+    if (name && typeof this._systemMap[name] !== 'undefined') {
+      throw new Error('System already registered with name: ' + name);
+    }
     system.initialize();
     this._systems.push(system);
+    if (name) {
+      this._systemMap[name] = system;
+    }
+  },
+
+  getSystem: function (name) {
+    return this._systemMap[name];
   },
 
   getMemoryBrowser: function () {
