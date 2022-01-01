@@ -17,6 +17,7 @@ function registerRenderSystem (program) {
     if (!document.querySelector('#div-monitor')) {
       const canvas = document.createElement('CANVAS');
       canvas.id = 'div-monitor';
+      canvas.style.imageRendering = 'pixelated';
       document.body.appendChild(canvas);
     }
     const canvas = document.querySelector('#div-monitor');

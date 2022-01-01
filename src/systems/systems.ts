@@ -1,5 +1,5 @@
-import wgl2 from './rendering/wgl2';
+import wgl2idx from './rendering/wgl2idx';
 
 export {
-  wgl2 as DefaultRender
+  wgl2idx as DefaultRender
 };

@@ -115,8 +115,8 @@ Scheduler.prototype = {
     if (!(result instanceof Baton)) {
       throw Error('Execution returned an unknown result:' + result);
     }
-    if (typeof result.npc !== 'undefined') {
-      this.currentExecution.pc = result.npc;
+    if (typeof (result as any).npc !== 'undefined') {
+      this.currentExecution.pc = (result as any).npc;
     }
     return this._call('onyield', result);
   },
@@ -133,7 +133,7 @@ Scheduler.prototype = {
 };
 
 function Baton (type, data) {
-  data = data || {};
+  data = data || {}
   this.type = type;
   Object.keys(data).forEach(function (key) {
     this[key] = data[key];
