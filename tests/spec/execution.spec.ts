@@ -109,7 +109,7 @@ describe('Workflow of transpiled programs', function () {
             expect(aX).to.equal(1);
             expect(bX).to.equal(2);
             expect(cX).to.equal(3);
-            fulfil();
+            fulfil(void 0);
           });
           program.run();
         });
@@ -127,7 +127,7 @@ describe('Workflow of transpiled programs', function () {
             expect(aX).to.equal(3);
             expect(bX).to.equal(0);
             expect(cX).to.equal(0);
-            fulfil();
+            fulfil(void 0);
           });
           program.run();
         });
@@ -139,8 +139,8 @@ describe('Workflow of transpiled programs', function () {
     return load('concurrency-1-process.prg')
       .then(function (program) {
         return new Promise(function (fulfil) {
-          var results = [];
-          var expected = [];
+          const results = [] as any[];
+          const expected = [] as any[];
           program.ondebug = autoResume(withDebugSession(function (session) {
             results.push(
               session.global('text_z').value
@@ -149,7 +149,7 @@ describe('Workflow of transpiled programs', function () {
           }));
           program.onfinished = function () {
             expect(results).to.deep.equal(expected);
-            fulfil();
+            fulfil(void 0);
           };
           program.run();
         });
