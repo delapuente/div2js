@@ -210,6 +210,41 @@ describe('Graphic operations', function () {
           program.run();
         });
       });
+describe('Graphic functions', function () {
+
+  describe('default video mode', function () {
+    it('is m320x200', function () {
+      return load('default-video-mode.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            program.onfinished = withDebugSession(function (session) {
+              const screen = session.screen;
+              expect(screen.width).to.equal(320);
+              expect(screen.height).to.equal(200);
+              expect(screen.buffer.length).to.equal(320 * 200);
+              fulfil(void 0);
+            })
+            program.run();
+          });
+        });
+    })
+  })
+
+  describe('put_pixel()', function () {
+    it('sets a pixel to a given color', function () {
+      return load('put_pixel.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            program.onfinished = withDebugSession(function (session) {
+              const screen = session.screen;
+              const pixelIndex = 99 * 320 + 159;
+              expect(screen.buffer[pixelIndex]).to.equal(15);
+              fulfil(void 0);
+            })
+            program.run();
+          });
+        });
+    })
   })
 
 })

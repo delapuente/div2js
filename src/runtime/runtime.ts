@@ -113,7 +113,13 @@ Runtime.prototype = {
   },
 
   _call: function (baton) {
-
+    const functionName = baton.functionName;
+    if (functionName === 'put_pixel') {
+      const [x, y, colorIndex] = baton.args;
+      this.getSystem('video').screen.putPixel(x, y, colorIndex);
+      // XXX: put_pixel returns the x value. Checked empirically.
+      this._scheduler.currentExecution.retv.enqueue(x);
+    }
   },
 
   _frame: function (baton) {
