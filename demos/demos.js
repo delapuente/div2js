@@ -7,8 +7,11 @@ programSelector.onchange = load;
 function load(evt) {
   reloadButton.disabled = true;
 
-  var programUrl = evt.target.value;
-  if (!programUrl) { return; }
+  var programUrl = document.querySelector('#demo-list').value;
+  if (!programUrl) {
+    reloadButton.disabled = false;
+    return;
+  }
 
   fetch(programUrl)
   .then(function (response) {
