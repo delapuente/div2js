@@ -96,7 +96,11 @@ function getDefaultScreen(
 function getDefaultPalette(
   size: number = DEFAULT_PALETTE_SIZE
 ): Palette {
-  return new Palette(size);
+  const palette = new Palette(size);
+  for (let i = 0; i < 15; i++) {
+    palette.setColor(i, 4*i, 4*i, 4*i);
+  }
+  return palette;
 }
 
 /**
