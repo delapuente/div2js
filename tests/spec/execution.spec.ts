@@ -194,22 +194,30 @@ describe('Memory state while running transpiled programs', function () {
 
 });
 
-describe('Graphic operations', function () {
+describe('Math functions', function () {
 
-  it('Not setting a video mode defaults in m320x200', function () {
-    return load('default-video-mode.prg')
-      .then(function (program) {
-        return new Promise(function (fulfil) {
-          program.onfinished = withDebugSession(function (session) {
-            const screen = session.screen;
-            expect(screen.width).to.equal(320);
-            expect(screen.height).to.equal(200);
-            expect(screen.buffer.length).to.equal(320 * 200);
-            fulfil(void 0);
-          })
-          program.run();
+  describe('rand()', function () {
+    it('gives a random number between start and end', function () {
+      return load('rand.prg')
+        .then(function (program) {
+          return new Promise(function (fulfil) {
+            program.onfinished = withDebugSession(function (session) {
+              var program = session.process({
+                index: 0,
+                type: 'rand'
+              });
+              debugger;
+              expect(program.private('random_value').value).to.be.within(0, 15);
+              fulfil(void 0);
+            })
+            program.run();
+          });
         });
-      });
+    })
+  })
+
+});
+
 describe('Graphic functions', function () {
 
   describe('default video mode', function () {

@@ -120,6 +120,11 @@ Runtime.prototype = {
       // XXX: put_pixel returns the x value. Checked empirically.
       this._scheduler.currentExecution.retv.enqueue(x);
     }
+    if (functionName === 'rand') {
+      const [min, max] = baton.args;
+      const result = Math.floor(Math.random() * (max - min + 1)) + min;
+      this._scheduler.currentExecution.retv.enqueue(result);
+    }
   },
 
   _frame: function (baton) {
