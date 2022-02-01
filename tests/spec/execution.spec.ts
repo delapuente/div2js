@@ -206,7 +206,6 @@ describe('Math functions', function () {
                 index: 0,
                 type: 'rand'
               });
-              debugger;
               expect(program.private('random_value').value).to.be.within(0, 15);
               fulfil(void 0);
             })
