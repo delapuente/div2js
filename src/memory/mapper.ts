@@ -21,11 +21,11 @@ class MemoryMap {
     return this.maxProcess * this.processSize;
   }
 
-  get maxPrivateSegmentSize () {
-    return Math.max.call(
-      Math,
-      Object.keys(this.cells.privates).map(function (processName) {
-        this._getSegmentSize(this.cells.privates[processName]);
+  get maxPrivateSegmentSize (): number {
+    return Math.max(
+      0,
+      ...Object.keys(this.cells.privates).map(function (processName) {
+        return this._getSegmentSize(this.cells.privates[processName]);
       }, this)
     );
   }
@@ -81,7 +81,7 @@ class MemoryMap {
     return new MemoryMap(json);
   }
 
-  private _getSegmentSize (cells) {
+  private _getSegmentSize (cells): number {
     return cells.reduce(function (total, cell) {
       return total + cell.size;
     }, 0);
