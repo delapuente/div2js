@@ -1,6 +1,7 @@
 # DIV2JS
 
-DIV2JS is a transpiler of DIV2 for the modern web. In experimental stage right now, DIV2JS tries to be a perfect simulator for the DIV2 language.
+DIV2JS is a transpiler of DIV2 for the modern web. In an experimental stage
+right now, DIV2JS tries to be a perfect simulator for the DIV2 language.
 
 ## Install
 
