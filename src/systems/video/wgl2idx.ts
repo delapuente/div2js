@@ -96,10 +96,7 @@ function getDefaultScreen(
 function getDefaultPalette(
   size: number = DEFAULT_PALETTE_SIZE
 ): Palette {
-  const palette = new Palette(size);
-  for (let i = 0; i < 15; i++) {
-    palette.setColor(i, 4*i, 4*i, 4*i);
-  }
+  const palette = Palette.withSize(size);
   return palette;
 }
 
@@ -200,6 +197,10 @@ class WebGL2IndexedScreenVideoSystem {
     gl.canvas.width = width;
     gl.canvas.height = height;
     gl.viewport(0, 0, width, height);
+  }
+
+  setPalette (palette: Palette) {
+    this.palette = palette;
   }
 
   _initShaders () {
