@@ -1,13 +1,25 @@
 import { PALFile } from "./pal";
 
+interface UrlFileSystemOptions {
+  readonly rootUrl: string;
+}
+
 export default class UrlFileSystem {
+
+  constructor(public options: UrlFileSystemOptions) {
+
+  }
 
   initialize() {}
 
   run () {}
 
   loadPal(url: string): Promise<PALFile> {
-    return _loadPal(url);
+    return _loadPal(this._getPath(url));
+  }
+
+  _getPath(url: string): string {
+    return this.options.rootUrl + url;
   }
 }
 
