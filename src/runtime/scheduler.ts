@@ -1,3 +1,5 @@
+import { assert } from "chai";
+
 let rAF = window.requestAnimationFrame;
 
 function Scheduler (mem, processMap, hooks) {
@@ -18,8 +20,8 @@ Scheduler.prototype = {
   },
 
   run: function () {
-    if (!this._running) {
-      this._running = true;
+    if (!this._isRunning) {
+      this._isRunning = true;
       this._scheduleStep();
     }
   },
@@ -30,7 +32,7 @@ Scheduler.prototype = {
   },
 
   stop: function () {
-    this._running = false;
+    this._isRunning = false;
   },
 
   resetExectution: function () {
@@ -40,8 +42,10 @@ Scheduler.prototype = {
 
   reset: function () {
     this._processList = [];
-    this._running = false;
+    this._isRunning = false;
     this._current = 0;
+    this._blocker = null;
+    this._blockedExecution = null;
   },
 
   addProgram: function (base) {
@@ -52,10 +56,25 @@ Scheduler.prototype = {
     this._add('process_' + name, base);
   },
 
+  addBlockingFunction: function (promise) {
+    this._blocker = promise;
+    this._blockedExecution = this.currentExecution;
+    this._blocker
+      .then(this._unblock.bind(this))
+      .catch((err) => {
+        // TODO: Maybe call onerror?
+        throw new Error(err);
+      });
+  },
+
   deleteCurrent: function () {
     let currentExecution = this._processList[this._current];
     currentExecution.dead = true;
     return currentExecution.id;
+  },
+
+  get _isBlocking () {
+    return this._blocker !== null;
   },
 
   _add: function (name, base) {
@@ -87,14 +106,20 @@ Scheduler.prototype = {
       return this._end();
     }
 
-    while (this._running && this._current < this._processList.length) {
+    while (
+      !this._isBlocking &&
+      this._isRunning &&
+      this._current < this._processList.length
+    ) {
       let execution = processList[this._current];
       let result = execution.runnable(this._mem, execution);
       this._takeAction(result);
-      if (this._running) { this._current++; }
+      if (this._isRunning) { this._current++; }
     }
 
-    if (this._running) {
+    if (this._isBlocking) {
+      this._scheduleStep();
+    } else if (this._isRunning) {
       this._call('onupdate');
       this._current = 0;
       this._processList = this._processList.filter(isAlive);
@@ -121,14 +146,20 @@ Scheduler.prototype = {
     return this._call('onyield', result);
   },
 
-  _call: function (name) {
+  _call: function (name, ...args) {
     let result;
     let target = this[name];
     if (target && typeof target.apply === 'function') {
-      let args = Array.prototype.slice.call(arguments, 1);
       result = target.apply(this, args);
     }
     return result;
+  },
+
+  _unblock: function () {
+    this._blocker = null;
+    this._current = this.processList.indexOf(this._blockedExecution);
+    assert(this._current !== -1, 'Blocked executions not found in the process list.');
+    this._blockedExecution = null;
   }
 };
 
