@@ -1,5 +1,6 @@
 import * as memory from './memory';
 import * as scheduler from './scheduler';
+import Palette from '../systems/video/palette';
 
 let Scheduler = scheduler.Scheduler;
 let MemoryManager = memory.MemoryManager;
@@ -73,6 +74,8 @@ Runtime.prototype = {
     this._memoryManager.reset();
     let id = this._memoryManager.allocateProcess();
     this._scheduler.addProgram(id);
+    // XXX: Load defaults
+    this._loadDefaultPalette();
     this._scheduler.run();
   },
 
@@ -125,6 +128,28 @@ Runtime.prototype = {
       const result = Math.floor(Math.random() * (max - min + 1)) + min;
       this._scheduler.currentExecution.retv.enqueue(result);
     }
+    if (functionName === 'load_pal') {
+      const [palettePath] = baton.args;
+      this._loadPal(palettePath);
+    }
+  },
+
+  _loadDefaultPalette: function () {
+    this._loadPal('PAL/DIV2.PAL', { discardReturnValue: true});
+  },
+
+  _loadPal(palettePath, { discardReturnValue = false } = {}) {
+    const currentExecution = this._scheduler.currentExecution;
+    const work = this.getSystem('files')
+      .loadPal(palettePath).then((palFile) => {
+        this.getSystem('video').setPalette(
+          Palette.fromBuffer(palFile.buffer)
+        );
+        if (!discardReturnValue) {
+          currentExecution.retv.enqueue(0);
+        }
+      });
+    this._scheduler.addBlockingFunction(work);
   },
 
   _frame: function (baton) {
