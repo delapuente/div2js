@@ -27,7 +27,7 @@ function load(programName) {
       return compiler.compile(src);
     })
     .then(function (obj) {
-      return loader.load(obj);
+      return loader.load(obj, { rootUrl: '/base/demos/'});
     });
 }
 

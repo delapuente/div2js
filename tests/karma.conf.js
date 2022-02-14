@@ -8,6 +8,7 @@ module.exports = function (config) {
       { pattern: 'tests/index.ts', watched: false },
       { pattern: 'tests/spec/samples/**/*', included: false },
       { pattern: 'src/div2lang.js', included: false, served: false },
+      { pattern: 'demos/PAL/**/*', served: true, included: false, watched: false },
     ],
     preprocessors: {
       'tests/**/*.ts': ['webpack']
