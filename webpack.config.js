@@ -1,16 +1,22 @@
 const path = require('path');
 
 module.exports = {
-  entry: ['./src/div2js.ts'],
+  mode: 'development',
+  entry: './src/div2js.ts',
   output: {
     filename: 'div2js.js',
-    path: path.resolve(__dirname, 'dist'),
     publicPath: 'dist',
-    library: 'div2',
-    libraryTarget: 'umd'
+    library: {
+      name: 'div2',
+      type: 'umd'
+    }
   },
   resolve: {
-    extensions: ['.ts', '.js', '.json']
+    extensions: ['.ts', '.js', '.json'],
+    fallback: {
+      fs: false,
+      path: false
+    }
   },
   devtool: 'source-map',
   module: {
@@ -24,16 +30,25 @@ module.exports = {
       {
         test: /\.(ts|js)$/,
         exclude: /node_modules/,
-        use: "awesome-typescript-loader"
+        use: "ts-loader"
       }
     ]
   },
   devServer: {
-    contentBase: [path.resolve(__dirname), path.resolve(__dirname, 'assets')],
-    watchContentBase: true,
-    disableHostCheck: true
+    static: [
+      {
+        directory: path.resolve(__dirname),
+        watch: true
+      },
+      {
+        directory: path.resolve(__dirname, 'assets'),
+        watch: true
+      }
+    ],
+    allowedHosts: 'all'
   },
-  node: {
-    'fs': 'empty'
+  stats: {
+    errorDetails: true,
+    colors: true
   }
 };

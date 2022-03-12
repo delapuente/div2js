@@ -3,7 +3,16 @@ const webpack = require('../webpack.test.js');
 module.exports = function (config) {
   config.set({
     basePath: '../',
-    frameworks: ['mocha', 'sinon-chai'],
+    frameworks: ['webpack', 'mocha', 'sinon-chai'],
+    plugins: [
+      'karma-webpack',
+      'karma-mocha',
+      'karma-sinon-chai',
+      'karma-mocha-reporter',
+      'karma-coverage-istanbul-reporter',
+      'karma-chrome-launcher',
+      'karma-firefox-launcher',
+    ],
     files: [
       { pattern: 'tests/index.ts', watched: false },
       { pattern: 'tests/spec/samples/**/*', included: false },
