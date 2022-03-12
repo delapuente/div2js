@@ -1,7 +1,6 @@
-import * as ast from './ast';
+import * as ast from "./ast";
 
 export default {
-
   callWith: function (name, args) {
     if (!Array.isArray(args)) {
       args = args ? [args] : [];
@@ -10,8 +9,8 @@ export default {
   },
 
   concurrentBody: function (cases) {
-    let programCounter = this.programCounter;
-    let switchStatement = new ast.SwitchStatement(programCounter, cases);
+    const programCounter = this.programCounter;
+    const switchStatement = new ast.SwitchStatement(programCounter, cases);
     return this.infiniteLoop(switchStatement);
   },
 
@@ -19,18 +18,19 @@ export default {
     return new ast.SwitchCase(ast.Literal.for(label));
   },
 
-  get endToken () {
+  get endToken() {
     return {
-      type: 'Identifier',
-      name: '__yieldEnd'
+      type: "Identifier",
+      name: "__yieldEnd",
     };
   },
 
   every: function (tests) {
-    let _this = this;
+    const _this = this;
     return tests.reduce(function (chain, test) {
-      return chain === null ? test :
-              new ast.LogicalExpression(chain, test, '&&');
+      return chain === null
+        ? test
+        : new ast.LogicalExpression(chain, test, "&&");
     }, null);
   },
 
@@ -42,17 +42,17 @@ export default {
    */
   fromIncrement: function (name, constant) {
     return {
-      type: 'AssignmentExpression',
-      operator: '+=',
+      type: "AssignmentExpression",
+      operator: "+=",
       left: {
-        type: 'Identifier',
-        name: name
+        type: "Identifier",
+        name: name,
       },
       right: {
-        type: 'Literal',
+        type: "Literal",
         value: constant,
-        raw: JSON.stringify(constant)
-      }
+        raw: JSON.stringify(constant),
+      },
     };
   },
 
@@ -64,17 +64,17 @@ export default {
    */
   fromInitilizator: function (name, constant) {
     return {
-      type: 'AssignmentExpression',
-      operator: '=',
+      type: "AssignmentExpression",
+      operator: "=",
       left: {
-        type: 'Identifier',
-        name: name
+        type: "Identifier",
+        name: name,
       },
       right: {
-        type: 'Literal',
+        type: "Literal",
         value: constant,
-        raw: JSON.stringify(constant)
-      }
+        raw: JSON.stringify(constant),
+      },
     };
   },
 
@@ -86,17 +86,17 @@ export default {
    */
   fromTest: function (name, constant, isLowerThan) {
     return {
-      type: 'BinaryExpression',
-      operator: isLowerThan ? '<=' : '>=',
+      type: "BinaryExpression",
+      operator: isLowerThan ? "<=" : ">=",
       left: {
-        type: 'Identifier',
-        name: name
+        type: "Identifier",
+        name: name,
       },
       right: {
-        type: 'Literal',
+        type: "Literal",
         value: constant,
-        raw: JSON.stringify(constant)
-      }
+        raw: JSON.stringify(constant),
+      },
     };
   },
 
@@ -106,11 +106,11 @@ export default {
    * @return a DIV2 comparison expression.
    * TODO: Maybe a set of DIV2 constructors is actually needed.
    */
-  get defaultFrameArgument () {
+  get defaultFrameArgument() {
     return {
-      type: 'Literal',
+      type: "Literal",
       value: 100,
-      raw: '100'
+      raw: "100",
     };
   },
 
@@ -120,10 +120,10 @@ export default {
    * @return a DIV2 comparison expression.
    * TODO: Maybe a set of DIV2 constructors is actually needed.
    */
-  get defaultReturnArgument () {
+  get defaultReturnArgument() {
     return {
-      type: 'Identifier',
-      name: 'id'
+      type: "Identifier",
+      name: "id",
     };
   },
 
@@ -148,14 +148,14 @@ export default {
   },
 
   _memory: function (index) {
-    return new ast.MemberExpression(new ast.Identifier('mem'), index, true);
+    return new ast.MemberExpression(new ast.Identifier("mem"), index, true);
   },
 
   _globalAddress: function (name) {
     return new ast.BinaryExpression(
       this.globalBaseIdentifier,
       this.identifierForGlobal(name),
-      '+'
+      "+"
     );
   },
 
@@ -164,7 +164,7 @@ export default {
     return new ast.BinaryExpression(
       this._localBase,
       this.identifierForLocal(name),
-      '+'
+      "+"
     );
   },
 
@@ -174,49 +174,49 @@ export default {
       new ast.BinaryExpression(
         this._localBase,
         this.privateOffsetIdentifier,
-        '+'
+        "+"
       ),
       new ast.Identifier(name),
-      '+'
+      "+"
     );
   },
 
-  globalSizeIdentifier: new ast.Identifier('G_SEGMENT_SIZE'),
+  globalSizeIdentifier: new ast.Identifier("G_SEGMENT_SIZE"),
 
-  globalBaseIdentifier: new ast.Identifier('G_BASE'),
+  globalBaseIdentifier: new ast.Identifier("G_BASE"),
 
   identifierForGlobal: function (names) {
-    return new ast.Identifier(['G'].concat(names).join('_').toUpperCase());
+    return new ast.Identifier(["G"].concat(names).join("_").toUpperCase());
   },
 
   identifierForLocal: function (names) {
-    return new ast.Identifier(['L'].concat(names).join('_').toUpperCase());
+    return new ast.Identifier(["L"].concat(names).join("_").toUpperCase());
   },
 
   identifierForPrivate: function (names) {
-    return new ast.Identifier(names.join('_').toLowerCase());
+    return new ast.Identifier(names.join("_").toLowerCase());
   },
 
   _localBase: new ast.MemberExpression(
-    new ast.Identifier('exec'),
-    new ast.Identifier('base'),
+    new ast.Identifier("exec"),
+    new ast.Identifier("base"),
     false
   ),
 
-  privateOffsetIdentifier: new ast.Identifier('P_OFFSET'),
+  privateOffsetIdentifier: new ast.Identifier("P_OFFSET"),
 
   newRange: function (min, max) {
-    return this.callWith('__range', [min, max]);
+    return this.callWith("__range", [min, max]);
   },
 
-  get processEnd () {
+  get processEnd() {
     return new ast.ReturnStatement(this.endToken);
   },
 
   call: function (kind, resume, name, argList) {
-    let yieldType = {
-      'function': '__yieldCallFunction',
-      'process': '__yieldNewProcess'
+    const yieldType = {
+      function: "__yieldCallFunction",
+      process: "__yieldNewProcess",
     }[kind];
     return new ast.ReturnStatement(
       this.callWith(
@@ -228,10 +228,10 @@ export default {
 
   processClone: function (child, parent) {
     return new ast.ReturnStatement(
-      this.callWith(
-        '__yieldClone',
-        [ast.Literal.for(child), ast.Literal.for(parent)]
-      )
+      this.callWith("__yieldClone", [
+        ast.Literal.for(child),
+        ast.Literal.for(parent),
+      ])
     );
   },
 
@@ -239,88 +239,78 @@ export default {
   // It is not "process frame", it is just frame.
   processFrame: function (resume, expression) {
     return new ast.ReturnStatement(
-      this.callWith(
-        '__yieldFrame',
-        [ast.Literal.for(resume), expression]
-      )
+      this.callWith("__yieldFrame", [ast.Literal.for(resume), expression])
     );
   },
 
   // TODO: Same here.
   processDebug: function (resume) {
     return new ast.ReturnStatement(
-      this.callWith(
-        '__yieldDebug',
-        [ast.Literal.for(resume)]
-      )
+      this.callWith("__yieldDebug", [ast.Literal.for(resume)])
     );
   },
 
   programFunction: function (name, body) {
     return new ast.FunctionDeclaration(
-      new ast.Identifier('program_' + name),
-      this.processParameters, undefined,
+      new ast.Identifier("program_" + name),
+      this.processParameters,
+      undefined,
       body
     );
   },
 
   processFunction: function (name, body) {
     return new ast.FunctionDeclaration(
-      new ast.Identifier('process_' + name),
-      this.processParameters, undefined,
+      new ast.Identifier("process_" + name),
+      this.processParameters,
+      undefined,
       body
     );
   },
 
   // TODO: Maybe mem, exec & args should be supplied by div2trans
-  get processParameters () {
+  get processParameters() {
     return [
-      new ast.Identifier('mem'),
-      new ast.Identifier('exec'),
-      new ast.Identifier('args')
+      new ast.Identifier("mem"),
+      new ast.Identifier("exec"),
+      new ast.Identifier("args"),
     ];
   },
 
   // TODO: See my comment about processFrame. I don't think this should be
   // different for a process than for a function.
   processReturn: function (expression) {
-    return new ast.ReturnStatement(
-      this.callWith(
-        '__yieldReturn',
-        expression
-      )
-    );
+    return new ast.ReturnStatement(this.callWith("__yieldReturn", expression));
   },
 
-  get programCounter () {
+  get programCounter() {
     return new ast.MemberExpression(
-      new ast.Identifier('exec'),
-      new ast.Identifier('pc')
+      new ast.Identifier("exec"),
+      new ast.Identifier("pc")
     );
   },
 
-  get dequeueReturnValue () {
+  get dequeueReturnValue() {
     return new ast.CallExpression(
       new ast.MemberExpression(
         new ast.MemberExpression(
-          new ast.Identifier('exec'),
-          new ast.Identifier('retv')
+          new ast.Identifier("exec"),
+          new ast.Identifier("retv")
         ),
-        new ast.Identifier('dequeue')
+        new ast.Identifier("dequeue")
       )
     );
   },
 
   some: function (evaluation, tests) {
-    return this.callWith('__some', [evaluation].concat(tests));
+    return this.callWith("__some", [evaluation].concat(tests));
   },
 
   toBool: function (ast) {
-    return this.callWith('__bool', ast);
+    return this.callWith("__bool", ast);
   },
 
-  get trueLiteral () {
+  get trueLiteral() {
     return ast.Literal.for(true);
-  }
-
+  },
 };

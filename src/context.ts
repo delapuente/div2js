@@ -1,13 +1,12 @@
+import * as ast from "./ast";
+import t from "./templates";
 
-import * as ast from './ast';
-import t from './templates';
-
-function Context (ctx?) {
+function Context(ctx?) {
   this._processes = {};
   this._auxNames = {};
   this._currentProcess = undefined;
 
-  for (let key in ctx) {
+  for (const key in ctx) {
     if (ctx.hasOwnProperty(key)) {
       this[key] = ctx[key];
     }
@@ -39,13 +38,11 @@ Context.prototype = {
   },
 
   callFunction: function (resumeLabel, name, argList) {
-    return this._currentLinearization
-      .callFunction(resumeLabel, name, argList);
+    return this._currentLinearization.callFunction(resumeLabel, name, argList);
   },
 
   newProcess: function (resumeLabel, name, argList) {
-    return this._currentLinearization
-      .newProcess(resumeLabel, name, argList);
+    return this._currentLinearization.newProcess(resumeLabel, name, argList);
   },
 
   clone: function (childLabel, parentLabel) {
@@ -81,18 +78,18 @@ Context.prototype = {
   },
 
   newAux: function (name, initializer) {
-    let nameCount = this._auxNames[name] || 0;
-    let suffix = this._auxNames[name] = nameCount + 1;
+    const nameCount = this._auxNames[name] || 0;
+    const suffix = (this._auxNames[name] = nameCount + 1);
     if (nameCount > 0) {
       name += suffix;
     }
-    let identifier = new ast.Identifier(name);
-    let declaration = new ast.VariableDeclaration(
+    const identifier = new ast.Identifier(name);
+    const declaration = new ast.VariableDeclaration(
       new ast.VariableDeclarator(identifier, initializer)
     );
     return {
       identifier: identifier,
-      declaration: declaration
+      declaration: declaration,
     };
   },
 
@@ -109,8 +106,11 @@ Context.prototype = {
   },
 
   goToIf: function (testAst, labelIfTrue, labelIfFalse) {
-    return this._currentLinearization
-      .goToIf(testAst, labelIfTrue, labelIfFalse);
+    return this._currentLinearization.goToIf(
+      testAst,
+      labelIfTrue,
+      labelIfFalse
+    );
   },
 
   goTo: function (label) {
@@ -118,34 +118,29 @@ Context.prototype = {
   },
 
   select: function (evaluation, options, defaultLabel) {
-    return this._currentLinearization.select(
-      evaluation,
-      options,
-      defaultLabel
-    );
+    return this._currentLinearization.select(evaluation, options, defaultLabel);
   },
 
   getScope: function (identifier) {
     let scope;
-    let symbols = this._mmap.symbols;
+    const symbols = this._mmap.symbols;
     if (symbols.isGlobal(identifier)) {
-      scope = 'global';
+      scope = "global";
     }
     // TODO: What about id? it is not a local but a special keyword with
     // identifier semantics to avoid assignation on it. Should be translated
     // as a local but identified like a special token and translated in a
     // special way.
     else if (symbols.isLocal(identifier)) {
-      scope = 'local';
-    }
-    else if (symbols.isPrivate(this._currentProcess, identifier)) {
-      scope = 'private';
+      scope = "local";
+    } else if (symbols.isPrivate(this._currentProcess, identifier)) {
+      scope = "private";
     }
     return scope;
-  }
+  },
 };
 
-function Linearization () {
+function Linearization() {
   this._pc = -1;
   this._sentences = [];
 }
@@ -154,8 +149,8 @@ Linearization.prototype = {
   constructor: Linearization,
 
   getCases: function () {
-    let cases = [];
-    let sentences = this._sentences;
+    const cases = [];
+    const sentences = this._sentences;
     let currentCase = null;
     let caseIsFinished = false;
     let isReturn;
@@ -163,11 +158,13 @@ Linearization.prototype = {
     let consequent;
 
     for (let i = 0, l = sentences.length; i < l; i++) {
-      let wrapper = sentences[i];
+      const wrapper = sentences[i];
       isLabel = wrapper instanceof Label;
-      isReturn = wrapper.type === 'Return';
+      isReturn = wrapper.type === "Return";
 
-      if (caseIsFinished && !isLabel) { continue; }
+      if (caseIsFinished && !isLabel) {
+        continue;
+      }
 
       if (isLabel) {
         currentCase = t.concurrentLabel(wrapper.label + 1);
@@ -186,11 +183,10 @@ Linearization.prototype = {
   },
 
   label: function (label) {
-    let lastSentence = this._sentences[this._sentences.length - 1];
+    const lastSentence = this._sentences[this._sentences.length - 1];
     if (lastSentence instanceof Label) {
       label.proxy(lastSentence);
-    }
-    else {
+    } else {
       label.label = this._pc + 1;
       this._sentences.push(label);
     }
@@ -217,11 +213,11 @@ Linearization.prototype = {
   },
 
   callFunction: function (resumeLabel, name, argList) {
-    this._addSentence(this._call('function', resumeLabel, name, argList));
+    this._addSentence(this._call("function", resumeLabel, name, argList));
   },
 
   newProcess: function (resumeLabel, name, argList) {
-    this._addSentence(this._call('process', resumeLabel, name, argList));
+    this._addSentence(this._call("process", resumeLabel, name, argList));
   },
 
   clone: function (childLabel, parentLabel) {
@@ -242,46 +238,49 @@ Linearization.prototype = {
 
   _verbatim: function (sentence) {
     return {
-      type: 'Verbatim',
-      sentences: [sentence]
+      type: "Verbatim",
+      sentences: [sentence],
     };
   },
 
   _goToIf: function (testAst, labelIfTrue, labelIfFalse) {
-    let _this = this;
+    const _this = this;
     return {
-      type: 'GoToIf',
-      get sentences () {
-        return [_this._programCounterBranch(
-          testAst,
-          labelIfTrue.label,
-          labelIfFalse.label
-        ), new ast.BreakStatement()];
-      }
+      type: "GoToIf",
+      get sentences() {
+        return [
+          _this._programCounterBranch(
+            testAst,
+            labelIfTrue.label,
+            labelIfFalse.label
+          ),
+          new ast.BreakStatement(),
+        ];
+      },
     };
   },
 
   _goTo: function (label) {
-    let _this = this;
+    const _this = this;
     return {
-      type: 'GoTo',
-      get sentences () {
+      type: "GoTo",
+      get sentences() {
         return [
           _this._programCounterSet(label.label),
-          new ast.BreakStatement()
+          new ast.BreakStatement(),
         ];
-      }
+      },
     };
   },
 
   _select: function (evaluation, options, defaultLabel) {
-    let _this = this;
+    const _this = this;
     return {
-      type: 'Select',
-      get sentences () {
-        let defaultExpression = _this._programCounterSet(defaultLabel.label);
-        let cases = options.map(function (option) {
-          let tests = option.tests;
+      type: "Select",
+      get sentences() {
+        const defaultExpression = _this._programCounterSet(defaultLabel.label);
+        const cases = options.map(function (option) {
+          const tests = option.tests;
           return _this._programCounterBranch(
             t.some(evaluation, tests),
             option.label.label
@@ -290,62 +289,62 @@ Linearization.prototype = {
         return [defaultExpression]
           .concat(cases)
           .concat([new ast.BreakStatement()]);
-      }
+      },
     };
   },
 
   _end: function () {
     return {
-      type: 'End',
-      get sentences () {
+      type: "End",
+      get sentences() {
         return [t.processEnd];
-      }
+      },
     };
   },
 
   _call: function (kind, resumeLabel, name, argList) {
-    let type = { 'function': 'CallFunction', 'process': 'NewProcess' }[kind];
+    const type = { function: "CallFunction", process: "NewProcess" }[kind];
     return {
       type: type,
-      get sentences () {
+      get sentences() {
         return [t.call(kind, resumeLabel.label + 1, name, argList)];
-      }
+      },
     };
   },
 
   _clone: function (childLabel, parentLabel) {
     return {
-      type: 'Clone',
-      get sentences () {
+      type: "Clone",
+      get sentences() {
         return [t.processClone(childLabel.label + 1, parentLabel.label + 1)];
-      }
+      },
     };
   },
 
   _frame: function (resumeLabel, expression) {
     return {
-      type: 'Frame',
-      get sentences () {
+      type: "Frame",
+      get sentences() {
         return [t.processFrame(resumeLabel.label + 1, expression)];
-      }
+      },
     };
   },
 
   _debug: function (resumeLabel) {
     return {
-      type: 'Debug',
-      get sentences () {
+      type: "Debug",
+      get sentences() {
         return [t.processDebug(resumeLabel.label + 1)];
-      }
+      },
     };
   },
 
   _return: function (expression) {
     return {
-      type: 'Return',
-      get sentences () {
+      type: "Return",
+      get sentences() {
         return [t.processReturn(expression)];
-      }
+      },
     };
   },
 
@@ -364,10 +363,7 @@ Linearization.prototype = {
 
   _programCounterSet: function (label) {
     return new ast.ExpressionStatement(
-      new ast.AssignmentExpression(
-        t.programCounter,
-        new ast.Literal(label + 1)
-      )
+      new ast.AssignmentExpression(t.programCounter, new ast.Literal(label + 1))
     );
   },
 
@@ -377,27 +373,28 @@ Linearization.prototype = {
     }
     this._sentences.push(ast);
     this._pc += 1;
-  }
+  },
 };
 
-function Label (n?) { this.label = n; }
+function Label(n?) {
+  this.label = n;
+}
 
 Label.prototype = {
   constructor: Label,
 
   proxy: function (anotherLabel) {
     this._proxifiedLabel = anotherLabel;
-    Object.defineProperty(this, 'label', { get: function () {
-      return this._proxifiedLabel.label;
-    }});
+    Object.defineProperty(this, "label", {
+      get: function () {
+        return this._proxifiedLabel.label;
+      },
+    });
   },
 
-  get sentences () {
+  get sentences() {
     return [];
-  }
+  },
 };
 
-export {
-  Context,
-  Linearization
-};
+export { Context, Linearization };

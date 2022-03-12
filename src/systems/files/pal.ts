@@ -1,4 +1,3 @@
-
 const VERSION_OFFSET = 7;
 
 const PAL_OFFSET = 8;
@@ -6,7 +5,6 @@ const PAL_OFFSET = 8;
 const GAMMA_OFFSET = 776;
 
 export class PALFile {
-
   readonly version: number;
 
   readonly buffer: Uint8Array;
@@ -24,15 +22,14 @@ export class PALFile {
     this.version = version;
     this.buffer = colorBytes;
   }
-
-};
+}
 
 function _assertPal(buffer: ArrayBuffer): Uint8Array {
   const bytes = new Uint8Array(buffer);
-  ['p', 'a', 'l', 0x1A, 0x0D, 0x0A, 0x00].forEach((code, index) => {
-    const char = typeof code === 'string' ? code.charCodeAt(0) : code;
+  ["p", "a", "l", 0x1a, 0x0d, 0x0a, 0x00].forEach((code, index) => {
+    const char = typeof code === "string" ? code.charCodeAt(0) : code;
     if (bytes[index] !== char) {
-      throw new Error('The file is not a PAL file');
+      throw new Error("The file is not a PAL file");
     }
   });
   return bytes;

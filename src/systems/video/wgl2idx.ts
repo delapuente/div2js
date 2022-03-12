@@ -1,5 +1,5 @@
-import IndexedGraphic from './indexedGraphic';
-import Palette from './palette';
+import IndexedGraphic from "./indexedGraphic";
+import Palette from "./palette";
 
 const vsSource = `#version 300 es
 
@@ -68,16 +68,16 @@ function createProgram(
   vertexShader: WebGLShader,
   fragmentShader: WebGLShader
 ): WebGLProgram {
-  var program = gl.createProgram();
+  const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
-  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
+  const success = gl.getProgramParameter(program, gl.LINK_STATUS);
   if (success) {
     return program;
   }
 
-  const errorMessage = gl.getProgramInfoLog(program)
+  const errorMessage = gl.getProgramInfoLog(program);
   gl.deleteProgram(program);
   throw new VideoSystemError(errorMessage);
 }
@@ -93,9 +93,7 @@ function getDefaultScreen(
   return new IndexedGraphic(width, height);
 }
 
-function getDefaultPalette(
-  size: number = DEFAULT_PALETTE_SIZE
-): Palette {
+function getDefaultPalette(size: number = DEFAULT_PALETTE_SIZE): Palette {
   const palette = Palette.withSize(size);
   return palette;
 }
@@ -151,59 +149,51 @@ function getDefaultPalette(
  * final color.
  */
 class WebGL2IndexedScreenVideoSystem {
-
-  _screenCorners = new Float32Array([
-     1,  1,
-    -1,  1,
-    -1, -1,
-     1,  1,
-    -1, -1,
-     1, -1,
-  ]);
+  _screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
 
   _screenGeometryVertexCount: number = this._screenCorners.length / 2;
 
-  _gl: WebGL2RenderingContext
+  _gl: WebGL2RenderingContext;
 
-  _gpuProgram: WebGLProgram
+  _gpuProgram: WebGLProgram;
 
   constructor(
     canvas,
     public screen: IndexedGraphic = getDefaultScreen(),
-    public palette: Palette = getDefaultPalette(),
+    public palette: Palette = getDefaultPalette()
   ) {
-    this._gl = canvas.getContext('webgl2');
+    this._gl = canvas.getContext("webgl2");
   }
 
-  initialize () {
+  initialize() {
     this._initShaders();
     this._loadScreenGeometry();
     this._configureScreenVao();
     this._configureScreenTexture();
     this._configurePaletteTexture();
     const { width, height } = this.screen;
-    this.setViewportResolution(width, height)
+    this.setViewportResolution(width, height);
   }
 
-  run (memory, environment) {
+  run(memory, environment) {
     this._sendPalette();
     this._sendFrameBuffer();
     this._drawScreen();
     this._flush();
   }
 
-  setViewportResolution (width, height) {
+  setViewportResolution(width, height) {
     const gl = this._gl;
     gl.canvas.width = width;
     gl.canvas.height = height;
     gl.viewport(0, 0, width, height);
   }
 
-  setPalette (palette: Palette) {
+  setPalette(palette: Palette) {
     this.palette = palette;
   }
 
-  _initShaders () {
+  _initShaders() {
     const gl = this._gl;
     const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
     const ps = createShader(gl, gl.FRAGMENT_SHADER, psSource);
@@ -211,27 +201,27 @@ class WebGL2IndexedScreenVideoSystem {
     gl.useProgram(this._gpuProgram);
   }
 
-  _loadScreenGeometry () {
+  _loadScreenGeometry() {
     const gl = this._gl;
     const buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, this._screenCorners, gl.STATIC_DRAW);
   }
 
-  _configureScreenVao () {
+  _configureScreenVao() {
     const gl = this._gl;
     const program = this._gpuProgram;
-    const location = gl.getAttribLocation(program, 'a_position');
+    const location = gl.getAttribLocation(program, "a_position");
     const vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     gl.enableVertexAttribArray(location);
     gl.vertexAttribPointer(location, 2, gl.FLOAT, false, 0, 0);
   }
 
-  _configureScreenTexture () {
+  _configureScreenTexture() {
     const gl = this._gl;
     const program = this._gpuProgram;
-    const screenLocation = gl.getUniformLocation(program, 'u_screen');
+    const screenLocation = gl.getUniformLocation(program, "u_screen");
     gl.uniform1i(screenLocation, 0);
     gl.activeTexture(gl.TEXTURE0);
     const frameBufferTexture = gl.createTexture();
@@ -239,10 +229,10 @@ class WebGL2IndexedScreenVideoSystem {
     this._configureTextureForIntegerIndexing();
   }
 
-  _configurePaletteTexture () {
+  _configurePaletteTexture() {
     const gl = this._gl;
     const program = this._gpuProgram;
-    const paletteLocation = gl.getUniformLocation(program, 'u_palette');
+    const paletteLocation = gl.getUniformLocation(program, "u_palette");
     gl.uniform1i(paletteLocation, 1);
     gl.activeTexture(gl.TEXTURE1);
     const paletteTexture = gl.createTexture();
@@ -250,7 +240,7 @@ class WebGL2IndexedScreenVideoSystem {
     this._configureTextureForIntegerIndexing();
   }
 
-  _configureTextureForIntegerIndexing () {
+  _configureTextureForIntegerIndexing() {
     const gl = this._gl;
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -258,31 +248,49 @@ class WebGL2IndexedScreenVideoSystem {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   }
 
-  _sendFrameBuffer () {
+  _sendFrameBuffer() {
     const gl = this._gl;
     const { width, height, buffer } = this.screen;
     gl.activeTexture(gl.TEXTURE0);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, width, height, 0, gl.ALPHA,
-                  gl.UNSIGNED_BYTE, buffer);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.ALPHA,
+      width,
+      height,
+      0,
+      gl.ALPHA,
+      gl.UNSIGNED_BYTE,
+      buffer
+    );
   }
 
-  _sendPalette () {
+  _sendPalette() {
     const gl = this._gl;
     const { size, buffer } = this.palette;
     gl.activeTexture(gl.TEXTURE1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, size, 1, 0, gl.RGB,
-                  gl.UNSIGNED_BYTE, buffer);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGB,
+      size,
+      1,
+      0,
+      gl.RGB,
+      gl.UNSIGNED_BYTE,
+      buffer
+    );
   }
 
-  _drawScreen () {
+  _drawScreen() {
     this._gl.drawArrays(this._gl.TRIANGLES, 0, this._screenGeometryVertexCount);
   }
 
-  _flush () {
+  _flush() {
     // XXX: Not relying on RAF requires a flush call to draw immediately.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#use_webgl.flush_when_not_using_requestanimationframe
     this._gl.flush();
   }
-};
+}
 
 export default WebGL2IndexedScreenVideoSystem;

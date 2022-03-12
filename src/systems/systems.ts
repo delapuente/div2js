@@ -1,7 +1,4 @@
-import wgl2idx from './video/wgl2idx';
-import urlFileSystem from './files/urlFiles';
+import wgl2idx from "./video/wgl2idx";
+import urlFileSystem from "./files/urlFiles";
 
-export {
-  wgl2idx as DefaultRender,
-  urlFileSystem as DefaultFileSystem
-};
+export { wgl2idx as DefaultRender, urlFileSystem as DefaultFileSystem };

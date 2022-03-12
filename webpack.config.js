@@ -1,54 +1,55 @@
-const path = require('path');
+/* eslint-disable @typescript-eslint/no-var-requires */
+const path = require("path");
 
 module.exports = {
-  mode: 'development',
-  entry: './src/div2js.ts',
+  mode: "development",
+  entry: "./src/div2js.ts",
   output: {
-    filename: 'div2js.js',
-    publicPath: 'dist',
+    filename: "div2js.js",
+    publicPath: "dist",
     library: {
-      name: 'div2',
-      type: 'umd'
-    }
+      name: "div2",
+      type: "umd",
+    },
   },
   resolve: {
-    extensions: ['.ts', '.js', '.json'],
+    extensions: [".ts", ".js", ".json"],
     fallback: {
       fs: false,
-      path: false
-    }
+      path: false,
+    },
   },
-  devtool: 'source-map',
+  devtool: "source-map",
   module: {
     rules: [
       {
-        enforce: 'pre',
+        enforce: "pre",
         test: /\.js$/,
         exclude: /node_modules/,
-        use: "source-map-loader"
+        use: "source-map-loader",
       },
       {
         test: /\.(ts|js)$/,
         exclude: /node_modules/,
-        use: "ts-loader"
-      }
-    ]
+        use: "ts-loader",
+      },
+    ],
   },
   devServer: {
     static: [
       {
         directory: path.resolve(__dirname),
-        watch: true
+        watch: true,
       },
       {
-        directory: path.resolve(__dirname, 'assets'),
-        watch: true
-      }
+        directory: path.resolve(__dirname, "assets"),
+        watch: true,
+      },
     ],
-    allowedHosts: 'all'
+    allowedHosts: "all",
   },
   stats: {
     errorDetails: true,
-    colors: true
-  }
+    colors: true,
+  },
 };

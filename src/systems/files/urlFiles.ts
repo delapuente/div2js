@@ -5,14 +5,11 @@ interface UrlFileSystemOptions {
 }
 
 export default class UrlFileSystem {
-
-  constructor(public options: UrlFileSystemOptions) {
-
-  }
+  constructor(public options: UrlFileSystemOptions) {}
 
   initialize() {}
 
-  run () {}
+  run() {}
 
   loadPal(url: string): Promise<PALFile> {
     return _loadPal(this._getPath(url));

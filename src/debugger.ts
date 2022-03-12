@@ -1,6 +1,6 @@
-import * as mapper from './memory/mapper';
+import * as mapper from "./memory/mapper";
 
-function DebugSession (memBrowser, screen) {
+function DebugSession(memBrowser, screen) {
   this._browser = memBrowser;
   this._screen = screen;
 }
@@ -8,26 +8,24 @@ function DebugSession (memBrowser, screen) {
 DebugSession.prototype = {
   constructor: DebugSession,
 
-  get global () {
+  get global() {
     return this._browser.global.bind(this._browser);
   },
 
-  get process () {
+  get process() {
     return this._browser.process.bind(this._browser);
   },
 
   get screen() {
     return this._screen;
-  }
+  },
 };
 
-function debug (runtime) {
+function debug(runtime) {
   return new DebugSession(
     runtime.getMemoryBrowser(),
-    runtime.getSystem('video').screen
+    runtime.getSystem("video").screen
   );
 }
 
-export {
-  DebugSession, debug
-};
+export { DebugSession, debug };

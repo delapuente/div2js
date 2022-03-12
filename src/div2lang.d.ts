@@ -1,4 +1,4 @@
-declare module 'fs';
+declare module "fs";
 
 declare class Parser {
   yy: any;
