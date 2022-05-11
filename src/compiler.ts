@@ -59,7 +59,7 @@ function generateProcessMap(ast) {
 function wrap(processMapAst, memoryOffsetsAst, memoryMapAst) {
   const wrapper = JSON.parse(JSON.stringify(wrapperTemplate));
   const body = wrapper.body[0].expression.body.body;
-  body.splice.apply(body, [1, 0].concat(memoryOffsetsAst));
+  body.splice(...[1, 0].concat(memoryOffsetsAst));
   const ret = body[body.length - 1];
   ret.argument.properties.push(entryForPMap(processMapAst.expression));
   if (memoryMapAst) {
