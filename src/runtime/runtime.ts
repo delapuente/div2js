@@ -15,6 +15,7 @@ function Environment() {
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
 function Runtime(processMap, memorySymbols) {
+  this._onerror = null;
   this._ondebug = null;
   this._onfinished = null;
   this._systems = [];
@@ -32,15 +33,13 @@ function Runtime(processMap, memorySymbols) {
 Runtime.prototype = {
   constructor: Runtime,
 
-  registerSystem: function (system, name) {
+  registerSystem: function (system, name: string) {
     if (name && typeof this._systemMap[name] !== "undefined") {
       throw new Error("System already registered with name: " + name);
     }
     system.initialize();
     this._systems.push(system);
-    if (name) {
-      this._systemMap[name] = system;
-    }
+    this._systemMap[name] = system;
   },
 
   getSystem: function (name) {
@@ -49,6 +48,17 @@ Runtime.prototype = {
 
   getMemoryBrowser: function () {
     return this._memoryManager.getBrowser();
+  },
+
+  set onerror(callback) {
+    this._onerror = callback;
+    if (this._scheduler instanceof scheduler.Scheduler) {
+      this._scheduler.onerror = this._onerror.bind(this);
+    }
+  },
+
+  get onerror() {
+    return this._onerror;
   },
 
   set onfinished(callback) {
@@ -105,7 +115,7 @@ Runtime.prototype = {
   },
 
   _startDebug: function () {
-    // XXX: Notice resume is run right now.
+    // XXX: Notice resume === run() right now!
     this._ondebug({
       resume: this._scheduler.run.bind(this._scheduler),
       stop: this._scheduler.stop.bind(this._scheduler),
@@ -151,12 +161,16 @@ Runtime.prototype = {
       .then((palFile) => {
         this.getSystem("video").setPalette(Palette.fromBuffer(palFile.buffer));
         if (!discardReturnValue) {
-          currentExecution.retv.enqueue(0);
+          currentExecution.retv.enqueue(1);
         }
+      })
+      .catch(function (error) {
+        throw error;
       });
     this._scheduler.addBlockingFunction(work);
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   _frame: function (baton) {},
 
   // TODO: Consider passing the id through the baton

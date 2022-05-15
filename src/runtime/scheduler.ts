@@ -1,12 +1,11 @@
 import { assert } from "chai";
 
-const rAF = window.requestAnimationFrame;
-
 function Scheduler(mem, processMap, hooks) {
   hooks = hooks || {};
   this.onyield = hooks.onyield;
   this.onfinished = hooks.onfinished;
   this.onupdate = hooks.onupdate;
+  this.onerror = hooks.onerror;
   this._mem = mem;
   this._pmap = processMap;
   this.reset();
@@ -20,9 +19,13 @@ Scheduler.prototype = {
   },
 
   run: function () {
+    assert(
+      !this._isFailed,
+      "The scheduler is failed. Handle the error at .currentError and call .recover() before calling .run()"
+    );
     if (!this._isRunning) {
-      this._isRunning = true;
       this._scheduleStep();
+      this._isRunning = true;
     }
   },
 
@@ -32,20 +35,18 @@ Scheduler.prototype = {
   },
 
   stop: function () {
+    window.cancelAnimationFrame(this._nextAnimationFrame);
+    this._nextAnimationFrame = null;
     this._isRunning = false;
-  },
-
-  resetExectution: function () {
-    this._processList = [];
-    this.reset();
   },
 
   reset: function () {
     this._processList = [];
     this._isRunning = false;
-    this._current = 0;
+    this._nextAnimationFrame = null;
     this._blocker = null;
-    this._blockedExecution = null;
+    this._currentError = null;
+    this._startOver();
   },
 
   addProgram: function (base) {
@@ -58,11 +59,7 @@ Scheduler.prototype = {
 
   addBlockingFunction: function (promise) {
     this._blocker = promise;
-    this._blockedExecution = this.currentExecution;
-    this._blocker.then(this._unblock.bind(this)).catch((err) => {
-      // TODO: Maybe call onerror?
-      throw new Error(err);
-    });
+    this._blocker.catch(this._fail.bind(this)).then(this._unblock.bind(this));
   },
 
   deleteCurrent: function () {
@@ -71,8 +68,27 @@ Scheduler.prototype = {
     return currentExecution.id;
   },
 
+  get currentError() {
+    return this._currentError;
+  },
+
   get _isBlocking() {
     return this._blocker !== null;
+  },
+
+  get _isFailed() {
+    return this._currentError !== null;
+  },
+
+  _fail: function (error) {
+    this.stop();
+    this._currentError = error;
+    // XXX: Force handle error synchronously, out of the promise chain.
+    window.setTimeout(this._handleError.bind(this));
+  },
+
+  recover: function () {
+    this._currentError = null;
   },
 
   _add: function (name, base) {
@@ -93,42 +109,60 @@ Scheduler.prototype = {
   },
 
   _scheduleStep: function () {
-    rAF(this._step.bind(this));
+    this._nextAnimationFrame = window.requestAnimationFrame(
+      this._step.bind(this)
+    );
   },
 
   _step: function () {
-    const processList = this._processList;
-    const processCount = processList.length;
+    assert(this._isRunning, "Scheduler is paused but a _step() was attempted");
+    assert(!this._isFailed, "Scheduler is failed but a _step() was attempted");
 
-    if (processCount === 0) {
+    if (this._isBlocking) {
+      this._scheduleStep();
+      return;
+    }
+
+    if (this._processList.length === 0) {
       return this._end();
     }
 
-    while (
-      !this._isBlocking &&
-      this._isRunning &&
-      this._current < this._processList.length
-    ) {
-      const execution = processList[this._current];
+    while (this._current < this._processList.length) {
+      const execution = this._processList[this._current];
       const result = execution.runnable(this._mem, execution);
       this._takeAction(result);
+
+      if (this._isBlocking) {
+        this._scheduleStep();
+        return;
+      }
+
       if (this._isRunning) {
         this._current++;
       }
     }
+    this._call("onupdate");
 
-    if (this._isBlocking) {
-      this._scheduleStep();
-    } else if (this._isRunning) {
-      this._call("onupdate");
-      this._current = 0;
-      this._processList = this._processList.filter(isAlive);
-      this._scheduleStep();
-    }
+    this._removeDeadProcess();
+    this._startOver();
+    this._scheduleStep();
+  },
+
+  _startOver: function () {
+    this._current = 0;
+  },
+
+  _removeDeadProcess: function () {
+    this._processList = this._processList.filter(isAlive);
 
     function isAlive(execution) {
       return !execution.dead;
     }
+  },
+
+  _handleError: function () {
+    assert(this._isFailed, "Scheduler is not failed but an error was handled");
+    this._call("onerror", this._currentError);
   },
 
   _end: function () {
@@ -157,12 +191,6 @@ Scheduler.prototype = {
 
   _unblock: function () {
     this._blocker = null;
-    this._current = this.processList.indexOf(this._blockedExecution);
-    assert(
-      this._current !== -1,
-      "Blocked executions not found in the process list."
-    );
-    this._blockedExecution = null;
   },
 };
 

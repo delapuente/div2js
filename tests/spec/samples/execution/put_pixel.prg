@@ -1,4 +1,4 @@
-PROGRAM put_pixel;
+PROGRAM _put_pixel;
 BEGIN
   put_pixel(159, 99, 15);
 END

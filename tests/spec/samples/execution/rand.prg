@@ -1,4 +1,4 @@
-PROGRAM rand;
+PROGRAM _rand;
 PRIVATE
   random_value;
 BEGIN

@@ -200,7 +200,7 @@ describe("Math functions", function () {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
               index: 0,
-              type: "rand",
+              type: "_rand",
             });
             expect(program.private("random_value").value).to.be.within(0, 15);
             fulfil(void 0);
@@ -240,6 +240,39 @@ describe("Graphic functions", function () {
             expect(screen.buffer[pixelIndex]).to.equal(15);
             fulfil(void 0);
           });
+          program.run();
+        });
+      });
+    });
+  });
+
+  describe("load_pal()", function () {
+    it("loads and set a palette", function () {
+      return load("load_pal.prg").then(function (program) {
+        return new Promise(function (fulfil) {
+          program.onfinished = withDebugSession(function (session) {
+            const program = session.process({
+              index: 0,
+              type: "_load_pal",
+            });
+            expect(program.private("palette_1").value).to.equal(1);
+            expect(program.private("palette_2").value).to.equal(1);
+            fulfil(void 0);
+          });
+          program.run();
+        });
+      });
+    });
+
+    it("errors when trying to load a non existent palette", function () {
+      return load("load_pal_error.prg").then(function (program) {
+        return new Promise(function (fulfil, reject) {
+          program.onfinished = () =>
+            reject(new Error("Should not have finished but errored, instead."));
+          program.onerror = (error) => {
+            expect(error.errorCode).to.equal(102);
+            fulfil(void 0);
+          };
           program.run();
         });
       });

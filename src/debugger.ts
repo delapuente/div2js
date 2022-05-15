@@ -1,5 +1,3 @@
-import * as mapper from "./memory/mapper";
-
 function DebugSession(memBrowser, screen) {
   this._browser = memBrowser;
   this._screen = screen;
