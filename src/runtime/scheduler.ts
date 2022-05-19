@@ -1,24 +1,97 @@
 import { assert } from "chai";
 
-function Scheduler(mem, processMap, hooks) {
-  hooks = hooks || {};
-  this.onyield = hooks.onyield;
-  this.onfinished = hooks.onfinished;
-  this.onupdate = hooks.onupdate;
-  this.onerror = hooks.onerror;
-  this._mem = mem;
-  this._pmap = processMap;
-  this.reset();
-}
+/**
+ * The scheduler encapsulates the responsibilty of executing processes. It does
+ * not know about painting the screen, playing audio, or anything like that.
+ * When processes are done executing, it publishes an event to notify the
+ * runtime.
+ *
+ * The scheduler knows about the process life cycle, it also coordinates
+ * asynchronous execution, hiding the asynchronous nature of the web into
+ * the synchronous execution of the processes.
+ *
+ * Last but not least, the scheduler knows about errored processes, and offers
+ * ways to handle and recover from them.
+ */
+class Scheduler {
+  onerror: CallableFunction | undefined;
+  onfinished: CallableFunction | undefined;
+  onyield: CallableFunction | undefined;
+  onupdate: CallableFunction | undefined;
 
-Scheduler.prototype = {
-  constructor: Scheduler,
+  get currentError() {
+    return this._currentError;
+  }
 
-  get currentExecution() {
+  get currentExecution(): any {
     return this._processList[this._current];
-  },
+  }
 
-  run: function () {
+  private _mem: any;
+  private _pmap: any;
+  private _processList: Array<any>;
+  private _isRunning: boolean;
+  private _nextAnimationFrame: number | null;
+  private _blocker: Promise<any> | null;
+  private _currentError: Error | null;
+  private _current: number;
+
+  private get _isBlocking(): boolean {
+    return this._blocker !== null;
+  }
+
+  private get _isFailed(): boolean {
+    return this._currentError !== null;
+  }
+
+  constructor(mem, processMap, hooks: Record<any, any> = {}) {
+    this.onyield = hooks.onyield;
+    this.onfinished = hooks.onfinished;
+    this.onupdate = hooks.onupdate;
+    this.onerror = hooks.onerror;
+    this._mem = mem;
+    this._pmap = processMap;
+    this.reset();
+  }
+
+  addBlockingFunction(promise: Promise<any>) {
+    this._blocker = promise;
+    this._blocker.catch(this._fail.bind(this)).then(this._unblock.bind(this));
+  }
+
+  addProcess(name: string, base: number) {
+    this._add("process_" + name, base);
+  }
+
+  addProgram(base: number) {
+    this._add("program", base);
+  }
+
+  deleteCurrent(): number {
+    const currentExecution = this._processList[this._current];
+    currentExecution.dead = true;
+    return currentExecution.id;
+  }
+
+  pause() {
+    this.stop();
+    return this._call("onpause");
+  }
+
+  reset() {
+    this._processList = [];
+    this._isRunning = false;
+    this._nextAnimationFrame = null;
+    this._blocker = null;
+    this._currentError = null;
+    this._startOver();
+  }
+
+  recover() {
+    this._currentError = null;
+  }
+
+  run() {
     assert(
       !this._isFailed,
       "The scheduler is failed. Handle the error at .currentError and call .recover() before calling .run()"
@@ -27,94 +100,76 @@ Scheduler.prototype = {
       this._scheduleStep();
       this._isRunning = true;
     }
-  },
+  }
 
-  pause: function () {
-    this.stop();
-    return this._call("onpause");
-  },
-
-  stop: function () {
+  stop() {
     window.cancelAnimationFrame(this._nextAnimationFrame);
     this._nextAnimationFrame = null;
     this._isRunning = false;
-  },
+  }
 
-  reset: function () {
-    this._processList = [];
-    this._isRunning = false;
-    this._nextAnimationFrame = null;
-    this._blocker = null;
-    this._currentError = null;
-    this._startOver();
-  },
-
-  addProgram: function (base) {
-    this._add("program", base);
-  },
-
-  addProcess: function (name, base) {
-    this._add("process_" + name, base);
-  },
-
-  addBlockingFunction: function (promise) {
-    this._blocker = promise;
-    this._blocker.catch(this._fail.bind(this)).then(this._unblock.bind(this));
-  },
-
-  deleteCurrent: function () {
-    const currentExecution = this._processList[this._current];
-    currentExecution.dead = true;
-    return currentExecution.id;
-  },
-
-  get currentError() {
-    return this._currentError;
-  },
-
-  get _isBlocking() {
-    return this._blocker !== null;
-  },
-
-  get _isFailed() {
-    return this._currentError !== null;
-  },
-
-  _fail: function (error) {
-    this.stop();
-    this._currentError = error;
-    // XXX: Force handle error synchronously, out of the promise chain.
-    window.setTimeout(this._handleError.bind(this));
-  },
-
-  recover: function () {
-    this._currentError = null;
-  },
-
-  _add: function (name, base) {
+  private _add(name: string, base: number) {
     const runnable = this._pmap[name];
     const processEnvironment = this._newProcessEnvironment(runnable, base);
     // XXX: Will be replaced by sorted insertion
     this._processList.push(processEnvironment);
-  },
+  }
 
-  _newProcessEnvironment: function (runnable, base) {
+  private _call(name: string, ...args: Array<any>): any {
+    let result;
+    const target = this[name];
+    if (target && typeof target.apply === "function") {
+      result = target.apply(this, args);
+    }
+    return result;
+  }
+
+  private _end() {
+    this.stop();
+    return this._call("onfinished");
+  }
+
+  private _fail(error) {
+    this.stop();
+    this._currentError = error;
+    // XXX: Force handle error synchronously, out of the promise chain.
+    window.setTimeout(this._handleError.bind(this));
+  }
+
+  private _handleError() {
+    assert(this._isFailed, "Scheduler is not failed but an error was handled");
+    this._call("onerror", this._currentError);
+  }
+
+  private _newProcessEnvironment(runnable: CallableFunction, base: number) {
     return {
       pc: 1,
-      runnable: runnable,
+      runnable,
       id: base,
-      base: base,
+      base,
       retv: new ReturnValuesQueue(),
     };
-  },
+  }
 
-  _scheduleStep: function () {
+  private _removeDeadProcess() {
+    this._processList = this._processList.filter(isAlive);
+
+    function isAlive(execution) {
+      return !execution.dead;
+    }
+  }
+
+  private _scheduleStep() {
     this._nextAnimationFrame = window.requestAnimationFrame(
       this._step.bind(this)
     );
-  },
+  }
 
-  _step: function () {
+  private _startOver() {
+    this._current = 0;
+  }
+
+  private _step() {
     assert(this._isRunning, "Scheduler is paused but a _step() was attempted");
     assert(!this._isFailed, "Scheduler is failed but a _step() was attempted");
 
@@ -146,31 +201,9 @@ Scheduler.prototype = {
     this._removeDeadProcess();
     this._startOver();
     this._scheduleStep();
-  },
+  }
 
-  _startOver: function () {
-    this._current = 0;
-  },
-
-  _removeDeadProcess: function () {
-    this._processList = this._processList.filter(isAlive);
-
-    function isAlive(execution) {
-      return !execution.dead;
-    }
-  },
-
-  _handleError: function () {
-    assert(this._isFailed, "Scheduler is not failed but an error was handled");
-    this._call("onerror", this._currentError);
-  },
-
-  _end: function () {
-    this.stop();
-    return this._call("onfinished");
-  },
-
-  _takeAction: function (result) {
+  private _takeAction(result: any): any {
     if (!(result instanceof Baton)) {
       throw Error("Execution returned an unknown result:" + result);
     }
@@ -178,46 +211,40 @@ Scheduler.prototype = {
       this.currentExecution.pc = (result as any).npc;
     }
     return this._call("onyield", result);
-  },
+  }
 
-  _call: function (name, ...args) {
-    let result;
-    const target = this[name];
-    if (target && typeof target.apply === "function") {
-      result = target.apply(this, args);
-    }
-    return result;
-  },
-
-  _unblock: function () {
+  private _unblock() {
     this._blocker = null;
-  },
-};
-
-function Baton(type, data) {
-  data = data || {};
-  this.type = type;
-  Object.keys(data).forEach(
-    function (key) {
-      this[key] = data[key];
-    }.bind(this)
-  );
+  }
 }
 
-function ReturnValuesQueue() {
-  this._data = [];
+class Baton implements Record<any, any> {
+  type: string;
+
+  constructor(type: string, data: Record<any, any> = {}) {
+    this.type = type;
+    Object.keys(data).forEach(
+      function (key) {
+        this[key] = data[key];
+      }.bind(this)
+    );
+  }
 }
 
-ReturnValuesQueue.prototype = {
-  constructor: ReturnValuesQueue,
+class ReturnValuesQueue {
+  private _data: Array<any>;
 
-  enqueue: function (value) {
+  constructor() {
+    this._data = [];
+  }
+
+  enqueue(value: any) {
     this._data.push(value);
-  },
+  }
 
-  dequeue: function () {
+  dequeue() {
     return this._data.shift();
-  },
-};
+  }
+}
 
 export { Scheduler, Baton };
