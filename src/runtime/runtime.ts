@@ -110,9 +110,6 @@ Runtime.prototype = {
 
   set onerror(callback) {
     this._onerror = callback;
-    if (this._scheduler instanceof Scheduler) {
-      this._scheduler.onerror = this._onerror.bind(this);
-    }
   },
 
   get onerror() {
@@ -147,8 +144,9 @@ Runtime.prototype = {
     const id = this._memoryManager.allocateProcess();
     this.addProgram(id);
     // XXX: Load defaults
-    this._loadDefaultPalette();
-    this._scheduler.run();
+    this._loadDefaultPalette().then(() => {
+      this._scheduler.run();
+    });
   },
 
   _runSystems: function () {
@@ -191,41 +189,24 @@ Runtime.prototype = {
 
   _call: function (baton) {
     const functionName = baton.functionName;
-    if (functionName === "put_pixel") {
-      const [x, y, colorIndex] = baton.args;
-      this.getSystem("video").screen.putPixel(x, y, colorIndex);
-      // XXX: put_pixel returns the x value. Checked empirically.
-      this._scheduler.currentExecution.retv.enqueue(x);
-    }
-    if (functionName === "rand") {
-      const [min, max] = baton.args;
-      const result = Math.floor(Math.random() * (max - min + 1)) + min;
-      this._scheduler.currentExecution.retv.enqueue(result);
-    }
-    if (functionName === "load_pal") {
-      const [palettePath] = baton.args;
-      this._loadPal(palettePath);
+    if (functionName in this) {
+      const result = this[functionName](...baton.args, this);
+      if (result instanceof Promise) {
+        this._scheduler.stop();
+        result
+          .catch((error) => setTimeout(this._onerror.bind(this, error)))
+          .then((returnValue) => {
+            this._scheduler.currentExecution.retv.enqueue(returnValue);
+            this._scheduler.run();
+          });
+      } else {
+        this._scheduler.currentExecution.retv.enqueue(result);
+      }
     }
   },
 
   _loadDefaultPalette: function () {
-    this._loadPal("PAL/DIV2.PAL", { discardReturnValue: true });
-  },
-
-  _loadPal(palettePath, { discardReturnValue = false } = {}) {
-    const currentExecution = this._scheduler.currentExecution;
-    const work = this.getSystem("files")
-      .loadPal(palettePath)
-      .then((palFile) => {
-        this.getSystem("video").setPalette(Palette.fromBuffer(palFile.buffer));
-        if (!discardReturnValue) {
-          currentExecution.retv.enqueue(1);
-        }
-      })
-      .catch(function (error) {
-        throw error;
-      });
-    this._scheduler.addBlockingFunction(work);
+    return this.load_pal("PAL/DIV2.PAL", this);
   },
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -236,6 +217,28 @@ Runtime.prototype = {
     const currentProcessId = this._scheduler.currentExecution.id;
     this._memoryManager.freeProcess(currentProcessId);
     this._scheduler.deleteCurrent();
+  },
+
+  put_pixel(x: number, y: number, colorIndex: number, systems: any) {
+    systems.getSystem("video").screen.putPixel(x, y, colorIndex);
+    return x; // XXX: put_pixel returns the x value. Checked empirically.
+  },
+
+  rand(min: number, max: number) {
+    const result = Math.floor(Math.random() * (max - min + 1)) + min;
+    return result;
+  },
+
+  load_pal(palettePath: string, systems: any) {
+    return systems
+      .getSystem("files")
+      .loadPal(palettePath)
+      .then((palFile) => {
+        systems
+          .getSystem("video")
+          .setPalette(Palette.fromBuffer(palFile.buffer));
+        return 1;
+      });
   },
 };
 

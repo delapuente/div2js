@@ -10,23 +10,12 @@ interface Runnable {
  * not know about painting the screen, playing audio, or anything like that.
  * When processes are done executing, it publishes an event to notify the
  * runtime.
- *
- * The scheduler knows about the process life cycle, it also coordinates
- * asynchronous execution, hiding the asynchronous nature of the web into
- * the synchronous execution of the processes.
- *
- * Last but not least, the scheduler knows about errored processes, and offers
- * ways to handle and recover from them.
  */
 class Scheduler {
   onerror: CallableFunction | undefined;
   onfinished: CallableFunction | undefined;
   onyield: CallableFunction | undefined;
   onupdate: CallableFunction | undefined;
-
-  get currentError() {
-    return this._currentError;
-  }
 
   get currentExecution(): any {
     return this._processList[this._current];
@@ -35,17 +24,7 @@ class Scheduler {
   private _processList: Array<Runnable>;
   private _isRunning: boolean;
   private _nextAnimationFrame: number | null;
-  private _blocker: Promise<any> | null;
-  private _currentError: Error | null;
   private _current: number;
-
-  private get _isBlocking(): boolean {
-    return this._blocker !== null;
-  }
-
-  private get _isFailed(): boolean {
-    return this._currentError !== null;
-  }
 
   constructor(hooks: Record<any, any> = {}) {
     this.onyield = hooks.onyield;
@@ -58,11 +37,6 @@ class Scheduler {
   add(processEnvironment: any) {
     // XXX: Will be replaced by sorted insertion
     this._processList.push(processEnvironment);
-  }
-
-  addBlockingFunction(promise: Promise<any>) {
-    this._blocker = promise;
-    this._blocker.catch(this._fail.bind(this)).then(this._unblock.bind(this));
   }
 
   deleteCurrent() {
@@ -79,20 +53,10 @@ class Scheduler {
     this._processList = [];
     this._isRunning = false;
     this._nextAnimationFrame = null;
-    this._blocker = null;
-    this._currentError = null;
     this._startOver();
   }
 
-  recover() {
-    this._currentError = null;
-  }
-
   run() {
-    assert(
-      !this._isFailed,
-      "The scheduler is failed. Handle the error at .currentError and call .recover() before calling .run()"
-    );
     if (!this._isRunning) {
       this._scheduleStep();
       this._isRunning = true;
@@ -105,7 +69,7 @@ class Scheduler {
     this._isRunning = false;
   }
 
-  private _call(name: string, ...args: Array<any>): any {
+  private _call(name: string, ...args: Array<unknown>): unknown {
     let result;
     const target = this[name];
     if (target && typeof target.apply === "function") {
@@ -117,18 +81,6 @@ class Scheduler {
   private _end() {
     this.stop();
     return this._call("onfinished");
-  }
-
-  private _fail(error) {
-    this.stop();
-    this._currentError = error;
-    // XXX: Force handle error synchronously, out of the promise chain.
-    window.setTimeout(this._handleError.bind(this));
-  }
-
-  private _handleError() {
-    assert(this._isFailed, "Scheduler is not failed but an error was handled");
-    this._call("onerror", this._currentError);
   }
 
   private _removeDeadProcess() {
@@ -151,12 +103,6 @@ class Scheduler {
 
   private _step() {
     assert(this._isRunning, "Scheduler is paused but a _step() was attempted");
-    assert(!this._isFailed, "Scheduler is failed but a _step() was attempted");
-
-    if (this._isBlocking) {
-      this._scheduleStep();
-      return;
-    }
 
     if (this._processList.length === 0) {
       return this._end();
@@ -167,14 +113,11 @@ class Scheduler {
       const result = processEnvironment.run();
       this._takeAction(result);
 
-      if (this._isBlocking) {
-        this._scheduleStep();
+      if (!this._isRunning) {
         return;
       }
 
-      if (this._isRunning) {
-        this._current++;
-      }
+      this._current++;
     }
     this._call("onupdate");
 
@@ -191,10 +134,6 @@ class Scheduler {
       this.currentExecution.pc = (result as any).npc;
     }
     return this._call("onyield", result);
-  }
-
-  private _unblock() {
-    this._blocker = null;
   }
 }
 class Baton implements Record<any, any> {
