@@ -1,5 +1,10 @@
 import { assert } from "chai";
 
+interface Runnable {
+  dead: boolean;
+  run(): void;
+}
+
 /**
  * The scheduler encapsulates the responsibilty of executing processes. It does
  * not know about painting the screen, playing audio, or anything like that.
@@ -27,9 +32,7 @@ class Scheduler {
     return this._processList[this._current];
   }
 
-  private _mem: any;
-  private _pmap: any;
-  private _processList: Array<any>;
+  private _processList: Array<Runnable>;
   private _isRunning: boolean;
   private _nextAnimationFrame: number | null;
   private _blocker: Promise<any> | null;
@@ -44,14 +47,17 @@ class Scheduler {
     return this._currentError !== null;
   }
 
-  constructor(mem, processMap, hooks: Record<any, any> = {}) {
+  constructor(hooks: Record<any, any> = {}) {
     this.onyield = hooks.onyield;
     this.onfinished = hooks.onfinished;
     this.onupdate = hooks.onupdate;
     this.onerror = hooks.onerror;
-    this._mem = mem;
-    this._pmap = processMap;
     this.reset();
+  }
+
+  add(processEnvironment: any) {
+    // XXX: Will be replaced by sorted insertion
+    this._processList.push(processEnvironment);
   }
 
   addBlockingFunction(promise: Promise<any>) {
@@ -59,18 +65,9 @@ class Scheduler {
     this._blocker.catch(this._fail.bind(this)).then(this._unblock.bind(this));
   }
 
-  addProcess(name: string, base: number) {
-    this._add("process_" + name, base);
-  }
-
-  addProgram(base: number) {
-    this._add("program", base);
-  }
-
-  deleteCurrent(): number {
+  deleteCurrent() {
     const currentExecution = this._processList[this._current];
     currentExecution.dead = true;
-    return currentExecution.id;
   }
 
   pause() {
@@ -108,13 +105,6 @@ class Scheduler {
     this._isRunning = false;
   }
 
-  private _add(name: string, base: number) {
-    const runnable = this._pmap[name];
-    const processEnvironment = this._newProcessEnvironment(runnable, base);
-    // XXX: Will be replaced by sorted insertion
-    this._processList.push(processEnvironment);
-  }
-
   private _call(name: string, ...args: Array<any>): any {
     let result;
     const target = this[name];
@@ -139,16 +129,6 @@ class Scheduler {
   private _handleError() {
     assert(this._isFailed, "Scheduler is not failed but an error was handled");
     this._call("onerror", this._currentError);
-  }
-
-  private _newProcessEnvironment(runnable: CallableFunction, base: number) {
-    return {
-      pc: 1,
-      runnable,
-      id: base,
-      base,
-      retv: new ReturnValuesQueue(),
-    };
   }
 
   private _removeDeadProcess() {
@@ -183,8 +163,8 @@ class Scheduler {
     }
 
     while (this._current < this._processList.length) {
-      const execution = this._processList[this._current];
-      const result = execution.runnable(this._mem, execution);
+      const processEnvironment = this._processList[this._current];
+      const result = processEnvironment.run();
       this._takeAction(result);
 
       if (this._isBlocking) {
@@ -217,7 +197,6 @@ class Scheduler {
     this._blocker = null;
   }
 }
-
 class Baton implements Record<any, any> {
   type: string;
 
@@ -231,20 +210,4 @@ class Baton implements Record<any, any> {
   }
 }
 
-class ReturnValuesQueue {
-  private _data: Array<any>;
-
-  constructor() {
-    this._data = [];
-  }
-
-  enqueue(value: any) {
-    this._data.push(value);
-  }
-
-  dequeue() {
-    return this._data.shift();
-  }
-}
-
-export { Scheduler, Baton };
+export { Scheduler, Baton, Runnable };
