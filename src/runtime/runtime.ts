@@ -1,8 +1,8 @@
 import { MemoryManager } from "./memory";
-import { Scheduler, Baton, Runnable } from "./scheduler";
-import Palette from "../systems/video/palette";
+import { Scheduler, Baton, Process } from "./scheduler";
+import { load_pal } from "../builtins";
 
-class ProcessEnvironment implements Runnable {
+class ProcessImpl implements Process {
   pc: number;
   runnable: CallableFunction;
   id: number;
@@ -57,6 +57,7 @@ function Runtime(processMap, memorySymbols) {
   this._onfinished = null;
   this._systems = [];
   this._systemMap = {};
+  this._functions = {};
   this._memoryManager = new MemoryManager(memorySymbols);
   this._environment = new Environment();
   this._pmap = processMap;
@@ -73,21 +74,13 @@ Runtime.prototype = {
 
   addProcess(name: string, base: number) {
     const runnable = this._pmap["process_" + name];
-    const processEnvironment = new ProcessEnvironment(
-      runnable,
-      base,
-      this._mem
-    );
+    const processEnvironment = new ProcessImpl(runnable, base, this._mem);
     this._scheduler.add(processEnvironment);
   },
 
   addProgram(base: number) {
     const runnable = this._pmap["program"];
-    const processEnvironment = new ProcessEnvironment(
-      runnable,
-      base,
-      this._mem
-    );
+    const processEnvironment = new ProcessImpl(runnable, base, this._mem);
     this._scheduler.add(processEnvironment);
   },
 
@@ -98,6 +91,13 @@ Runtime.prototype = {
     system.initialize();
     this._systems.push(system);
     this._systemMap[name] = system;
+  },
+
+  registerFunction: function (fn: CallableFunction, name: string) {
+    if (name && typeof this._functions[name] !== "undefined") {
+      throw new Error("Function already registered with name: " + name);
+    }
+    this._functions[name] = fn;
   },
 
   getSystem: function (name) {
@@ -129,22 +129,23 @@ Runtime.prototype = {
 
   set ondebug(callback) {
     this._ondebug = callback;
-    if (this._scheduler instanceof Scheduler) {
-      this._scheduler.ondebug = this._ondebug;
-    }
   },
 
   get ondebug() {
     return this._ondebug;
   },
 
+  resume: function () {
+    this._scheduler.run();
+  },
+
   run: function () {
+    // TODO: Should check for running or paused.
     this._scheduler.reset();
     this._memoryManager.reset();
     const id = this._memoryManager.allocateProcess();
     this.addProgram(id);
-    // XXX: Load defaults
-    this._loadDefaultPalette().then(() => {
+    this._loadDefaults().then(() => {
       this._scheduler.run();
     });
   },
@@ -157,25 +158,17 @@ Runtime.prototype = {
     });
   },
 
-  _schedule: function (baton) {
+  _schedule: function (baton, process) {
     const name = "_" + baton.type;
     if (!(name in this)) {
       throw Error("Unknown execution message: " + baton.type);
     }
-    return this[name](baton);
+    return this[name](baton, process);
   },
 
-  _debug: function (baton) {
-    this._scheduler.onpause = this._startDebug.bind(this);
-    this._scheduler.pause();
-  },
-
-  _startDebug: function () {
-    // XXX: Notice resume === run() right now!
-    this._ondebug({
-      resume: this._scheduler.run.bind(this._scheduler),
-      stop: this._scheduler.stop.bind(this._scheduler),
-    });
+  _debug: function () {
+    this._scheduler.stop();
+    this._ondebug();
   },
 
   _newprocess: function (baton) {
@@ -187,26 +180,26 @@ Runtime.prototype = {
     this.addProcess(name, id);
   },
 
-  _call: function (baton) {
+  _call: function (baton, process) {
     const functionName = baton.functionName;
-    if (functionName in this) {
-      const result = this[functionName](...baton.args, this);
+    if (functionName in this._functions) {
+      const result = this._functions[functionName](...baton.args, this);
       if (result instanceof Promise) {
         this._scheduler.stop();
         result
           .catch((error) => setTimeout(this._onerror.bind(this, error)))
           .then((returnValue) => {
-            this._scheduler.currentExecution.retv.enqueue(returnValue);
+            process.retv.enqueue(returnValue);
             this._scheduler.run();
           });
       } else {
-        this._scheduler.currentExecution.retv.enqueue(result);
+        process.retv.enqueue(result);
       }
     }
   },
 
-  _loadDefaultPalette: function () {
-    return this.load_pal("PAL/DIV2.PAL", this);
+  _loadDefaults: function () {
+    return load_pal("PAL/DIV2.PAL", this);
   },
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -214,31 +207,9 @@ Runtime.prototype = {
 
   // TODO: Consider passing the id through the baton
   _end: function (baton) {
-    const currentProcessId = this._scheduler.currentExecution.id;
+    const currentProcessId = this._scheduler.currentProcess.id;
     this._memoryManager.freeProcess(currentProcessId);
     this._scheduler.deleteCurrent();
-  },
-
-  put_pixel(x: number, y: number, colorIndex: number, systems: any) {
-    systems.getSystem("video").screen.putPixel(x, y, colorIndex);
-    return x; // XXX: put_pixel returns the x value. Checked empirically.
-  },
-
-  rand(min: number, max: number) {
-    const result = Math.floor(Math.random() * (max - min + 1)) + min;
-    return result;
-  },
-
-  load_pal(palettePath: string, systems: any) {
-    return systems
-      .getSystem("files")
-      .loadPal(palettePath)
-      .then((palFile) => {
-        systems
-          .getSystem("video")
-          .setPalette(Palette.fromBuffer(palFile.buffer));
-        return 1;
-      });
   },
 };
 
