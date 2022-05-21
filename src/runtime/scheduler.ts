@@ -1,8 +1,15 @@
 import { assert } from "chai";
 
-interface Runnable {
+interface Process {
   dead: boolean;
-  run(): void;
+  pc: number;
+  run(): Baton;
+}
+
+interface SchedulerHooks<P extends Process> {
+  onfinished?: () => unknown;
+  onupdate?: () => unknown;
+  onyield?: (baton: Baton, process: P) => unknown;
 }
 
 /**
@@ -11,42 +18,34 @@ interface Runnable {
  * When processes are done executing, it publishes an event to notify the
  * runtime.
  */
-class Scheduler {
-  onerror: CallableFunction | undefined;
+class Scheduler<P extends Process> {
   onfinished: CallableFunction | undefined;
   onyield: CallableFunction | undefined;
   onupdate: CallableFunction | undefined;
 
-  get currentExecution(): any {
+  get currentProcess(): P {
     return this._processList[this._current];
   }
 
-  private _processList: Array<Runnable>;
+  private _processList: Array<P>;
   private _isRunning: boolean;
   private _nextAnimationFrame: number | null;
   private _current: number;
 
-  constructor(hooks: Record<any, any> = {}) {
-    this.onyield = hooks.onyield;
-    this.onfinished = hooks.onfinished;
-    this.onupdate = hooks.onupdate;
-    this.onerror = hooks.onerror;
+  constructor(hooks: SchedulerHooks<P> = {}) {
+    this.onyield = hooks?.onyield;
+    this.onfinished = hooks?.onfinished;
+    this.onupdate = hooks?.onupdate;
     this.reset();
   }
 
-  add(processEnvironment: any) {
+  add(process: P) {
     // XXX: Will be replaced by sorted insertion
-    this._processList.push(processEnvironment);
+    this._processList.push(process);
   }
 
   deleteCurrent() {
-    const currentExecution = this._processList[this._current];
-    currentExecution.dead = true;
-  }
-
-  pause() {
-    this.stop();
-    return this._call("onpause");
+    this.currentProcess.dead = true;
   }
 
   reset() {
@@ -72,7 +71,7 @@ class Scheduler {
   private _call(name: string, ...args: Array<unknown>): unknown {
     let result;
     const target = this[name];
-    if (target && typeof target.apply === "function") {
+    if (typeof target === "function") {
       result = target.apply(this, args);
     }
     return result;
@@ -109,9 +108,9 @@ class Scheduler {
     }
 
     while (this._current < this._processList.length) {
-      const processEnvironment = this._processList[this._current];
-      const result = processEnvironment.run();
-      this._takeAction(result);
+      const process = this.currentProcess;
+      const baton = process.run();
+      this._yield(baton);
 
       if (!this._isRunning) {
         return;
@@ -126,14 +125,12 @@ class Scheduler {
     this._scheduleStep();
   }
 
-  private _takeAction(result: any): any {
-    if (!(result instanceof Baton)) {
-      throw Error("Execution returned an unknown result:" + result);
+  private _yield(baton: Baton): unknown {
+    const { currentProcess } = this;
+    if (typeof (baton as any).npc !== "undefined") {
+      currentProcess.pc = (baton as any).npc;
     }
-    if (typeof (result as any).npc !== "undefined") {
-      this.currentExecution.pc = (result as any).npc;
-    }
-    return this._call("onyield", result);
+    return this._call("onyield", baton, currentProcess);
   }
 }
 class Baton implements Record<any, any> {
@@ -149,4 +146,4 @@ class Baton implements Record<any, any> {
   }
 }
 
-export { Scheduler, Baton, Runnable };
+export { Scheduler, Baton, Process };

@@ -1,5 +1,6 @@
 import * as runtime from "./runtime/runtime";
 import * as systems from "./systems/systems";
+import * as builtins from "./builtins";
 
 function load(objText, options = { rootUrl: "" }) {
   // tslint:disable-next-line:no-eval
@@ -11,6 +12,8 @@ function load(objText, options = { rootUrl: "" }) {
   registerRenderSystem(program);
   // TODO: Let's also think how to configure the systems in a configurable way
   registerFileSystem(program, options.rootUrl);
+  // TODO: Let's also think how to add new functions in a configurable way
+  registerFunctions(program, builtins);
   return Promise.resolve(program);
 }
 
@@ -35,6 +38,13 @@ function registerFileSystem(program, rootUrl = "") {
     }),
     "files"
   );
+}
+
+function registerFunctions(program, builtins) {
+  const functions = Object.keys(builtins);
+  for (const functionName of functions) {
+    program.registerFunction(builtins[functionName], functionName);
+  }
 }
 
 export { load };

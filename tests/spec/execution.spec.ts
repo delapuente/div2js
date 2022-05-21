@@ -37,14 +37,14 @@ function withDebugSession(callback) {
 }
 
 function autoResume(callback) {
-  return function (control) {
-    const result = callback.call(this, control);
+  return function () {
+    const result = callback.call(this, this);
     if (result instanceof Promise) {
       result.then(function () {
-        control.resume();
+        this.resume();
       });
     } else {
-      control.resume();
+      this.resume();
     }
   };
 }
