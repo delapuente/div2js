@@ -1,6 +1,6 @@
 import * as translator from "../../src/div2trans";
 import * as checker from "../../src/div2checker";
-import { SymbolTable } from "../../src/memory/symbols";
+import { SymbolTable } from "../../src/memoryBrowser/symbols";
 import { expect } from "chai";
 
 const simpleDefinitions = {

@@ -1,5 +1,5 @@
 import * as ctx from "./context";
-import * as mapper from "./memory/mapper";
+import * as mapper from "./memoryBrowser/mapper";
 
 function extractContext(div2ast, symbolTable) {
   if (div2ast.type !== "Unit") {

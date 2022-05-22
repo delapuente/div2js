@@ -61,7 +61,7 @@ function Runtime(processMap, memorySymbols) {
   this._memoryManager = new MemoryManager(memorySymbols);
   this._environment = new Environment();
   this._pmap = processMap;
-  this._mem = this._memoryManager.getMemory();
+  this._mem = this._memoryManager.rawMemory;
   this._scheduler = new Scheduler({
     onyield: this._schedule.bind(this),
     // XXX: Update means after all processes have run entirely
@@ -105,7 +105,7 @@ Runtime.prototype = {
   },
 
   getMemoryBrowser: function () {
-    return this._memoryManager.getBrowser();
+    return this._memoryManager.browser;
   },
 
   set onerror(callback) {

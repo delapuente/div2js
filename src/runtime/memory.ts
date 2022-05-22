@@ -1,35 +1,35 @@
-import * as mapper from "../memory/mapper";
+import { MemoryMap, MemoryBrowser } from "../memoryBrowser/mapper";
 
-const MemoryMap = mapper.MemoryMap;
-const MemoryBrowser = mapper.MemoryBrowser;
+type MemoryArray = Int32Array;
 
-function MemoryManager(symbols) {
-  this._map = new MemoryMap(symbols);
-  this._allocateMemory();
-  this._createProcessTemplate();
-}
-
-MemoryManager.prototype = {
-  constructor: MemoryManager,
-
-  getBrowser: function () {
+/**
+ * The MemoryManager is responsible for managing the memory of a DIV2 program.
+ * It allocates the contiguous memory for the program, and provides a semantic
+ * API to access the memory via the MemoryBrowser.
+ */
+class MemoryManager {
+  get browser(): MemoryBrowser {
     return this._browser;
-  },
+  }
 
-  getMemory: function () {
+  get rawMemory(): MemoryArray {
     return this._mem;
-  },
+  }
 
-  reset: function () {
-    this._mem.fill(0);
-    // TODO: Add globals
-    for (let index = 0, l = this._map.maxProcess; index < l; index++) {
-      const process = this._browser.process({ index: index });
-      process.local("reserved.process_id").value = process.offset;
-    }
-  },
+  private _browser: MemoryBrowser;
+  private _map: MemoryMap;
+  private _mem: MemoryArray;
+  private _processTemplate: MemoryArray;
 
-  allocateProcess: function () {
+  constructor(symbols) {
+    this._map = new MemoryMap(symbols);
+    const { globalSegmentSize, processPoolSize } = this._map;
+    this._mem = new Int32Array(globalSegmentSize + processPoolSize);
+    this._browser = new MemoryBrowser(this._mem, this._map);
+    this._createProcessTemplate();
+  }
+
+  allocateProcess(): number {
     for (let index = 0, l = this._map.maxProcess; index < l; index++) {
       const process = this._browser.process({ index: index });
       const isFree = process.local("reserved.status").value === 0;
@@ -38,27 +38,24 @@ MemoryManager.prototype = {
         return process.id;
       }
     }
-    return undefined;
-  },
+    throw new Error("Impossible to allocate a new process");
+  }
 
-  freeProcess: function (processId) {
+  freeProcess(processId: number) {
     const process = this._browser.process({ id: processId });
     process.local("reserved.status").value = 0;
-  },
+  }
 
-  _allocateMemory: function () {
-    const memorySize = this._map.globalSegmentSize + this._map.processPoolSize;
-    this._mem = new Int32Array(memorySize);
-    this._browser = new MemoryBrowser(this._mem, this._map);
-  },
+  reset() {
+    this._mem.fill(0);
+    // TODO: Add globals
+    for (let index = 0, l = this._map.maxProcess; index < l; index++) {
+      const process = this._browser.process({ index: index });
+      process.local("reserved.process_id").value = process.offset;
+    }
+  }
 
-  _initializeProcessMemory: function (process) {
-    const id = process.id;
-    process.setMemory(this._processTemplate);
-    process.local("reserved.process_id").value = id; // restore Id
-  },
-
-  _createProcessTemplate: function () {
+  _createProcessTemplate() {
     const locals = this._map.cells["locals"];
     this._processTemplate = new Int32Array(this._map.processSize);
     copyDefaults(this._processTemplate, locals, 0);
@@ -66,7 +63,6 @@ MemoryManager.prototype = {
 
     function copyDefaults(buffer, cells, base) {
       cells.forEach(function (cell) {
-        const length = cell.length;
         const itemSize = cell.size / cell.length;
         for (let i = 0, l = cell.length; i < l; i++) {
           const itemOffset = base + i * itemSize;
@@ -78,7 +74,13 @@ MemoryManager.prototype = {
         }
       });
     }
-  },
-};
+  }
+
+  _initializeProcessMemory(processMemory) {
+    const id = processMemory.id;
+    processMemory.setMemory(this._processTemplate);
+    processMemory.local("reserved.process_id").value = id; // restore Id
+  }
+}
 
 export { MemoryManager };
