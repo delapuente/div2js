@@ -1,66 +1,70 @@
-// The definition format of the memory map is described here.
-//
-// In DIV, memory is a continuous and int (4 bytes) directionable-only array
-// of cells. Pointer arithmetic can not address sub-int-size (word or byte)
-// cells. DIV memory is 4 bytes aligned.
-//
-// Symbols is not a 1:1 memory map but a summary from which the memory map
-// is derived. The main goal for symbol tables is to specify the relative
-// order for specific memory regions.
-//
-// Each cell is defined by an object with the following fields:
-//
-//   * type    - is the type of the cell: byte (1 byte), word (2 bytes), int
-//               (4 bytes, "default" if omitted) and struct.
-//   * name    - is the name of the symbol.
-//   * fields  - if the type is struct, this is the list of symbols of the
-//               struct.
-//   * length  - length to repeat this symbol (1 if omitted).
-//   * default - default value for the cell (0 if omitted).
-//   * hidden  - if true, the symbol is not visible in the memory browser.
-//
-// Since most of the length, a symbol is 1 int, instead of an object, you
-// can specify a string with the "name" of the symbol.
+// XXX: In DIV, memory is a continuous and int (4 bytes) directionable-only
+// array of cells. Pointer arithmetic can not address sub-int-size (word or
+// byte) cells. DIV memory is 4 bytes aligned.
 
-import { assert } from "chai";
-
-// Based on docs, sources and experimental tests:
-// https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h
-// Experimental tests are based on measuring offsets between pairs of
-// variables or struct fields. It seems there are "hidden" variables.
-//
-// IMPORTANT!!
-// Ultimate values are put to preserve experimental offsets. When multiple
-// values preserve the offsets, I chose the one closest to what is
-// documented.
-interface BaseCell {
+interface BaseSymbol {
   name: string;
   length?: number;
   hidden?: boolean;
 }
 
-interface SimpleCell extends BaseCell {
+interface SimpleSymbol extends BaseSymbol {
   type?: "byte" | "word" | "int";
   default?: number;
 }
 
-interface StructCell extends BaseCell {
+interface StructSymbol extends BaseSymbol {
   type?: "struct";
   fields?: ShortEntry[];
 }
 
-type ShortCell = SimpleCell | StructCell;
-type ShortEntry = ShortCell | string;
+type ShortSymbol = SimpleSymbol | StructSymbol;
+type ShortEntry = ShortSymbol | string;
 type ShortDefinitions = {
   [key in keyof Definitions]: Array<ShortEntry>;
 };
 
-type Cell = Required<SimpleCell> | (Required<StructCell> & { fields: Cell[] });
+/**
+ * A DIV symbol is an object describing a function, a variable or a proces.
+ * The following fields describe the symbol:
+ *
+ *  * type    - is the type of the cell: "byte" (1 byte), "word" (2 bytes),
+ *              "int" (4 bytes; default if omitted) and "struct".
+ *  * name    - is the name of the symbol.
+ *  * length  - times to repeat this symbol (1 if omitted).
+ *  * hidden  - if true, the symbol is not visible in the memory browser.
+ *  * fields  - if the type is "struct", this is the list of symbols of the
+ *              struct.
+ *  * default - default value for the cell (0 if omitted).
+ *
+ * The `DivSymbol` type requires all the fields to be present, but there is
+ * a relaxed version of it where only the name is required. An also valid
+ * alternative is to specify a string with the "name" of the symbol.
+ */
+type DivSymbol =
+  | Required<SimpleSymbol>
+  | (Required<StructSymbol> & { fields: DivSymbol[] });
+
 interface Definitions {
-  wellKnownGlobals: Array<Cell>;
-  wellKnownLocals: Array<Cell>;
+  wellKnownGlobals: Array<DivSymbol>;
+  wellKnownLocals: Array<DivSymbol>;
 }
 
+/**
+ * Compendium of all the well known DIV symbols, common to all DIV programs.
+ * It becomes the corner stone of the `SymbolTable`, from which the memory
+ * map is derived.
+ *
+ * Based on docs, sources, and experimental tests:
+ * https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h
+ *
+ * Experimental tests are based on measuring offsets between pairs of variables
+ * or struct fields. It seems there are "hidden" variables.
+ *
+ * IMPORTANT NOTE:
+ * Present values are chosen to preserve experimental offsets. When multiple
+ * values preserve the offsets, I chose the one closest to what is documented.
+ */
 const MEMORY_DEFINITIONS: Definitions = _normalizeDefinitions({
   wellKnownGlobals: [
     {
@@ -288,30 +292,30 @@ const MEMORY_DEFINITIONS: Definitions = _normalizeDefinitions({
 
 function _normalizeDefinitions(definitions: ShortDefinitions): Definitions {
   return {
-    wellKnownGlobals: definitions.wellKnownGlobals.map(normalizeCell),
-    wellKnownLocals: definitions.wellKnownLocals.map(normalizeCell),
+    wellKnownGlobals: definitions.wellKnownGlobals.map(normalize),
+    wellKnownLocals: definitions.wellKnownLocals.map(normalize),
   };
 }
 
-function normalizeCell(symbol: ShortEntry): Cell {
-  const cell = typeof symbol === "string" ? { name: symbol } : symbol;
+function normalize(symbol: ShortEntry): DivSymbol {
+  const symbolObject = typeof symbol === "string" ? { name: symbol } : symbol;
   const normalized =
-    cell.type === "struct"
+    symbolObject.type === "struct"
       ? {
           type: "struct" as const,
-          name: cell.name,
-          length: cell.length ?? 1,
-          hidden: cell.hidden ?? false,
-          fields: cell.fields.map(normalizeCell),
+          name: symbolObject.name,
+          length: symbolObject.length ?? 1,
+          hidden: symbolObject.hidden ?? false,
+          fields: symbolObject.fields.map(normalize),
         }
       : {
-          type: cell.type ?? ("int" as const),
-          name: cell.name,
-          length: cell.length ?? 1,
-          hidden: cell.hidden ?? false,
-          default: cell.default ?? 0,
+          type: symbolObject.type ?? ("int" as const),
+          name: symbolObject.name,
+          length: symbolObject.length ?? 1,
+          hidden: symbolObject.hidden ?? false,
+          default: symbolObject.default ?? 0,
         };
   return normalized;
 }
 
-export { MEMORY_DEFINITIONS, Definitions, ShortCell, Cell, normalizeCell };
+export { MEMORY_DEFINITIONS, Definitions, ShortSymbol, DivSymbol, normalize };

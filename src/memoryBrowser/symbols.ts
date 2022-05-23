@@ -1,9 +1,14 @@
-import { ShortCell, Cell, Definitions, normalizeCell } from "./definitions";
+import { ShortSymbol, DivSymbol, Definitions, normalize } from "./definitions";
 
+/**
+ * The SymbolTable is a relation of all the variables and functions in the
+ * program. It keeps information about the memory locations and semantics
+ * of the program symbols.
+ */
 class SymbolTable {
-  readonly globals: Array<Cell>;
-  readonly locals: Array<Cell>;
-  readonly privates: Record<string, Array<Cell>>;
+  readonly globals: Array<DivSymbol>;
+  readonly locals: Array<DivSymbol>;
+  readonly privates: Record<string, Array<DivSymbol>>;
 
   constructor(definitions: Definitions) {
     this.globals = definitions.wellKnownGlobals;
@@ -11,12 +16,12 @@ class SymbolTable {
     this.privates = {};
   }
 
-  addGlobal(definition: ShortCell | Cell): Cell {
-    return this._add("globals", normalizeCell(definition));
+  addGlobal(definition: ShortSymbol | DivSymbol): DivSymbol {
+    return this._add("globals", normalize(definition));
   }
 
-  addLocal(definition: ShortCell | Cell): Cell {
-    return this._add("locals", normalizeCell(definition));
+  addLocal(definition: ShortSymbol | DivSymbol): DivSymbol {
+    return this._add("locals", normalize(definition));
   }
 
   isGlobal(name: string): boolean {
@@ -29,8 +34,11 @@ class SymbolTable {
     return name === "id" || this._isKnown("locals", name.toLowerCase());
   }
 
-  addPrivate(processName: string, definition: ShortCell | Cell): Cell {
-    const normalized = normalizeCell(definition);
+  addPrivate(
+    processName: string,
+    definition: ShortSymbol | DivSymbol
+  ): DivSymbol {
+    const normalized = normalize(definition);
     this.privates[processName] = this.privates[processName] || [];
     this.privates[processName].push(normalized);
     return normalized;
@@ -46,8 +54,11 @@ class SymbolTable {
     );
   }
 
-  _add(kind: "globals" | "locals", definition: ShortCell | Cell): Cell {
-    const normalized = normalizeCell(definition);
+  _add(
+    kind: "globals" | "locals",
+    definition: ShortSymbol | DivSymbol
+  ): DivSymbol {
+    const normalized = normalize(definition);
     this[kind].push(normalized);
     return normalized;
   }

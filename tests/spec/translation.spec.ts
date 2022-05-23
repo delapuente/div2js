@@ -2,14 +2,11 @@ import * as translator from "../../src/div2trans";
 import * as checker from "../../src/div2checker";
 import { SymbolTable } from "../../src/memoryBrowser/symbols";
 import { expect } from "chai";
-import {
-  Definitions,
-  normalizeCell,
-} from "../../src/memoryBrowser/definitions";
+import { Definitions, normalize } from "../../src/memoryBrowser/definitions";
 
 const simpleDefinitions: Definitions = {
-  wellKnownGlobals: [normalizeCell("text_z")],
-  wellKnownLocals: [normalizeCell("x"), normalizeCell("y")],
+  wellKnownGlobals: [normalize("text_z")],
+  wellKnownLocals: [normalize("x"), normalize("y")],
 };
 
 describe("AST translation from DIV2 to JavaScript", function () {
