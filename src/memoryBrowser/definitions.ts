@@ -10,27 +10,58 @@
 //
 // Each cell is defined by an object with the following fields:
 //
-//   * type   - is the type of the cell: byte (1 byte), word (2 bytes), int
-//              (4 bytes, "default" if omitted) and struct.
-//   * name   - is the name of the symbol.
-//   * fields - if the type is struct, this is the list of symbols of the
-//              struct.
-//   * length - times to repeat this symbol (1 if omitted)
+//   * type    - is the type of the cell: byte (1 byte), word (2 bytes), int
+//               (4 bytes, "default" if omitted) and struct.
+//   * name    - is the name of the symbol.
+//   * fields  - if the type is struct, this is the list of symbols of the
+//               struct.
+//   * length  - length to repeat this symbol (1 if omitted).
+//   * default - default value for the cell (0 if omitted).
+//   * hidden  - if true, the symbol is not visible in the memory browser.
 //
-// Since most of the times, a symbol is 1 int, instead of an object, you
+// Since most of the length, a symbol is 1 int, instead of an object, you
 // can specify a string with the "name" of the symbol.
+
+import { assert } from "chai";
 
 // Based on docs, sources and experimental tests:
 // https://github.com/DIVGAMES/DIV-Games-Studio/blob/0c006cca548f9d6dc66d174d4f05d167148c7e78/dll/div.h
-// Experimental tests are besed on measuring offsets between pairs of
+// Experimental tests are based on measuring offsets between pairs of
 // variables or struct fields. It seems there are "hidden" variables.
 //
 // IMPORTANT!!
 // Ultimate values are put to preserve experimental offsets. When multiple
 // values preserve the offsets, I chose the one closest to what is
 // documented.
+interface BaseCell {
+  name: string;
+  length?: number;
+  hidden?: boolean;
+}
 
-export default {
+interface SimpleCell extends BaseCell {
+  type?: "byte" | "word" | "int";
+  default?: number;
+}
+
+interface StructCell extends BaseCell {
+  type?: "struct";
+  fields?: ShortEntry[];
+}
+
+type ShortCell = SimpleCell | StructCell;
+type ShortEntry = ShortCell | string;
+type ShortDefinitions = {
+  [key in keyof Definitions]: Array<ShortEntry>;
+};
+
+type Cell = Required<SimpleCell> | (Required<StructCell> & { fields: Cell[] });
+interface Definitions {
+  wellKnownGlobals: Array<Cell>;
+  wellKnownLocals: Array<Cell>;
+}
+
+const MEMORY_DEFINITIONS: Definitions = _normalizeDefinitions({
   wellKnownGlobals: [
     {
       type: "struct",
@@ -253,4 +284,34 @@ export default {
     { name: "m8_nextsector", default: -1 },
     { name: "m8_step", default: 32 },
   ],
-};
+});
+
+function _normalizeDefinitions(definitions: ShortDefinitions): Definitions {
+  return {
+    wellKnownGlobals: definitions.wellKnownGlobals.map(normalizeCell),
+    wellKnownLocals: definitions.wellKnownLocals.map(normalizeCell),
+  };
+}
+
+function normalizeCell(symbol: ShortEntry): Cell {
+  const cell = typeof symbol === "string" ? { name: symbol } : symbol;
+  const normalized =
+    cell.type === "struct"
+      ? {
+          type: "struct" as const,
+          name: cell.name,
+          length: cell.length ?? 1,
+          hidden: cell.hidden ?? false,
+          fields: cell.fields.map(normalizeCell),
+        }
+      : {
+          type: cell.type ?? ("int" as const),
+          name: cell.name,
+          length: cell.length ?? 1,
+          hidden: cell.hidden ?? false,
+          default: cell.default ?? 0,
+        };
+  return normalized;
+}
+
+export { MEMORY_DEFINITIONS, Definitions, ShortCell, Cell, normalizeCell };
