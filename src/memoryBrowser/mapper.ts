@@ -3,69 +3,86 @@
 // so we need either the different segment sizes (for debugging) or the
 // complete memory size (regular execution).
 
+import { DivSymbol } from "./definitions";
+import { SymbolTable } from "./symbols";
+
+interface MemoryCell {
+  symbol: DivSymbol;
+  offset: number;
+  size: number;
+  fields?: MemoryCell[];
+}
+
+type MemorySegments = {
+  globals: MemoryCell[];
+  locals: MemoryCell[];
+  privates: { [processName: string]: MemoryCell[] };
+};
+
+type MemorySegmentName = keyof MemorySegments;
+
 // TODO: consider embedding an initial memory dump in the form of a base64
 // blob. Heavy "binaries".
 
+/**
+ * The `MemoryMap` translates DIV program symbols to memory locations (cells)
+ * in terms of relative offsets.
+ *
+ * Notice the `MemoryMap` knows nothing about the real values of the variables
+ * since it does not have any reference to the program's actual memory.
+ */
 class MemoryMap {
-  get globalSegmentSize() {
+  // TODO: Perhaps we are lacking the concept of cell size or addressable word
+  // as the minimum number of bytes addressable. In the case of DIV2, this
+  // number is 4 which matches the ALIGNMENT.
+  static readonly ALIGNMENT = 4; // 4 bytes
+  static readonly GLOBAL_OFFSET = 1; /* TODO: Must take into account all
+                                        DIV padding including program source.
+                                        Leave 0 address free. */
+  static readonly SIZE_IN_BYTES = Object.freeze({
+    byte: 1 as const,
+    word: 2 as const,
+    int: 4 as const,
+  });
+
+  get globalSegmentSize(): number {
     return this._getSegmentSize(this.cells["globals"]) / MemoryMap.ALIGNMENT;
-  }
-
-  get localSegmentSize() {
-    return this._getSegmentSize(this.cells["locals"]) / MemoryMap.ALIGNMENT;
-  }
-
-  get processPoolSize() {
-    return this.maxProcess * this.processSize;
   }
 
   get maxPrivateSegmentSize(): number {
     return Math.max(
       0,
-      ...Object.keys(this.cells.privates).map(function (processName) {
+      ...Object.keys(this.cells.privates).map((processName) => {
         return this._getSegmentSize(this.cells.privates[processName]);
-      }, this)
+      })
     );
   }
 
-  get processSize() {
+  get localSegmentSize(): number {
+    return this._getSegmentSize(this.cells["locals"]) / MemoryMap.ALIGNMENT;
+  }
+
+  get poolOffset(): number {
+    return MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize;
+  }
+
+  get processPoolSize(): number {
+    return this.maxProcess * this.processSize;
+  }
+
+  get processSize(): number {
     const size = this.localSegmentSize + this.maxPrivateSegmentSize;
     // XXX: Force to be ALWAYS even. In addition to an odd pool offset,
     // it warrants all the process to start in an ODD address so the id
     // is ALWAYS ODD and thus, always TRUE.
-    if (size % 2 !== 0) {
-      return size + 1;
-    }
-    return size;
+    return size % 2 === 0 ? size : size + 1;
   }
 
-  get poolOffset() {
-    return MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize;
-  }
+  readonly cells: MemorySegments;
+  readonly maxProcess: number;
+  readonly symbols: SymbolTable;
 
-  // TODO: Perhaps we are lacking the concept of cell size or addressable word
-  // as the minimum number of bytes addressable. In the case of DIV2, this
-  // number is 4 which matches the ALIGNMENT.
-
-  static ALIGNMENT = 4; // 4 bytes
-
-  static GLOBAL_OFFSET = 1; /* TODO: Must take into account all
-                               DIV padding including program source. Leave
-                               0 address free. */
-
-  static SIZE_IN_BYTES = {
-    byte: 1,
-    word: 2,
-    int: 4,
-  };
-
-  maxProcess: number;
-
-  symbols;
-
-  cells;
-
-  constructor(symbols) {
+  constructor(symbols: SymbolTable) {
     this.maxProcess = 5919; /* XXX: This is the max process count for empty
                                programs. Still trying to figure out why. */
     this.symbols = symbols;
@@ -73,12 +90,21 @@ class MemoryMap {
     this._buildMap();
   }
 
-  static exportToJson(map) {
+  static exportToJson(map: MemoryMap): SymbolTable {
     return map.symbols;
   }
 
-  static importFromJson(json) {
-    return new MemoryMap(json);
+  private _buildMap() {
+    this.cells.globals = this._inToCells(this.symbols.globals);
+    this.cells.locals = this._inToCells(this.symbols.locals);
+    this.cells.privates = Object.keys(this.symbols.privates).reduce(
+      (privates, processName) => {
+        const privateMap = this._inToCells(this.symbols.privates[processName]);
+        privates[processName] = privateMap;
+        return privates;
+      },
+      {}
+    );
   }
 
   private _getSegmentSize(cells): number {
@@ -87,51 +113,46 @@ class MemoryMap {
     }, 0);
   }
 
-  private _buildMap() {
-    this.cells.globals = this._inToCells(this.symbols.globals);
-    this.cells.locals = this._inToCells(this.symbols.locals);
-    this.cells.privates = {};
-    Object.keys(this.symbols.privates).forEach(function (processName) {
-      const privateMap = this._inToCells(this.symbols.privates[processName]);
-      this.cells.privates[processName] = privateMap;
-    }, this);
-  }
-
-  private _inToCells(symbols) {
+  private _inToCells(symbols: DivSymbol[]): MemoryCell[] {
     let offset = 0;
-    const cells = [];
-    symbols.forEach(
-      function (symbol) {
-        const cell = Object.create(symbol);
-        cell.size = this._sizeOf(symbol);
-        cell.offset = offset;
-        if (symbol.type === "struct") {
-          cell.fields = this._inToCells(symbol.fields);
-        }
-        offset += cell.size / MemoryMap.ALIGNMENT;
-        cells.push(cell);
-      }.bind(this)
-    );
+    const cells = symbols.map((symbol) => {
+      const cell =
+        symbol.type === "struct"
+          ? {
+              symbol,
+              offset,
+              size: this._sizeOf(symbol),
+              fields: this._inToCells(symbol.fields),
+            }
+          : {
+              symbol,
+              offset,
+              size: this._sizeOf(symbol),
+            };
+      offset += cell.size / MemoryMap.ALIGNMENT;
+      return cell;
+    });
     return cells;
   }
 
-  private _sizeOf(symbol) {
-    let individualSize;
-    if (symbol.type !== "struct") {
-      individualSize = MemoryMap.SIZE_IN_BYTES[symbol.type];
-    } else {
-      individualSize = symbol.fields.reduce(
-        function (partial, field) {
-          return partial + this._sizeOf(field);
-        }.bind(this),
-        0
-      );
-    }
+  private _sizeOf(symbol: DivSymbol): number {
+    const individualSize =
+      symbol.type !== "struct"
+        ? MemoryMap.SIZE_IN_BYTES[symbol.type]
+        : symbol.fields.reduce((partial, field) => {
+            return partial + this._sizeOf(field);
+          }, 0);
     return individualSize * symbol.length;
   }
 }
 
 // TODO: Consider to move to its own module.
+/**
+ * The `MemoryBrowser` provides means to inspect and manipulate the memory
+ * of a DIV program in terms of the symbol definitions. I.e.: instead of
+ * accessing the raw memory, it allows to inspect the values of the variables
+ * per name and/or per process.
+ */
 class MemoryBrowser {
   private _mem;
 
@@ -195,12 +216,12 @@ class MemoryBrowser {
     let offset;
     const name = names[0];
     const cell = cells.find(function (cell) {
-      return cell.name === name;
+      return cell.symbol.name === name;
     });
     if (!cell) {
       return undefined;
     }
-    if (cell.type !== "struct") {
+    if (cell.symbol.type !== "struct") {
       return cell.offset;
     }
     const fieldOffset = this._offset(cell.fields, names.slice(1));
@@ -266,6 +287,13 @@ class ProcessView {
   }
 }
 
-const { exportToJson, importFromJson } = MemoryMap;
+const { exportToJson } = MemoryMap;
 
-export { MemoryMap, MemoryBrowser, exportToJson, importFromJson };
+export {
+  MemoryMap,
+  MemoryBrowser,
+  MemoryCell,
+  exportToJson,
+  ProcessView,
+  MemorySegmentName,
+};

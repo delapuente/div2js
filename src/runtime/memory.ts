@@ -1,5 +1,13 @@
-import { MemoryMap, MemoryBrowser } from "../memoryBrowser/mapper";
+import {
+  MemoryMap,
+  MemoryBrowser,
+  MemoryCell,
+  ProcessView,
+} from "../memoryBrowser/mapper";
 
+// XXX: In DIV, memory is a continuous, and int-directionable-only (each 4
+// bytes) array of cells. Pointer arithmetic can not address sub-int-size
+// values (word or byte). DIV memory is 4-byte aligned.
 type MemoryArray = Int32Array;
 
 /**
@@ -56,18 +64,22 @@ class MemoryManager {
   }
 
   _createProcessTemplate() {
-    const locals = this._map.cells["locals"];
+    const locals = this._map.cells.locals;
     this._processTemplate = new Int32Array(this._map.processSize);
     copyDefaults(this._processTemplate, locals, 0);
     // TODO: Add privates
 
-    function copyDefaults(buffer, cells, base) {
-      cells.forEach(function (cell) {
-        const itemSize = cell.size / cell.length;
-        for (let i = 0, l = cell.length; i < l; i++) {
-          const itemOffset = base + i * itemSize;
-          if (cell.type !== "struct") {
-            buffer[itemOffset + cell.offset] = cell.default;
+    function copyDefaults(
+      buffer: MemoryArray,
+      cells: MemoryCell[],
+      base: number
+    ) {
+      cells.forEach((cell) => {
+        const itemSize = cell.size / cell.symbol.length;
+        for (let index = 0, l = cell.symbol.length; index < l; index++) {
+          const itemOffset = base + index * itemSize;
+          if (cell.symbol.type !== "struct") {
+            buffer[itemOffset + cell.offset] = cell.symbol.default;
           } else {
             copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
           }
@@ -76,7 +88,7 @@ class MemoryManager {
     }
   }
 
-  _initializeProcessMemory(processMemory) {
+  _initializeProcessMemory(processMemory: ProcessView) {
     const id = processMemory.id;
     processMemory.setMemory(this._processTemplate);
     processMemory.local("reserved.process_id").value = id; // restore Id

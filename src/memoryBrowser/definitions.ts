@@ -1,7 +1,3 @@
-// XXX: In DIV, memory is a continuous and int (4 bytes) directionable-only
-// array of cells. Pointer arithmetic can not address sub-int-size (word or
-// byte) cells. DIV memory is 4 bytes aligned.
-
 interface BaseSymbol {
   name: string;
   length?: number;
@@ -15,13 +11,12 @@ interface SimpleSymbol extends BaseSymbol {
 
 interface StructSymbol extends BaseSymbol {
   type?: "struct";
-  fields?: ShortEntry[];
+  fields?: ShortSymbol[];
 }
 
-type ShortSymbol = SimpleSymbol | StructSymbol;
-type ShortEntry = ShortSymbol | string;
+type ShortSymbol = SimpleSymbol | StructSymbol | string;
 type ShortDefinitions = {
-  [key in keyof Definitions]: Array<ShortEntry>;
+  [key in keyof Definitions]: Array<ShortSymbol>;
 };
 
 /**
@@ -38,12 +33,13 @@ type ShortDefinitions = {
  *  * default - default value for the cell (0 if omitted).
  *
  * The `DivSymbol` type requires all the fields to be present, but there is
- * a relaxed version of it where only the name is required. An also valid
- * alternative is to specify a string with the "name" of the symbol.
+ * a relaxed version (`ShortSymbol`) of it where only the name is required.
+ * Another valid alternative is to specify a string with the "name" of the
+ * symbol.
  */
 type DivSymbol =
   | Required<SimpleSymbol>
-  | (Required<StructSymbol> & { fields: DivSymbol[] });
+  | (Required<Omit<StructSymbol, "fields">> & { fields: DivSymbol[] });
 
 interface Definitions {
   wellKnownGlobals: Array<DivSymbol>;
@@ -297,7 +293,7 @@ function _normalizeDefinitions(definitions: ShortDefinitions): Definitions {
   };
 }
 
-function normalize(symbol: ShortEntry): DivSymbol {
+function normalize(symbol: ShortSymbol): DivSymbol {
   const symbolObject = typeof symbol === "string" ? { name: symbol } : symbol;
   const normalized =
     symbolObject.type === "struct"

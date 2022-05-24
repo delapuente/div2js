@@ -2,12 +2,10 @@ import parser from "./div2lang";
 import * as checker from "./div2checker";
 import * as translator from "./div2trans";
 import * as ast from "./ast";
-import * as symbols from "./memoryBrowser/symbols";
+import { SymbolTable } from "./memoryBrowser/symbols";
 import { MEMORY_DEFINITIONS } from "./memoryBrowser/definitions";
 import * as mapper from "./memoryBrowser/mapper";
 import * as generator from "escodegen";
-
-const SymbolTable = symbols.SymbolTable;
 
 parser.yy = parser.yy || {};
 parser.yy.parseError = parser.parseError;

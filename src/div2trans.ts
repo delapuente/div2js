@@ -129,7 +129,7 @@ function getSegmentDeclarations(segment, prefixes, cells) {
   let definitions = [];
   for (let i = 0, l = cells.length; i < l; i++) {
     const cell = cells[i];
-    if (!cell.hidden) {
+    if (!cell.symbol.hidden) {
       const identifierFactory =
         "identifierFor" +
         {
@@ -137,14 +137,14 @@ function getSegmentDeclarations(segment, prefixes, cells) {
           locals: "Local",
           privates: "Private",
         }[segment];
-      prefixes.push(cell.name);
+      prefixes.push(cell.symbol.name);
       definitions.push(
         new ast.VariableDeclarator(
           t[identifierFactory](prefixes),
           ast.Literal["for"](cell.offset)
         )
       );
-      if (cell.type === "struct") {
+      if (cell.symbol.type === "struct") {
         definitions = definitions.concat(
           getSegmentDeclarations(segment, prefixes, cell.fields)
         );
