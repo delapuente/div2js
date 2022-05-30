@@ -3,7 +3,7 @@ import * as checker from "./div2checker";
 import * as translator from "./div2trans";
 import * as ast from "./ast";
 import { SymbolTable } from "./memoryBrowser/symbols";
-import { MEMORY_DEFINITIONS } from "./memoryBrowser/definitions";
+import { DIV_SYMBOLS } from "./memoryBrowser/definitions";
 import * as mapper from "./memoryBrowser/mapper";
 import * as generator from "escodegen";
 
@@ -11,7 +11,7 @@ parser.yy = parser.yy || {};
 parser.yy.parseError = parser.parseError;
 
 function compile(srcText, sourceURL = "/div-program.js") {
-  const symbolTable = new SymbolTable(MEMORY_DEFINITIONS);
+  const symbolTable = new SymbolTable(DIV_SYMBOLS);
   const div2Ast = parser.parse(srcText);
   const context = checker.extractContext(div2Ast, symbolTable);
   const jsAst = translator.translate(div2Ast, context);

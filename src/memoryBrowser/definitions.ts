@@ -1,22 +1,22 @@
-interface BaseSymbol {
+interface BaseSymbolDefinition {
   name: string;
   length?: number;
   hidden?: boolean;
 }
 
-interface SimpleSymbol extends BaseSymbol {
+interface SimpleSymbol extends BaseSymbolDefinition {
   type?: "byte" | "word" | "int";
   default?: number;
 }
 
-interface StructSymbol extends BaseSymbol {
+interface StructSymbol extends BaseSymbolDefinition {
   type?: "struct";
-  fields?: ShortSymbol[];
+  fields?: SymbolDefinition[];
 }
 
-type ShortSymbol = SimpleSymbol | StructSymbol | string;
-type ShortDefinitions = {
-  [key in keyof Definitions]: Array<ShortSymbol>;
+type SymbolDefinition = SimpleSymbol | StructSymbol | string;
+type Definitions = {
+  [key in keyof WellKnownSymbols]: Array<SymbolDefinition>;
 };
 
 /**
@@ -41,7 +41,7 @@ type DivSymbol =
   | Required<SimpleSymbol>
   | (Required<Omit<StructSymbol, "fields">> & { fields: DivSymbol[] });
 
-interface Definitions {
+interface WellKnownSymbols {
   wellKnownGlobals: Array<DivSymbol>;
   wellKnownLocals: Array<DivSymbol>;
 }
@@ -61,7 +61,7 @@ interface Definitions {
  * Present values are chosen to preserve experimental offsets. When multiple
  * values preserve the offsets, I chose the one closest to what is documented.
  */
-const MEMORY_DEFINITIONS: Definitions = _normalizeDefinitions({
+const DIV_SYMBOLS: WellKnownSymbols = _normalizeDefinitions({
   wellKnownGlobals: [
     {
       type: "struct",
@@ -286,14 +286,14 @@ const MEMORY_DEFINITIONS: Definitions = _normalizeDefinitions({
   ],
 });
 
-function _normalizeDefinitions(definitions: ShortDefinitions): Definitions {
+function _normalizeDefinitions(definitions: Definitions): WellKnownSymbols {
   return {
     wellKnownGlobals: definitions.wellKnownGlobals.map(normalize),
     wellKnownLocals: definitions.wellKnownLocals.map(normalize),
   };
 }
 
-function normalize(symbol: ShortSymbol): DivSymbol {
+function normalize(symbol: SymbolDefinition): DivSymbol {
   const symbolObject = typeof symbol === "string" ? { name: symbol } : symbol;
   const normalized =
     symbolObject.type === "struct"
@@ -314,4 +314,10 @@ function normalize(symbol: ShortSymbol): DivSymbol {
   return normalized;
 }
 
-export { MEMORY_DEFINITIONS, Definitions, ShortSymbol, DivSymbol, normalize };
+export {
+  DIV_SYMBOLS,
+  WellKnownSymbols,
+  SymbolDefinition,
+  DivSymbol,
+  normalize,
+};

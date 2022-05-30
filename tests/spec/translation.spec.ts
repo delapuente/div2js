@@ -2,9 +2,9 @@ import * as translator from "../../src/div2trans";
 import * as checker from "../../src/div2checker";
 import { SymbolTable } from "../../src/memoryBrowser/symbols";
 import { expect } from "chai";
-import { Definitions, normalize } from "../../src/memoryBrowser/definitions";
+import { WellKnownSymbols, normalize } from "../../src/memoryBrowser/definitions";
 
-const simpleDefinitions: Definitions = {
+const simpleDefinitions: WellKnownSymbols = {
   wellKnownGlobals: [normalize("text_z")],
   wellKnownLocals: [normalize("x"), normalize("y")],
 };

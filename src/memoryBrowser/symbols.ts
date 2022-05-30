@@ -1,4 +1,9 @@
-import { ShortSymbol, DivSymbol, Definitions, normalize } from "./definitions";
+import {
+  SymbolDefinition,
+  DivSymbol,
+  WellKnownSymbols,
+  normalize,
+} from "./definitions";
 
 /**
  * The SymbolTable is a relation of all the variables and functions in the
@@ -10,17 +15,17 @@ class SymbolTable {
   readonly locals: Array<DivSymbol>;
   readonly privates: Record<string, Array<DivSymbol>>;
 
-  constructor(definitions: Definitions) {
+  constructor(definitions: WellKnownSymbols) {
     this.globals = definitions.wellKnownGlobals;
     this.locals = definitions.wellKnownLocals;
     this.privates = {};
   }
 
-  addGlobal(definition: ShortSymbol | DivSymbol): DivSymbol {
+  addGlobal(definition: SymbolDefinition | DivSymbol): DivSymbol {
     return this._add("globals", normalize(definition));
   }
 
-  addLocal(definition: ShortSymbol | DivSymbol): DivSymbol {
+  addLocal(definition: SymbolDefinition | DivSymbol): DivSymbol {
     return this._add("locals", normalize(definition));
   }
 
@@ -36,7 +41,7 @@ class SymbolTable {
 
   addPrivate(
     processName: string,
-    definition: ShortSymbol | DivSymbol
+    definition: SymbolDefinition | DivSymbol
   ): DivSymbol {
     const normalized = normalize(definition);
     this.privates[processName] = this.privates[processName] || [];
@@ -56,7 +61,7 @@ class SymbolTable {
 
   _add(
     kind: "globals" | "locals",
-    definition: ShortSymbol | DivSymbol
+    definition: SymbolDefinition | DivSymbol
   ): DivSymbol {
     const normalized = normalize(definition);
     this[kind].push(normalized);
