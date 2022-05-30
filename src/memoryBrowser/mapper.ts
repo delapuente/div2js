@@ -3,8 +3,10 @@
 // so we need either the different segment sizes (for debugging) or the
 // complete memory size (regular execution).
 
-import { DivSymbol } from "./definitions";
+import { DivSymbol, WellKnownSymbols } from "./definitions";
 import { SymbolTable } from "./symbols";
+import { MemoryArray } from "../runtime/memory";
+import { assert } from "chai";
 
 interface MemoryCell {
   symbol: DivSymbol;
@@ -46,20 +48,20 @@ class MemoryMap {
   });
 
   get globalSegmentSize(): number {
-    return this._getSegmentSize(this.cells["globals"]) / MemoryMap.ALIGNMENT;
+    return this._getSegmentSize(this.segments["globals"]) / MemoryMap.ALIGNMENT;
   }
 
   get maxPrivateSegmentSize(): number {
     return Math.max(
       0,
-      ...Object.keys(this.cells.privates).map((processName) => {
-        return this._getSegmentSize(this.cells.privates[processName]);
+      ...Object.keys(this.segments.privates).map((processName) => {
+        return this._getSegmentSize(this.segments.privates[processName]);
       })
     );
   }
 
   get localSegmentSize(): number {
-    return this._getSegmentSize(this.cells["locals"]) / MemoryMap.ALIGNMENT;
+    return this._getSegmentSize(this.segments["locals"]) / MemoryMap.ALIGNMENT;
   }
 
   get poolOffset(): number {
@@ -78,7 +80,7 @@ class MemoryMap {
     return size % 2 === 0 ? size : size + 1;
   }
 
-  readonly cells: MemorySegments;
+  readonly segments: MemorySegments;
   readonly maxProcess: number;
   readonly symbols: SymbolTable;
 
@@ -86,7 +88,7 @@ class MemoryMap {
     this.maxProcess = 5919; /* XXX: This is the max process count for empty
                                programs. Still trying to figure out why. */
     this.symbols = symbols;
-    this.cells = Object.create(null);
+    this.segments = Object.create(null);
     this._buildMap();
   }
 
@@ -95,9 +97,9 @@ class MemoryMap {
   }
 
   private _buildMap() {
-    this.cells.globals = this._inToCells(this.symbols.globals);
-    this.cells.locals = this._inToCells(this.symbols.locals);
-    this.cells.privates = Object.keys(this.symbols.privates).reduce(
+    this.segments.globals = this._inToCells(this.symbols.globals);
+    this.segments.locals = this._inToCells(this.symbols.locals);
+    this.segments.privates = Object.keys(this.symbols.privates).reduce(
       (privates, processName) => {
         const privateMap = this._inToCells(this.symbols.privates[processName]);
         privates[processName] = privateMap;
@@ -146,6 +148,12 @@ class MemoryMap {
   }
 }
 
+interface ProcessSearchOptions {
+  id?: number;
+  index?: number;
+  type?: string;
+}
+
 // TODO: Consider to move to its own module.
 /**
  * The `MemoryBrowser` provides means to inspect and manipulate the memory
@@ -154,21 +162,21 @@ class MemoryMap {
  * per name and/or per process.
  */
 class MemoryBrowser {
-  private _mem;
+  private _map: MemoryMap;
+  private _mem: MemoryArray;
 
-  private _map;
-
-  constructor(mem, map) {
+  constructor(mem: MemoryArray, map: MemoryMap) {
     this._mem = mem;
     this._map = map;
   }
 
-  global(name) {
+  global(
+    name: (keyof WellKnownSymbols["wellKnownGlobals"] & string) | string
+  ): MemView {
     return this.seek(this.offset("globals", name));
   }
 
-  process(options) {
-    options = options || {};
+  process(options: ProcessSearchOptions = {}): ProcessView {
     const id = options.id;
     const type = options.type; /* TODO: Remove. Now is necessary but in the
                                 future, the type should be retrieved from the
@@ -178,46 +186,47 @@ class MemoryBrowser {
     if (id) {
       return new ProcessView(this, id, type);
     }
-    const index = options.index || 0;
+    const index = options.index ?? 0;
     const poolOffset = this._map.poolOffset;
     const processSize = this._map.processSize;
     const processOffset = poolOffset + index * processSize;
     return new ProcessView(this, processOffset, type);
   }
 
-  setMemory(buffer, offset) {
-    return this._mem.set(buffer, offset);
-  }
-
-  offset(segment, name, base = 0, processName?) {
-    base = segment === "globals" ? MemoryMap.GLOBAL_OFFSET : base;
-    let cells = this._map.cells[segment];
-    // TODO: Refactor needed, all this ifs... Privates are special, perhaps
-    // they deserve a special tratment over an unified layer dealing with
-    // somethign lower level than named segments such as the segment array
-    // itself.
-    if (segment === "privates") {
-      cells = cells[processName];
-      base += this._map.localSegmentSize;
-    }
-    const names = name.split(".");
-    const offset = this._offset(cells, names);
-    if (offset === undefined) {
-      throw new Error("Can not get the offset for " + name);
-    }
-    return base + offset;
-  }
-
-  seek(offset) {
+  seek(offset: number): MemView {
     return new MemView(this._mem, offset);
   }
 
-  _offset(cells, names) {
-    let offset;
+  setMemory(buffer: MemoryArray, offset: number) {
+    this._mem.set(buffer, offset);
+  }
+
+  offset(
+    segmentName: keyof MemorySegments,
+    name: string,
+    base = 0,
+    processName?: string
+  ): number {
+    if (segmentName === "privates" && processName === undefined) {
+      throw new Error("processName is required for privates");
+    }
+    const segments =
+      segmentName === "privates"
+        ? this._map.segments.privates[processName]
+        : this._map.segments[segmentName];
+    let memoryBase = segmentName === "globals" ? MemoryMap.GLOBAL_OFFSET : base;
+    if (segmentName === "privates") {
+      memoryBase += this._map.localSegmentSize;
+    }
+    const names = name.split(".");
+    const offset = this._offset(segments, names);
+
+    return memoryBase + offset;
+  }
+
+  _offset(cells: MemoryCell[], names: string[]): number | undefined {
     const name = names[0];
-    const cell = cells.find(function (cell) {
-      return cell.symbol.name === name;
-    });
+    const cell = cells.find((cell) => cell.symbol.name === name);
     if (!cell) {
       return undefined;
     }
@@ -233,57 +242,54 @@ class MemoryBrowser {
 }
 
 class MemView {
-  private _storage;
-
+  private _mem: MemoryArray;
   private _offset: number;
 
-  constructor(storage, offset) {
-    this._storage = storage;
+  constructor(storage: MemoryArray, offset: number) {
+    this._mem = storage;
     this._offset = offset;
   }
 
-  get value() {
-    return this._storage[this._offset];
+  get value(): number {
+    return this._mem[this._offset];
   }
 
-  set value(v) {
-    this._storage[this._offset] = v;
+  set value(v: number) {
+    this._mem[this._offset] = v;
   }
 }
 
 class ProcessView {
-  private _browser;
+  get id(): number {
+    return this.local("reserved.process_id").value;
+  }
 
-  private _base;
+  get offset(): number {
+    return this._base;
+  }
 
-  private _type;
+  private _base: number;
+  private _browser: MemoryBrowser;
+  private _type: string;
 
-  constructor(browser, base, type) {
+  constructor(browser: MemoryBrowser, base: number, type: string) {
     this._browser = browser;
     this._base = base;
     this._type = type;
   }
 
-  setMemory(memBuffer) {
-    this._browser.setMemory(memBuffer, this.offset); // Ignore id
-  }
-
-  local(name) {
+  local(name: string): MemView {
     return this._browser.seek(this._browser.offset("locals", name, this._base));
   }
 
-  private(name) {
+  private(name): MemView {
     return this._browser.seek(
       this._browser.offset("privates", name, this._base, this._type)
     );
   }
 
-  get offset() {
-    return this._base;
-  }
-
-  get id() {
-    return this.local("reserved.process_id").value;
+  setMemory(memBuffer: MemoryArray) {
+    this._browser.setMemory(memBuffer, this.offset); // Ignore id
   }
 }
 

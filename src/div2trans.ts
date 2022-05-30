@@ -121,7 +121,7 @@ function getGlobalBaseDeclaration(context) {
 
 function translateSegment(segment, context) {
   const mmap = context.getMemoryMap();
-  const vars = getSegmentDeclarations(segment, [], mmap.cells[segment]);
+  const vars = getSegmentDeclarations(segment, [], mmap.segments[segment]);
   return new ast.VariableDeclaration(vars);
 }
 
@@ -192,7 +192,7 @@ translators.Process = function (divProgram, context) {
 
 function translatePrivates(processName, context) {
   const mmap = context.getMemoryMap();
-  const privates = mmap.cells.privates[processName];
+  const privates = mmap.segments.privates[processName];
   if (!privates) {
     return null;
   }

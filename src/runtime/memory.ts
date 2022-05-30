@@ -64,7 +64,7 @@ class MemoryManager {
   }
 
   _createProcessTemplate() {
-    const locals = this._map.cells.locals;
+    const locals = this._map.segments.locals;
     this._processTemplate = new Int32Array(this._map.processSize);
     copyDefaults(this._processTemplate, locals, 0);
     // TODO: Add privates
@@ -95,4 +95,4 @@ class MemoryManager {
   }
 }
 
-export { MemoryManager };
+export { MemoryManager, MemoryArray };
