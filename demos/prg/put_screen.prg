@@ -4,7 +4,7 @@ PRIVATE
   file1;
 
 BEGIN
-  file1 = load_fpg("../fpg/help.fpg");
+  file1 = load_fpg("help\help.fpg");
 
   put_screen(file1, 1); // Put graphic 1 as background.
 
