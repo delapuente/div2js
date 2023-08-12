@@ -220,7 +220,7 @@ class MemoryBrowser {
     }
     const names = name.split(".");
     const offset = this._offset(segments, names);
-
+    assert(offset !== undefined, `Can not get the offset for ${name}`);
     return memoryBase + offset;
   }
 

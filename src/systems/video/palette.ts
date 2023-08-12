@@ -1,5 +1,8 @@
 class Palette {
-  size: number;
+  // TODO: double-check with DIV manuals to implement integrity
+  // tests and validation.
+
+  readonly size: number;
 
   static fromBuffer(buffer: Uint8Array): Palette {
     const palette = new Palette(buffer);
@@ -11,7 +14,7 @@ class Palette {
     return new Palette(buffer);
   }
 
-  constructor(public buffer: Uint8Array) {
+  constructor(public readonly buffer: Uint8Array) {
     // TODO: validate buffer size
     this.size = buffer.length / 3;
   }
