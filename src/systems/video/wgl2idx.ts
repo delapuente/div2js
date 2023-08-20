@@ -1,3 +1,4 @@
+import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 
@@ -157,12 +158,23 @@ class WebGL2IndexedScreenVideoSystem {
 
   _gpuProgram: WebGLProgram;
 
+  // TODO: Double check if it is possible to access the FPG data directly from
+  // the DIV program. If so, we should imitate the DIV behavior and store the
+  // FPG the program memory. The system could keep indices to conveninet places
+  // for quick access.
+  readonly _loadedFpgs: Fpg[];
+
+  // TODO: Regardless of the above, it would be a good idea to separate the
+  // duty of managing FPGs, MAPs, PALs, and other resources from the video
+  // system, into a Resource Manager.
+
   constructor(
     canvas,
     public screen: IndexedGraphic = getDefaultScreen(),
     public palette: Palette = getDefaultPalette()
   ) {
     this._gl = canvas.getContext("webgl2");
+    this._loadedFpgs = [];
   }
 
   initialize() {
@@ -191,6 +203,20 @@ class WebGL2IndexedScreenVideoSystem {
 
   setPalette(palette: Palette) {
     this.palette = palette;
+  }
+
+  loadFpg(fpg: Fpg) {
+    const fpgId = this._nextFpgId();
+    this._loadedFpgs.push(fpg);
+    return fpgId;
+  }
+
+  putScreen(fpgId: number, mapId: number) {
+    // TODO: Validate fpgId and mapId.
+    const fpg = this._loadedFpgs[fpgId];
+    const map = fpg.map(mapId);
+    this.screen.putScreen(map.data, map.width, map.height);
+    return 0;
   }
 
   _initShaders() {
@@ -290,6 +316,10 @@ class WebGL2IndexedScreenVideoSystem {
     // XXX: Not relying on RAF requires a flush call to draw immediately.
     // https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#use_webgl.flush_when_not_using_requestanimationframe
     this._gl.flush();
+  }
+
+  _nextFpgId() {
+    return this._loadedFpgs.length;
   }
 }
 

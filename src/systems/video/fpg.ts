@@ -1,14 +1,9 @@
 import DivMap from "./map";
 import Palette from "./palette";
 
-const paletteOffset = 8;
-
-const mapsOffset = 1352;
+const mapsOffset = 1344;
 
 class Fpg {
-  // TODO: double-check with DIV manuals to implement integrity
-  // tests and validation.
-
   readonly _divMaps: DivMap[] = [];
 
   readonly palette: Palette;
@@ -18,12 +13,13 @@ class Fpg {
     return fpg;
   }
 
-  constructor(public buffer: Uint8Array) {
+  constructor(public readonly buffer: Uint8Array) {
     this.palette = this._extractPalette();
     this._divMaps = this._extractDivMaps();
   }
 
   map(index: number): DivMap {
+    // TODO: validate index.
     return this._divMaps[index];
   }
 
@@ -41,7 +37,7 @@ class Fpg {
 
   _extractPalette(): Palette {
     // TODO: extract the palette position accurately.
-    const paletteBuffer = this.buffer.subarray(paletteOffset, mapsOffset);
+    const paletteBuffer = this.buffer.subarray(0, mapsOffset);
     const palette = Palette.fromBuffer(paletteBuffer);
     return palette;
   }
