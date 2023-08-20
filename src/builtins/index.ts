@@ -1,8 +1,13 @@
 import Palette from "../systems/video/palette";
+import Fpg from "../systems/video/fpg";
 
 function put_pixel(x: number, y: number, colorIndex: number, systems: any) {
   systems.getSystem("video").screen.putPixel(x, y, colorIndex);
   return x; // XXX: put_pixel returns the x value. Checked empirically.
+}
+
+function put_screen(file: number, graph: number, systems: any) {
+  return systems.getSystem("video").putScreen(file, graph);
 }
 
 function rand(min: number, max: number) {
@@ -20,4 +25,16 @@ function load_pal(palettePath: string, systems: any) {
     });
 }
 
-export { put_pixel, rand, load_pal };
+function load_fpg(fpgPath: string, systems: any) {
+  return systems
+    .getSystem("files")
+    .loadFpg(fpgPath)
+    .then((fpgFile) => {
+      const fpgId = systems
+        .getSystem("video")
+        .loadFpg(Fpg.fromBuffer(fpgFile.buffer));
+      return fpgId;
+    });
+}
+
+export { put_pixel, put_screen, rand, load_pal, load_fpg };
