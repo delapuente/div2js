@@ -1,5 +1,6 @@
 import { PALFile } from "./pal";
 import { DivError } from "../../errors";
+import { FPGFile } from "./fpg";
 
 interface UrlFileSystemOptions {
   readonly rootUrl: string;
@@ -19,6 +20,11 @@ export default class UrlFileSystem {
     return _loadPal(this._convertToUrl(normalizedPath));
   }
 
+  loadFpg(path: string): Promise<FPGFile> {
+    const normalizedPath = this._normalizePath(path);
+    return _loadFpg(this._convertToUrl(normalizedPath));
+  }
+
   _normalizePath(path: string): string {
     if (path.includes("/")) {
       return path;
@@ -32,6 +38,9 @@ export default class UrlFileSystem {
     if (extension.toLowerCase() === "pal") {
       return "PAL";
     }
+    if (extension.toLowerCase() === "fpg") {
+      return "FPG";
+    }
     return null;
   }
 
@@ -40,6 +49,9 @@ export default class UrlFileSystem {
   }
 
   _convertToUrl(url: string): string {
+    if (!this.options.rootUrl) {
+      return url;
+    }
     return this._join(this.options.rootUrl, url);
   }
 
@@ -57,4 +69,13 @@ async function _loadPal(url: string): Promise<PALFile> {
   }
   const buffer = await response.arrayBuffer();
   return PALFile.fromArrayBuffer(buffer);
+}
+
+async function _loadFpg(url: string): Promise<FPGFile> {
+  const response = await fetch(url);
+  if (response.status === 404) {
+    throw new DivError(102);
+  }
+  const buffer = await response.arrayBuffer();
+  return FPGFile.fromArrayBuffer(buffer);
 }
