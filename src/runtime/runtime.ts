@@ -199,7 +199,7 @@ Runtime.prototype = {
   },
 
   _loadDefaults: function () {
-    return load_pal("PAL/DIV2.PAL", this);
+    return load_pal("PAL/DIV.PAL", this);
   },
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
