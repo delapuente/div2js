@@ -4,7 +4,7 @@
   "description": "A DIV2 transpiler for the modern web",
   "scripts": {
     "build": "npm run embed-wrapper && webpack --progress",
-    "demos": "npm run embed-wrapper && webpack-dev-server",
+    "demos": "npm run embed-wrapper && webpack serve",
     "dev": "concurrently \"npm run watch\" \"karma start ./tests/karma.conf.js\"",
     "embed-wrapper": "node scripts/embed-wrapper.js",
     "linter": "eslint 'src/**/*.ts'",

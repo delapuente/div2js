@@ -6,7 +6,8 @@ module.exports = {
   entry: "./src/div2js.ts",
   output: {
     filename: "div2js.js",
-    publicPath: "dist",
+    path: path.resolve(__dirname, "dist"),
+    publicPath: "/dist/",
     library: {
       name: "div2",
       type: "umd",
@@ -38,11 +39,7 @@ module.exports = {
   devServer: {
     static: [
       {
-        directory: path.resolve(__dirname),
-        watch: true,
-      },
-      {
-        directory: path.resolve(__dirname, "assets"),
+        directory: path.join(__dirname),
         watch: true,
       },
     ],
