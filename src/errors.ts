@@ -8,7 +8,8 @@ class DivError extends Error {
 }
 
 const _errorMessages = {
-  102: "Could not load the palette, file not found.",
+  102: "Could not load the file, file not found.",
+  121: "There was an attempt to use a graphic that does not exist.",
 };
 
 function _getErrorMessage(errorCode: number) {

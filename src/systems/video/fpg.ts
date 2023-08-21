@@ -1,10 +1,11 @@
+import { DivError } from "../../errors";
 import DivMap from "./map";
 import Palette from "./palette";
 
 const mapsOffset = 1344;
 
 class Fpg {
-  readonly _divMaps: DivMap[] = [];
+  readonly _divMaps: Map<number, DivMap> = new Map();
 
   readonly palette: Palette;
 
@@ -19,17 +20,20 @@ class Fpg {
   }
 
   map(index: number): DivMap {
-    // TODO: validate index.
-    return this._divMaps[index];
+    const map = this._divMaps.get(index);
+    if (!map) {
+      throw new DivError(121);
+    }
+    return map;
   }
 
-  _extractDivMaps() {
-    const divMaps: DivMap[] = [];
+  _extractDivMaps(): Map<number, DivMap> {
+    const divMaps = new Map();
     const mapBuffer = this.buffer.subarray(mapsOffset);
     let offset = 0;
     while (offset < mapBuffer.length) {
       const map = DivMap.fromBuffer(mapBuffer.subarray(offset));
-      divMaps.push(map);
+      divMaps.set(map.code, map);
       offset += map.size;
     }
     return divMaps;
