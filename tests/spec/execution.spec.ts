@@ -246,6 +246,36 @@ describe("Graphic functions", function () {
     });
   });
 
+  describe("put_screen()", function () {
+    it("centers a map in a file in the screen", function () {
+      return load("put_screen.prg").then(function (program) {
+        return new Promise(function (fulfil) {
+          program.onfinished = withDebugSession(function (session) {
+            const screen = session.screen;
+            const testPattern = [
+              [31, 0, 0, 31],
+              [0, 15, 31, 0],
+              [0, 31, 15, 0],
+              [31, 0, 0, 31],
+            ];
+            for (let y = 0; y < 4; y++) {
+              for (let x = 0; x < 4; x++) {
+                // XXX: 158 and 98 are the offsets to center the 4x4 test map.
+                const pixelIndex = (y + 98) * 320 + (x + 158);
+                expect(screen.buffer[pixelIndex]).to.equal(
+                  testPattern[y][x],
+                  `Pixel at (${x}, ${y}) should be ${testPattern[y][x]}`
+                );
+              }
+            }
+            fulfil(void 0);
+          });
+          program.run();
+        });
+      });
+    });
+  });
+
   describe("load_pal()", function () {
     it("loads and set a palette", function () {
       return load("load_pal.prg").then(function (program) {
@@ -271,6 +301,53 @@ describe("Graphic functions", function () {
             reject(new Error("Should not have finished but errored, instead."));
           program.onerror = (error) => {
             expect(error.errorCode).to.equal(102);
+            fulfil(void 0);
+          };
+          program.run();
+        });
+      });
+    });
+  });
+
+  describe("load_fpg()", function () {
+    it("loads a file", function () {
+      return load("load_fpg.prg").then(function (program) {
+        return new Promise(function (fulfil) {
+          program.onfinished = withDebugSession(function (session) {
+            const program = session.process({
+              index: 0,
+              type: "_load_fpg",
+            });
+            expect(program.private("fpg_1").value).to.equal(0);
+            expect(program.private("fpg_2").value).to.equal(1);
+            fulfil(void 0);
+          });
+          program.run();
+        });
+      });
+    });
+
+    it("errors when trying to load a non existent file", function () {
+      return load("load_fpg_error.prg").then(function (program) {
+        return new Promise(function (fulfil, reject) {
+          program.onfinished = () =>
+            reject(new Error("Should not have finished but errored, instead."));
+          program.onerror = (error) => {
+            expect(error.errorCode).to.equal(102);
+            fulfil(void 0);
+          };
+          program.run();
+        });
+      });
+    });
+
+    it("errors when trying to use a non existent map", function () {
+      return load("load_fpg_map_error.prg").then(function (program) {
+        return new Promise(function (fulfil, reject) {
+          program.onfinished = () =>
+            reject(new Error("Should not have finished but errored, instead."));
+          program.onerror = (error) => {
+            expect(error.errorCode).to.equal(121);
             fulfil(void 0);
           };
           program.run();

@@ -16,16 +16,16 @@ export default class UrlFileSystem {
   run() {}
 
   loadPal(path: string): Promise<PALFile> {
-    const normalizedPath = this._normalizePath(path);
+    const normalizedPath = this.normalizePath(path);
     return _loadPal(this._convertToUrl(normalizedPath));
   }
 
   loadFpg(path: string): Promise<FPGFile> {
-    const normalizedPath = this._normalizePath(path);
+    const normalizedPath = this.normalizePath(path);
     return _loadFpg(this._convertToUrl(normalizedPath));
   }
 
-  _normalizePath(path: string): string {
+  normalizePath(path: string): string {
     if (path.includes("/")) {
       return path;
     }
