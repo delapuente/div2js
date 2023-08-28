@@ -4,6 +4,7 @@ import {
   MemoryCell,
   ProcessView,
 } from "../memoryBrowser/mapper";
+import { SymbolTable } from "../memoryBrowser/symbols";
 
 // XXX: In DIV, memory is a continuous, and int-directionable-only (each 4
 // bytes) array of cells. Pointer arithmetic can not address sub-int-size
@@ -29,7 +30,7 @@ class MemoryManager {
   private _mem: MemoryArray;
   private _processTemplate: MemoryArray;
 
-  constructor(symbols) {
+  constructor(symbols: SymbolTable) {
     this._map = new MemoryMap(symbols);
     const { globalSegmentSize, processPoolSize } = this._map;
     this._mem = new Int32Array(globalSegmentSize + processPoolSize);

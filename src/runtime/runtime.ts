@@ -1,6 +1,8 @@
 import { MemoryManager } from "./memory";
 import { Scheduler, Baton, Process } from "./scheduler";
 import { load_pal } from "../builtins";
+import { DivError } from "../errors";
+import { SymbolTable } from "../memoryBrowser/symbols";
 
 class ProcessImpl implements Process {
   pc: number;
@@ -49,97 +51,112 @@ function Environment() {
   };
 }
 
-// TODO: Runtime should be passed with a light version of the memory map,
-// enough to be able of allocating the needed memory.
-function Runtime(processMap, memorySymbols) {
-  this._onerror = null;
-  this._ondebug = null;
-  this._onfinished = null;
-  this._systems = [];
-  this._systemMap = {};
-  this._functions = {};
-  this._memoryManager = new MemoryManager(memorySymbols);
-  this._environment = new Environment();
-  this._pmap = processMap;
-  this._mem = this._memoryManager.rawMemory;
-  this._scheduler = new Scheduler({
-    onyield: this._schedule.bind(this),
-    // XXX: Update means after all processes have run entirely
-    onupdate: this._runSystems.bind(this),
-  });
+interface System {
+  initialize(): void;
+  run?(memoryBrowser: any, environment: any): void;
 }
 
-Runtime.prototype = {
-  constructor: Runtime,
+// TODO: Runtime should be passed with a light version of the memory map,
+// enough to be able of allocating the needed memory.
+class Runtime {
+  _onerror?: (error: DivError) => void;
+  _ondebug?: CallableFunction;
+  _onfinished?: CallableFunction;
+  _systems: System[];
+  _systemMap: { [key: string]: System };
+  _functions: { [key: string]: CallableFunction };
+  _memoryManager: MemoryManager;
+  _environment: any;
+  _pmap: any;
+  _mem: any;
+  _scheduler: Scheduler<Process>;
+
+  constructor(processMap, memorySymbols: SymbolTable) {
+    this._onerror = null;
+    this._ondebug = null;
+    this._onfinished = null;
+    this._systems = [];
+    this._systemMap = {};
+    this._functions = {};
+    this._memoryManager = new MemoryManager(memorySymbols);
+    this._environment = new Environment();
+    this._pmap = processMap;
+    this._mem = this._memoryManager.rawMemory;
+    this._scheduler = new Scheduler({
+      onyield: this._schedule.bind(this),
+      // XXX: Update means after all processes have run entirely
+      onupdate: this._runSystems.bind(this),
+    });
+  }
 
   addProcess(name: string, base: number) {
     const runnable = this._pmap["process_" + name];
     const processEnvironment = new ProcessImpl(runnable, base, this._mem);
     this._scheduler.add(processEnvironment);
-  },
+  }
 
   addProgram(base: number) {
     const runnable = this._pmap["program"];
     const processEnvironment = new ProcessImpl(runnable, base, this._mem);
     this._scheduler.add(processEnvironment);
-  },
+  }
 
-  registerSystem: function (system, name: string) {
+  registerSystem(system: System, name: string) {
     if (name && typeof this._systemMap[name] !== "undefined") {
       throw new Error("System already registered with name: " + name);
     }
     system.initialize();
     this._systems.push(system);
     this._systemMap[name] = system;
-  },
+  }
 
-  registerFunction: function (fn: CallableFunction, name: string) {
+  registerFunction(fn: CallableFunction, name: string) {
     if (name && typeof this._functions[name] !== "undefined") {
       throw new Error("Function already registered with name: " + name);
     }
     this._functions[name] = fn;
-  },
+  }
 
-  getSystem: function (name) {
+  getSystem(name) {
     return this._systemMap[name];
-  },
+  }
 
-  getMemoryBrowser: function () {
+  getMemoryBrowser() {
     return this._memoryManager.browser;
-  },
+  }
 
   set onerror(callback) {
     this._onerror = callback;
-  },
+  }
 
   get onerror() {
     return this._onerror;
-  },
+  }
 
   set onfinished(callback) {
     this._onfinished = callback;
     if (this._scheduler instanceof Scheduler) {
       this._scheduler.onfinished = this._onfinished.bind(this);
     }
-  },
+  }
 
   get onfinished() {
     return this._onfinished;
-  },
+  }
 
   set ondebug(callback) {
     this._ondebug = callback;
-  },
+  }
 
   get ondebug() {
     return this._ondebug;
-  },
+  }
 
-  resume: function () {
+  resume() {
     this._scheduler.run();
-  },
+  }
 
-  run: function () {
+  run() {
     // TODO: Should check for running or paused.
     this._scheduler.reset();
     this._memoryManager.reset();
@@ -148,42 +165,53 @@ Runtime.prototype = {
     this._loadDefaults().then(() => {
       this._scheduler.run();
     });
-  },
+  }
 
-  _runSystems: function () {
+  _runSystems() {
     const memoryBrowser = this.getMemoryBrowser();
     const environment = this._environment;
     this._systems.forEach(function (system) {
-      system.run(memoryBrowser, environment);
+      if (typeof system.run === "function") {
+        system.run(memoryBrowser, environment);
+      }
     });
-  },
+  }
 
-  _schedule: function (baton, process) {
+  _schedule(baton, process) {
     const name = "_" + baton.type;
     if (!(name in this)) {
       throw Error("Unknown execution message: " + baton.type);
     }
     return this[name](baton, process);
-  },
+  }
 
-  _debug: function () {
+  _debug() {
     this._scheduler.stop();
     this._ondebug();
-  },
+  }
 
-  _newprocess: function (baton) {
+  _newprocess(baton) {
     const name = baton.processName;
     const id = this._memoryManager.allocateProcess();
     if (!id) {
       throw new Error("Max number of process reached!");
     }
     this.addProcess(name, id);
-  },
+  }
 
-  _call: function (baton, process) {
+  _call(baton, process) {
     const functionName = baton.functionName;
     if (functionName in this._functions) {
-      const result = this._functions[functionName](...baton.args, this);
+      let result = null;
+      try {
+        result = this._functions[functionName](...baton.args, this);
+      } catch (error) {
+        if (error instanceof DivError) {
+          this._onerror(error);
+        } else {
+          throw error;
+        }
+      }
       if (result instanceof Promise) {
         this._scheduler.stop();
         result
@@ -196,21 +224,21 @@ Runtime.prototype = {
         process.retv.enqueue(result);
       }
     }
-  },
+  }
 
-  _loadDefaults: function () {
+  _loadDefaults() {
     return load_pal("PAL/DIV.PAL", this);
-  },
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  _frame: function (baton) {},
+  _frame(baton) {}
 
   // TODO: Consider passing the id through the baton
-  _end: function (baton) {
+  _end(baton) {
     const currentProcessId = this._scheduler.currentProcess.id;
     this._memoryManager.freeProcess(currentProcessId);
     this._scheduler.deleteCurrent();
-  },
-};
+  }
+}
 
-export { Runtime, Baton };
+export { Runtime, Baton, System };
