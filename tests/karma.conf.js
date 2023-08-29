@@ -19,7 +19,7 @@ module.exports = function (config) {
       { pattern: "tests/spec/samples/**/*", included: false },
       { pattern: "src/div2lang.js", included: false, served: false },
       {
-        pattern: "demos/PAL/**/*",
+        pattern: "demos/+(PAL|FPG|HELP)/**/*",
         served: true,
         included: false,
         watched: false,
