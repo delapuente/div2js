@@ -2,7 +2,6 @@ import { MemoryManager } from "./memory";
 import { Scheduler, Baton, Process } from "./scheduler";
 import { load_pal } from "../builtins";
 import { DivError } from "../errors";
-import { SymbolTable } from "../memoryBrowser/symbols";
 
 class ProcessImpl implements Process {
   pc: number;
