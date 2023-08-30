@@ -27,7 +27,7 @@ function load() {
     })
     .then(function (program) {
       reloadButton.disabled = false;
-      program.run();
+      program.start();
     })
     .catch(function (error) {
       console.log(error.message);

@@ -156,7 +156,7 @@ class Runtime {
     this._scheduler.run();
   }
 
-  run() {
+  start() {
     // TODO: Should check for running or paused.
     this._scheduler.reset();
     this._memoryManager.reset();

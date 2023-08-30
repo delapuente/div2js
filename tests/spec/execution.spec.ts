@@ -54,7 +54,7 @@ describe("Workflow of transpiled programs", function () {
     return load("empty-program.prg").then(function (program) {
       return new Promise(function (fulfil) {
         program.onfinished = fulfil;
-        program.run();
+        program.start();
       });
     });
   });
@@ -66,7 +66,7 @@ describe("Workflow of transpiled programs", function () {
         return new Promise(function (fulfil) {
           program.ondebug = autoResume(debugSpy);
           program.onfinished = fulfil;
-          program.run();
+          program.start();
         });
       })
       .then(function () {
@@ -86,7 +86,7 @@ describe("Workflow of transpiled programs", function () {
         return new Promise(function (fulfil) {
           program.ondebug = autoResume(debugSpy);
           program.onfinished = fulfil;
-          program.run();
+          program.start();
         });
       })
       .then(function () {
@@ -106,7 +106,7 @@ describe("Workflow of transpiled programs", function () {
           expect(cX).to.equal(3);
           fulfil(void 0);
         });
-        program.run();
+        program.start();
       });
     });
   });
@@ -123,7 +123,7 @@ describe("Workflow of transpiled programs", function () {
           expect(cX).to.equal(0);
           fulfil(void 0);
         });
-        program.run();
+        program.start();
       });
     });
   });
@@ -146,7 +146,7 @@ describe("Workflow of transpiled programs", function () {
             expect(results).to.deep.equal(expected);
             fulfil(void 0);
           };
-          program.run();
+          program.start();
         });
       });
     }
@@ -168,7 +168,7 @@ describe("Memory state while running transpiled programs", function () {
           })
         );
         program.onfinished = fulfil;
-        program.run();
+        program.start();
       });
     });
   });
@@ -186,7 +186,7 @@ describe("Memory state while running transpiled programs", function () {
           })
         );
         program.onfinished = fulfil;
-        program.run();
+        program.start();
       });
     });
   });
@@ -205,7 +205,7 @@ describe("Math functions", function () {
             expect(program.private("random_value").value).to.be.within(0, 15);
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -224,7 +224,7 @@ describe("Graphic functions", function () {
             expect(screen.buffer.length).to.equal(320 * 200);
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -240,7 +240,7 @@ describe("Graphic functions", function () {
             expect(screen.buffer[pixelIndex]).to.equal(15);
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -270,7 +270,7 @@ describe("Graphic functions", function () {
             }
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -289,7 +289,7 @@ describe("Graphic functions", function () {
             expect(program.private("palette_2").value).to.equal(1);
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -303,7 +303,7 @@ describe("Graphic functions", function () {
             expect(error.errorCode).to.equal(102);
             fulfil(void 0);
           };
-          program.run();
+          program.start();
         });
       });
     });
@@ -322,7 +322,7 @@ describe("Graphic functions", function () {
             expect(program.private("fpg_2").value).to.equal(1);
             fulfil(void 0);
           });
-          program.run();
+          program.start();
         });
       });
     });
@@ -336,7 +336,7 @@ describe("Graphic functions", function () {
             expect(error.errorCode).to.equal(102);
             fulfil(void 0);
           };
-          program.run();
+          program.start();
         });
       });
     });
@@ -350,7 +350,7 @@ describe("Graphic functions", function () {
             expect(error.errorCode).to.equal(121);
             fulfil(void 0);
           };
-          program.run();
+          program.start();
         });
       });
     });
