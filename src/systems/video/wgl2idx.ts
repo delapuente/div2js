@@ -3,6 +3,7 @@ import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 
 const vsSource = `#version 300 es
+#pragma vscode_glsllint_stage: vert
 
 in vec4 a_position;
 
@@ -16,6 +17,7 @@ void main() {
 }`;
 
 const psSource = `#version 300 es
+#pragma vscode_glsllint_stage: frag
 
 precision mediump float;
 
