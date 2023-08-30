@@ -8,12 +8,6 @@ interface Process {
   run(): Baton;
 }
 
-interface SchedulerHooks<P extends Process> {
-  onfinished?: () => unknown;
-  onupdate?: () => unknown;
-  onyield?: (baton: Baton, process: P) => unknown;
-}
-
 /**
  * The scheduler encapsulates the responsibilty of executing processes. It does
  * not know about painting the screen, playing audio, or anything like that.
@@ -21,9 +15,9 @@ interface SchedulerHooks<P extends Process> {
  * runtime.
  */
 class Scheduler<P extends Process> {
-  onfinished: CallableFunction | undefined;
-  onyield: CallableFunction | undefined;
-  onupdate: CallableFunction | undefined;
+  onfinished?: CallableFunction;
+  onyield?: CallableFunction;
+  onupdate?: CallableFunction;
 
   get currentProcess(): P {
     return this._processList[this._current];
@@ -33,13 +27,6 @@ class Scheduler<P extends Process> {
   private _isRunning: boolean;
   private _nextAnimationFrame: number | null;
   private _current: number;
-
-  constructor(hooks: SchedulerHooks<P> = {}) {
-    this.onyield = hooks?.onyield;
-    this.onfinished = hooks?.onfinished;
-    this.onupdate = hooks?.onupdate;
-    this.reset();
-  }
 
   add(process: P) {
     // XXX: Will be replaced by sorted insertion

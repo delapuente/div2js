@@ -82,11 +82,7 @@ class Runtime {
     this._environment = new Environment();
     this._pmap = processMap;
     this._mem = this._memoryManager.rawMemory;
-    this._scheduler = new Scheduler({
-      onyield: this._schedule.bind(this),
-      // XXX: Update means after all processes have run entirely
-      onupdate: this._runSystems.bind(this),
-    });
+    this._scheduler = new Scheduler();
   }
 
   addProcess(name: string, base: number) {
@@ -158,6 +154,8 @@ class Runtime {
 
   start() {
     // TODO: Should check for running or paused.
+    this._scheduler.onyield = this._schedule.bind(this);
+    this._scheduler.onupdate = this._runSystems.bind(this);
     this._scheduler.reset();
     this._memoryManager.reset();
     const id = this._memoryManager.allocateProcess();
