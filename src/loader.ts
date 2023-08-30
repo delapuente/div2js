@@ -1,13 +1,15 @@
 import * as runtime from "./runtime/runtime";
 import * as systems from "./systems/systems";
 import * as builtins from "./builtins";
+import { MemoryManager } from "./runtime/memory";
 
 function load(objText, options = { rootUrl: "" }) {
   // tslint:disable-next-line:no-eval
   const unit = eval(objText)(runtime, systems);
   const processMap = unit.pmap;
   const memoryMap = unit.mmap;
-  const program = new runtime.Runtime(processMap, memoryMap);
+  const memoryManager = new MemoryManager(memoryMap);
+  const program = new runtime.Runtime(processMap, memoryManager);
   // TODO: Let's think how to register new systems in a configurable way
   registerRenderSystem(program);
   // TODO: Let's also think how to configure the systems in a configurable way

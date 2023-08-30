@@ -2,13 +2,14 @@ import { expect } from "chai";
 import { Runtime, System } from "../../../src/runtime/runtime";
 import { SymbolTable } from "../../../src/memoryBrowser/symbols";
 import { DIV_SYMBOLS } from "../../../src/memoryBrowser/definitions";
+import { MemoryManager } from "../../../src/runtime/memory";
 
 describe("The Runtime class", () => {
   let runtime: Runtime;
 
   beforeEach(() => {
-    const symbols = new SymbolTable(DIV_SYMBOLS);
-    runtime = new Runtime({}, symbols);
+    const memoryManager = new MemoryManager(new SymbolTable(DIV_SYMBOLS));
+    runtime = new Runtime({}, memoryManager);
   });
 
   describe("registerSystem()", () => {

@@ -71,14 +71,14 @@ class Runtime {
   _mem: any;
   _scheduler: Scheduler<Process>;
 
-  constructor(processMap, memorySymbols: SymbolTable) {
+  constructor(processMap, memoryManager: MemoryManager) {
     this._onerror = null;
     this._ondebug = null;
     this._onfinished = null;
     this._systems = [];
     this._systemMap = {};
     this._functions = {};
-    this._memoryManager = new MemoryManager(memorySymbols);
+    this._memoryManager = memoryManager;
     this._environment = new Environment();
     this._pmap = processMap;
     this._mem = this._memoryManager.rawMemory;
