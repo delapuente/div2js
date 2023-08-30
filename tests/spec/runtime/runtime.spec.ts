@@ -3,13 +3,16 @@ import { Runtime, System } from "../../../src/runtime/runtime";
 import { SymbolTable } from "../../../src/memoryBrowser/symbols";
 import { DIV_SYMBOLS } from "../../../src/memoryBrowser/definitions";
 import { MemoryManager } from "../../../src/runtime/memory";
+import { Process, Scheduler } from "../../../src/runtime/scheduler";
 
 describe("The Runtime class", () => {
+  let scheduler: Scheduler<Process>;
   let runtime: Runtime;
 
   beforeEach(() => {
     const memoryManager = new MemoryManager(new SymbolTable(DIV_SYMBOLS));
-    runtime = new Runtime({}, memoryManager);
+    scheduler = new Scheduler();
+    runtime = new Runtime({}, memoryManager, scheduler);
   });
 
   describe("registerSystem()", () => {

@@ -70,7 +70,11 @@ class Runtime {
   _mem: any;
   _scheduler: Scheduler<Process>;
 
-  constructor(processMap, memoryManager: MemoryManager) {
+  constructor(
+    processMap,
+    memoryManager: MemoryManager,
+    scheduler: Scheduler<Process>
+  ) {
     this._onerror = null;
     this._ondebug = null;
     this._onfinished = null;
@@ -81,7 +85,7 @@ class Runtime {
     this._environment = new Environment();
     this._pmap = processMap;
     this._mem = this._memoryManager.rawMemory;
-    this._scheduler = new Scheduler();
+    this._scheduler = scheduler;
   }
 
   addProcess(name: string, base: number) {

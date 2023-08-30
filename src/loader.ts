@@ -2,6 +2,7 @@ import * as runtime from "./runtime/runtime";
 import * as systems from "./systems/systems";
 import * as builtins from "./builtins";
 import { MemoryManager } from "./runtime/memory";
+import { Scheduler } from "./runtime/scheduler";
 
 function load(objText, options = { rootUrl: "" }) {
   // tslint:disable-next-line:no-eval
@@ -9,7 +10,8 @@ function load(objText, options = { rootUrl: "" }) {
   const processMap = unit.pmap;
   const memoryMap = unit.mmap;
   const memoryManager = new MemoryManager(memoryMap);
-  const program = new runtime.Runtime(processMap, memoryManager);
+  const scheduler = new Scheduler();
+  const program = new runtime.Runtime(processMap, memoryManager, scheduler);
   // TODO: Let's think how to register new systems in a configurable way
   registerRenderSystem(program);
   // TODO: Let's also think how to configure the systems in a configurable way
