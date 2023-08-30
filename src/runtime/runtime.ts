@@ -193,9 +193,6 @@ class Runtime {
   _newprocess(baton) {
     const name = baton.processName;
     const id = this._memoryManager.allocateProcess();
-    if (!id) {
-      throw new Error("Max number of process reached!");
-    }
     this.addProcess(name, id);
   }
 
