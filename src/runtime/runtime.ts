@@ -58,8 +58,8 @@ interface System {
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
 class Runtime {
-  _onerror?: (error: DivError) => void;
-  _ondebug?: CallableFunction;
+  onerror?: (error: DivError) => void;
+  ondebug?: CallableFunction;
   _onfinished?: CallableFunction;
   _systems: System[];
   _systemMap: { [key: string]: System };
@@ -75,8 +75,8 @@ class Runtime {
     memoryManager: MemoryManager,
     scheduler: Scheduler<Process>
   ) {
-    this._onerror = null;
-    this._ondebug = null;
+    this.onerror = null;
+    this.ondebug = null;
     this._onfinished = null;
     this._systems = [];
     this._systemMap = {};
@@ -124,14 +124,6 @@ class Runtime {
     return this._memoryManager.browser;
   }
 
-  set onerror(callback) {
-    this._onerror = callback;
-  }
-
-  get onerror() {
-    return this._onerror;
-  }
-
   set onfinished(callback) {
     this._onfinished = callback;
     if (this._scheduler instanceof Scheduler) {
@@ -143,21 +135,13 @@ class Runtime {
     return this._onfinished;
   }
 
-  set ondebug(callback) {
-    this._ondebug = callback;
-  }
-
-  get ondebug() {
-    return this._ondebug;
-  }
-
   resume() {
     this._scheduler.run();
   }
 
   start() {
     // TODO: Should check for running or paused.
-    this._scheduler.onyield = this._schedule.bind(this);
+    this._scheduler.onyield = this._handle.bind(this);
     this._scheduler.onupdate = this._runSystems.bind(this);
     this._scheduler.reset();
     this._memoryManager.reset();
@@ -166,6 +150,52 @@ class Runtime {
     this._loadDefaults().then(() => {
       this._scheduler.run();
     });
+  }
+
+  debug() {
+    this._scheduler.stop();
+    this.ondebug();
+  }
+
+  newProcess(processName: string) {
+    const id = this._memoryManager.allocateProcess();
+    this.addProcess(processName, id);
+  }
+
+  call(functionName: string, args: unknown[], process) {
+    if (functionName in this._functions) {
+      let result = null;
+      try {
+        result = this._functions[functionName](...args, this);
+      } catch (error) {
+        if (error instanceof DivError) {
+          this.onerror(error);
+        } else {
+          throw error;
+        }
+      }
+      if (result instanceof Promise) {
+        this._scheduler.stop();
+        result
+          .catch((error) => setTimeout(this.onerror.bind(this, error)))
+          .then((returnValue) => {
+            process.retv.enqueue(returnValue);
+            this._scheduler.run();
+          });
+      } else {
+        process.retv.enqueue(result);
+      }
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  frame() {}
+
+  // TODO: Consider passing the id through the baton
+  end() {
+    const currentProcessId = this._scheduler.currentProcess.id;
+    this._memoryManager.freeProcess(currentProcessId);
+    this._scheduler.deleteCurrent();
   }
 
   _runSystems() {
@@ -178,64 +208,41 @@ class Runtime {
     });
   }
 
-  _schedule(baton, process) {
-    const name = "_" + baton.type;
+  _handle(baton, originator: Process) {
+    const name = `_${baton.type}`;
     if (!(name in this)) {
       throw Error("Unknown execution message: " + baton.type);
     }
-    return this[name](baton, process);
+    return this[name](baton, originator);
   }
 
   _debug() {
-    this._scheduler.stop();
-    this._ondebug();
+    return this.debug();
   }
 
-  _newprocess(baton) {
+  _newProcess(baton) {
     const name = baton.processName;
-    const id = this._memoryManager.allocateProcess();
-    this.addProcess(name, id);
+    return this.newProcess(name);
   }
 
   _call(baton, process) {
     const functionName = baton.functionName;
-    if (functionName in this._functions) {
-      let result = null;
-      try {
-        result = this._functions[functionName](...baton.args, this);
-      } catch (error) {
-        if (error instanceof DivError) {
-          this._onerror(error);
-        } else {
-          throw error;
-        }
-      }
-      if (result instanceof Promise) {
-        this._scheduler.stop();
-        result
-          .catch((error) => setTimeout(this._onerror.bind(this, error)))
-          .then((returnValue) => {
-            process.retv.enqueue(returnValue);
-            this._scheduler.run();
-          });
-      } else {
-        process.retv.enqueue(result);
-      }
-    }
+    const args = baton.args;
+    return this.call(functionName, args, process);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  _frame() {
+    return this.frame();
+  }
+
+  // TODO: Consider passing the id through the baton
+  _end() {
+    return this.end();
   }
 
   _loadDefaults() {
     return load_pal("PAL/DIV.PAL", this);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  _frame(baton) {}
-
-  // TODO: Consider passing the id through the baton
-  _end(baton) {
-    const currentProcessId = this._scheduler.currentProcess.id;
-    this._memoryManager.freeProcess(currentProcessId);
-    this._scheduler.deleteCurrent();
   }
 }
 

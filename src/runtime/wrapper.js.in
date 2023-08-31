@@ -12,7 +12,7 @@
   }
 
   function __yieldNewProcess(npc, processName, args) {
-    return new rt.Baton('newprocess', {
+    return new rt.Baton('newProcess', {
       npc: npc,
       processName: processName,
       args: args
