@@ -247,7 +247,7 @@ describe("Graphic functions", function () {
   });
 
   describe("put_screen()", function () {
-    it("centers a map in a file in the screen", function () {
+    it("centers a small map in a file in the screen", function () {
       return load("put_screen.prg").then(function (program) {
         return new Promise(function (fulfil) {
           program.onfinished = withDebugSession(function (session) {
@@ -260,7 +260,8 @@ describe("Graphic functions", function () {
             ];
             for (let y = 0; y < 4; y++) {
               for (let x = 0; x < 4; x++) {
-                // XXX: 158 and 98 are the offsets to center the 4x4 test map.
+                // XXX: 158 and 98 are the offsets to center the 4x4 test map
+                // in the 320x200 screen.
                 const pixelIndex = (y + 98) * 320 + (x + 158);
                 expect(screen.buffer[pixelIndex]).to.equal(
                   testPattern[y][x],
@@ -268,6 +269,22 @@ describe("Graphic functions", function () {
                 );
               }
             }
+            fulfil(void 0);
+          });
+          program.start();
+        });
+      });
+    });
+
+    it("centers a big map in a file in the screen", function () {
+      return load("put_screen_with_big_map.prg").then(function (program) {
+        return new Promise(function (fulfil) {
+          program.onfinished = withDebugSession(function (session) {
+            const screen = session.screen;
+            expect(screen.buffer[0 * 320 + 0]).to.equal(31);
+            expect(screen.buffer[0 * 320 + 319]).to.equal(31);
+            expect(screen.buffer[199 * 320 + 0]).to.equal(31);
+            expect(screen.buffer[199 * 320 + 319]).to.equal(31);
             fulfil(void 0);
           });
           program.start();
