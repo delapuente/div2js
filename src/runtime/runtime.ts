@@ -126,9 +126,7 @@ class Runtime {
 
   set onfinished(callback) {
     this._onfinished = callback;
-    if (this._scheduler instanceof Scheduler) {
-      this._scheduler.onfinished = this._onfinished.bind(this);
-    }
+    this._scheduler.onfinished = this._onfinished.bind(this);
   }
 
   get onfinished() {
@@ -185,6 +183,8 @@ class Runtime {
       } else {
         process.retv.enqueue(result);
       }
+    } else {
+      throw new Error("Function not found: " + functionName);
     }
   }
 
