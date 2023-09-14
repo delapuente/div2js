@@ -2,7 +2,12 @@ import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 
-const vsSource = `#version 300 es
+// XXX: Just for enabling syntax highlighting for the shaders.
+function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
+  return String.raw({ raw: strings }, ...values);
+}
+
+const vsSource = glsl`#version 300 es
 #pragma vscode_glsllint_stage: vert
 
 in vec4 a_position;
@@ -16,7 +21,7 @@ void main() {
   v_texcoord = a_position.xy * vec2(0.5, -0.5) + 0.5;
 }`;
 
-const psSource = `#version 300 es
+const psSource = glsl`#version 300 es
 #pragma vscode_glsllint_stage: frag
 
 precision mediump float;
