@@ -12,7 +12,7 @@ base.devtool = "eval-source-map";
 base.module.rules.push({
   test: /\.(ts|js)$/,
   use: {
-    loader: "istanbul-instrumenter-loader",
+    loader: "@ephesoft/webpack.istanbul.loader",
     options: { esModules: true },
   },
   include: path.resolve("src/"),
