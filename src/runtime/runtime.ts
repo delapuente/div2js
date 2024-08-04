@@ -2,6 +2,10 @@ import { MemoryManager } from "./memory";
 import { Scheduler, Baton, Process } from "./scheduler";
 import { load_pal } from "../builtins";
 import { DivError } from "../errors";
+import { VideoSystem } from "../systems/video/wgl2idx";
+import { Div2FileSystem } from "../systems/files/div2FileSystem";
+
+type SystemKind = "video" | "files";
 
 class ProcessImpl implements Process {
   pc: number;
@@ -55,6 +59,8 @@ interface System {
   run?(memoryBrowser: any, environment: any): void;
 }
 
+type GetSystemReturnType<K> = K extends "video" ? VideoSystem : K extends "files" ? Div2FileSystem : never;
+
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
 class Runtime {
@@ -62,7 +68,7 @@ class Runtime {
   ondebug?: CallableFunction;
   _onfinished?: CallableFunction;
   _systems: System[];
-  _systemMap: { [key: string]: System };
+  _systemMap: { 'video'?: VideoSystem, 'files'?: Div2FileSystem };
   _functions: { [key: string]: CallableFunction };
   _memoryManager: MemoryManager;
   _environment: any;
@@ -116,8 +122,14 @@ class Runtime {
     this._functions[name] = fn;
   }
 
-  getSystem(name) {
-    return this._systemMap[name];
+  getSystem<T extends SystemKind>(name: T): GetSystemReturnType<T> {
+    if (name === "video") {
+      return this._systemMap[name] as GetSystemReturnType<T>;
+    }
+    if (name === "files") {
+      return this._systemMap[name] as GetSystemReturnType<T>;
+    }
+    return this._systemMap[name] as GetSystemReturnType<T>;
   }
 
   getMemoryBrowser() {

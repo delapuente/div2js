@@ -1,12 +1,14 @@
 import { PALFile } from "./pal";
-import { DivError } from "../../errors";
+import { DivError } from "../../../errors";
 import { FPGFile } from "./fpg";
+import { System } from "../../../runtime/runtime";
+import { Div2FileSystem } from "../div2FileSystem";
 
 interface UrlFileSystemOptions {
   readonly rootUrl: string;
 }
 
-export default class UrlFileSystem {
+export default class UrlFileSystem implements System, Div2FileSystem {
   constructor(public options: UrlFileSystemOptions) {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function

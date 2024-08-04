@@ -1,4 +1,4 @@
-import { DivError } from "../../errors";
+import { DivError } from "../../../errors";
 import DivMap from "./map";
 import Palette from "./palette";
 

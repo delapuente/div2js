@@ -1,6 +1,8 @@
+import { System } from "../../../runtime/runtime";
 import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
+import { Div2VideoSystem } from "../div2VideoSystem";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -156,7 +158,7 @@ function getDefaultPalette(size: number = DEFAULT_PALETTE_SIZE): Palette {
  * Finally, the intensity values are interpolated from 0 to 255 to get the
  * final color.
  */
-class WebGL2IndexedScreenVideoSystem {
+class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   _screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
 
   _screenGeometryVertexCount: number = this._screenCorners.length / 2;
@@ -330,4 +332,5 @@ class WebGL2IndexedScreenVideoSystem {
   }
 }
 
+export { Div2VideoSystem as VideoSystem };
 export default WebGL2IndexedScreenVideoSystem;
