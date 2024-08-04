@@ -2,13 +2,13 @@ import Palette from "../systems/video/wgl2idx/palette";
 import Fpg from "../systems/video/wgl2idx/fpg";
 import { Runtime } from "../runtime/runtime";
 
-function put_pixel(x: number, y: number, colorIndex: number, systems: Runtime) {
-  systems.getSystem("video").screen.putPixel(x, y, colorIndex);
+function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
+  runtime.getSystem("video").screen.putPixel(x, y, colorIndex);
   return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 
-function put_screen(file: number, graph: number, systems: Runtime) {
-  return systems.getSystem("video").putScreen(file, graph);
+function put_screen(file: number, graph: number, runtime: Runtime) {
+  return runtime.getSystem("video").putScreen(file, graph);
 }
 
 function rand(min: number, max: number) {
