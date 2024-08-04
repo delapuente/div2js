@@ -52,8 +52,8 @@ function autoResume(callback) {
 describe("Workflow of transpiled programs", function () {
   it("The empty program just finishes", function () {
     return load("empty-program.prg").then(function (program) {
-      return new Promise(function (fulfil) {
-        program.onfinished = fulfil;
+      return new Promise(function (fulfill) {
+        program.onfinished = fulfill;
         program.start();
       });
     });
@@ -63,9 +63,9 @@ describe("Workflow of transpiled programs", function () {
     const debugSpy = sinon.spy();
     return load("debug-invocation.prg")
       .then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.ondebug = autoResume(debugSpy);
-          program.onfinished = fulfil;
+          program.onfinished = fulfill;
           program.start();
         });
       })
@@ -83,9 +83,9 @@ describe("Workflow of transpiled programs", function () {
     return load("debug-resume.prg")
       .then(function (prg) {
         program = prg;
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.ondebug = autoResume(debugSpy);
-          program.onfinished = fulfil;
+          program.onfinished = fulfill;
           program.start();
         });
       })
@@ -96,7 +96,7 @@ describe("Workflow of transpiled programs", function () {
 
   it("Each process sets its own locals", function () {
     return load("locals.prg").then(function (program) {
-      return new Promise(function (fulfil) {
+      return new Promise(function (fulfill) {
         program.onfinished = withDebugSession(function (session) {
           const aX = session.process({ index: 1 }).local("x").value;
           const bX = session.process({ index: 2 }).local("x").value;
@@ -104,7 +104,7 @@ describe("Workflow of transpiled programs", function () {
           expect(aX).to.equal(1);
           expect(bX).to.equal(2);
           expect(cX).to.equal(3);
-          fulfil(void 0);
+          fulfill(void 0);
         });
         program.start();
       });
@@ -113,7 +113,7 @@ describe("Workflow of transpiled programs", function () {
 
   it("Process are reused ", function () {
     return load("process-reuse.prg").then(function (program) {
-      return new Promise(function (fulfil) {
+      return new Promise(function (fulfill) {
         program.onfinished = withDebugSession(function (session) {
           const aX = session.process({ index: 1 }).local("x").value;
           const bX = session.process({ index: 2 }).local("x").value;
@@ -121,7 +121,7 @@ describe("Workflow of transpiled programs", function () {
           expect(aX).to.equal(3);
           expect(bX).to.equal(0);
           expect(cX).to.equal(0);
-          fulfil(void 0);
+          fulfill(void 0);
         });
         program.start();
       });
@@ -133,7 +133,7 @@ describe("Workflow of transpiled programs", function () {
       "to main program, then finishes",
     function () {
       return load("concurrency-1-process.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           const results = [] as any[];
           const expected = [] as any[];
           program.ondebug = autoResume(
@@ -144,7 +144,7 @@ describe("Workflow of transpiled programs", function () {
           );
           program.onfinished = function () {
             expect(results).to.deep.equal(expected);
-            fulfil(void 0);
+            fulfill(void 0);
           };
           program.start();
         });
@@ -156,7 +156,7 @@ describe("Workflow of transpiled programs", function () {
 describe("Memory state while running transpiled programs", function () {
   it("Properly sets all initial values", function () {
     return load("initial-state.prg").then(function (program) {
-      return new Promise(function (fulfil, reject) {
+      return new Promise(function (fulfill, reject) {
         program.ondebug = autoResume(
           withDebugSession(function (session) {
             const program = session.process({ index: 0 });
@@ -167,7 +167,7 @@ describe("Memory state while running transpiled programs", function () {
             expect(program.local("reserved.box_x1").value).to.equal(-1);
           })
         );
-        program.onfinished = fulfil;
+        program.onfinished = fulfill;
         program.start();
       });
     });
@@ -175,7 +175,7 @@ describe("Memory state while running transpiled programs", function () {
 
   it("Properly handle privates", function () {
     return load("declare-privates.prg").then(function (program) {
-      return new Promise(function (fulfil, reject) {
+      return new Promise(function (fulfill, reject) {
         program.ondebug = autoResume(
           withDebugSession(function (session) {
             const program = session.process({
@@ -185,7 +185,7 @@ describe("Memory state while running transpiled programs", function () {
             expect(program.private("private_var").value).to.equal(10);
           })
         );
-        program.onfinished = fulfil;
+        program.onfinished = fulfill;
         program.start();
       });
     });
@@ -196,14 +196,14 @@ describe("Math functions", function () {
   describe("rand()", function () {
     it("gives a random number between start and end", function () {
       return load("rand.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
               index: 0,
               type: "_rand",
             });
             expect(program.private("random_value").value).to.be.within(0, 15);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -216,13 +216,13 @@ describe("Graphic functions", function () {
   describe("default video mode", function () {
     it("is m320x200", function () {
       return load("default-video-mode.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
             expect(screen.width).to.equal(320);
             expect(screen.height).to.equal(200);
             expect(screen.buffer.length).to.equal(320 * 200);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -233,12 +233,12 @@ describe("Graphic functions", function () {
   describe("put_pixel()", function () {
     it("sets a pixel to a given color", function () {
       return load("put_pixel.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
             const pixelIndex = 99 * 320 + 159;
             expect(screen.buffer[pixelIndex]).to.equal(15);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -249,7 +249,7 @@ describe("Graphic functions", function () {
   describe("put_screen()", function () {
     it("centers a small map in a file in the screen", function () {
       return load("put_screen.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
             const testPattern = [
@@ -269,7 +269,7 @@ describe("Graphic functions", function () {
                 );
               }
             }
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -278,14 +278,14 @@ describe("Graphic functions", function () {
 
     it("centers a big map in a file in the screen", function () {
       return load("put_screen_with_big_map.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
             expect(screen.buffer[0 * 320 + 0]).to.equal(31);
             expect(screen.buffer[0 * 320 + 319]).to.equal(31);
             expect(screen.buffer[199 * 320 + 0]).to.equal(31);
             expect(screen.buffer[199 * 320 + 319]).to.equal(31);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -296,7 +296,7 @@ describe("Graphic functions", function () {
   describe("load_pal()", function () {
     it("loads and set a palette", function () {
       return load("load_pal.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
               index: 0,
@@ -304,7 +304,7 @@ describe("Graphic functions", function () {
             });
             expect(program.private("palette_1").value).to.equal(1);
             expect(program.private("palette_2").value).to.equal(1);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -313,12 +313,12 @@ describe("Graphic functions", function () {
 
     it("errors when trying to load a non existent palette", function () {
       return load("load_pal_error.prg").then(function (program) {
-        return new Promise(function (fulfil, reject) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
           program.onerror = (error) => {
             expect(error.errorCode).to.equal(102);
-            fulfil(void 0);
+            fulfill(void 0);
           };
           program.start();
         });
@@ -329,7 +329,7 @@ describe("Graphic functions", function () {
   describe("load_fpg()", function () {
     it("loads a file", function () {
       return load("load_fpg.prg").then(function (program) {
-        return new Promise(function (fulfil) {
+        return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
               index: 0,
@@ -337,7 +337,7 @@ describe("Graphic functions", function () {
             });
             expect(program.private("fpg_1").value).to.equal(0);
             expect(program.private("fpg_2").value).to.equal(1);
-            fulfil(void 0);
+            fulfill(void 0);
           });
           program.start();
         });
@@ -346,12 +346,12 @@ describe("Graphic functions", function () {
 
     it("errors when trying to load a non existent file", function () {
       return load("load_fpg_error.prg").then(function (program) {
-        return new Promise(function (fulfil, reject) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
           program.onerror = (error) => {
             expect(error.errorCode).to.equal(102);
-            fulfil(void 0);
+            fulfill(void 0);
           };
           program.start();
         });
@@ -360,12 +360,12 @@ describe("Graphic functions", function () {
 
     it("errors when trying to use a non existent map", function () {
       return load("load_fpg_map_error.prg").then(function (program) {
-        return new Promise(function (fulfil, reject) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
           program.onerror = (error) => {
             expect(error.errorCode).to.equal(121);
-            fulfil(void 0);
+            fulfill(void 0);
           };
           program.start();
         });
