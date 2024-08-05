@@ -51,6 +51,7 @@ describe("DIV2 parser", function () {
     "expression.prg",
     "parenthesised-expression.prg",
     "loop-with-body.prg",
+    "unary-expression.prg",
   ];
 
   programs.forEach(function (programName) {

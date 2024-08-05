@@ -1,0 +1,17 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "UnaryExpression",
+        "operator": "-",
+        "argument": {
+          "type": "Literal",
+          "value": 1,
+          "raw": "1"
+        }
+      }
+    }
+  ]
+}

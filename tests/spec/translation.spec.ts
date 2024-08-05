@@ -65,6 +65,7 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "debug.prg",
     "process.prg",
     "expression-priority.prg",
+    "unary-expression.prg",
   ];
 
   programs.forEach(function (programName) {

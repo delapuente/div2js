@@ -3,7 +3,7 @@ import t from "./templates";
 
 const translators = Object.create(null);
 
-// TODO: Consider switching these to MemortBrowser-based assignment and read
+// TODO: Consider switching these to MemoryBrowser-based assignment and read
 // so the JS code can be optimized and inlined later. This would decouple
 // translation from memory layout.
 translators.AssignmentExpression = function (divAssignment, context) {
@@ -15,6 +15,31 @@ translators.AssignmentExpression = function (divAssignment, context) {
     divAssignment.operator
   );
 };
+
+translators.UnaryExpression = function (divUnary, context) {
+  if (divUnary.operator === "+" || divUnary.operator === "-") {
+    return new ast.UnaryExpression(
+      translate(divUnary.argument, context),
+      divUnary.operator
+    );
+  }
+
+  let unaryFunction;
+  switch (divUnary.operator) {
+    case "&":
+      unaryFunction = "__offset";
+      break;
+    case "*":
+      unaryFunction = "__deref";
+      break;
+    case "!":
+      unaryFunction = "__not";
+      break;
+    default:
+      throw new Error("Unary operator unknown: " + divUnary.operator);
+  }
+  return t.callWith(unaryFunction, [translate(divUnary.argument, context)]);
+}
 
 translators.BinaryExpression = function (divBinary, context) {
   return new ast.BinaryExpression(
