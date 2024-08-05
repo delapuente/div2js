@@ -241,6 +241,11 @@ translators.Identifier = function (divIdentifier, context) {
   if (!scope) {
     throw new Error("Unknown name " + name);
   }
+  // In DIV, consts are substitutions, not variables.
+  if (scope === "constant") {
+    const value = context.constantValue(name);
+    return ast.Literal.for(value);
+  }
   const scopeTranslator = "memory" + scope[0].toUpperCase() + scope.substr(1);
   if (!(scopeTranslator in t)) {
     throw new Error("Unknown scope " + scope);

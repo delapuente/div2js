@@ -10,14 +10,17 @@ import {
  * program. It keeps information about the memory locations and semantics
  * of the program symbols.
  */
+// TODO: This should not be part of the memory browser. Notice constants are symbols but not memory cells.
 class SymbolTable {
   readonly globals: Array<DivSymbol>;
+  readonly constants: Array<DivSymbol>;
   readonly locals: Array<DivSymbol>;
   readonly privates: Record<string, Array<DivSymbol>>;
 
   constructor(definitions: WellKnownSymbols) {
     this.globals = definitions.wellKnownGlobals;
     this.locals = definitions.wellKnownLocals;
+    this.constants = definitions.wellKnownConstants;
     this.privates = {};
   }
 
@@ -27,6 +30,10 @@ class SymbolTable {
 
   addLocal(definition: SymbolDefinition | DivSymbol): DivSymbol {
     return this._add("locals", normalize(definition));
+  }
+
+  isConstant(name: string): boolean {
+    return this._isKnown("constants", name.toLowerCase());
   }
 
   isGlobal(name: string): boolean {
@@ -60,7 +67,7 @@ class SymbolTable {
   }
 
   _add(
-    kind: "globals" | "locals",
+    kind: "globals" | "locals" | "constants",
     definition: SymbolDefinition | DivSymbol
   ): DivSymbol {
     const normalized = normalize(definition);
@@ -68,7 +75,7 @@ class SymbolTable {
     return normalized;
   }
 
-  _isKnown(kind: "globals" | "locals", name: string): boolean {
+  _isKnown(kind: "globals" | "locals" | "constants", name: string): boolean {
     return this[kind].some(function (symbol) {
       return symbol.name === name;
     });

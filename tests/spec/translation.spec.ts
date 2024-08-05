@@ -7,6 +7,7 @@ import { WellKnownSymbols, normalize } from "../../src/memoryBrowser/definitions
 const simpleDefinitions: WellKnownSymbols = {
   wellKnownGlobals: [normalize("text_z")],
   wellKnownLocals: [normalize("x"), normalize("y")],
+  wellKnownConstants: [normalize({ name: "pi", default: 180000 })],
 };
 
 describe("AST translation from DIV2 to JavaScript", function () {
@@ -66,6 +67,7 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "process.prg",
     "expression-priority.prg",
     "unary-expression.prg",
+    "constant-expression.prg",
   ];
 
   programs.forEach(function (programName) {

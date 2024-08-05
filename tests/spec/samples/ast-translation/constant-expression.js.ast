@@ -1,0 +1,55 @@
+{
+  "type": "WhileStatement",
+  "test": {
+    "type": "Literal",
+    "value": true,
+    "raw": "true"
+  },
+  "body": {
+    "type": "BlockStatement",
+    "body": [
+      {
+        "type": "SwitchStatement",
+        "discriminant": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+            "type": "Identifier",
+            "name": "exec"
+          },
+          "property": {
+            "type": "Identifier",
+            "name": "pc"
+          }
+        },
+        "cases": [
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "Literal",
+                  "value": 180000,
+                  "raw": "180000"
+                }
+              },
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Identifier",
+                  "name": "__yieldEnd"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

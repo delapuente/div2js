@@ -1,0 +1,12 @@
+{
+  "type": "ProcessBody",
+  "sentences": [
+    {
+      "type": "ExpressionSentence",
+      "expression": {
+        "type": "Identifier",
+        "name": "pi"
+      }
+    }
+  ]
+}

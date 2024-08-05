@@ -44,6 +44,7 @@ type DivSymbol =
 interface WellKnownSymbols {
   wellKnownGlobals: Array<DivSymbol>;
   wellKnownLocals: Array<DivSymbol>;
+  wellKnownConstants: Array<DivSymbol>;
 }
 
 /**
@@ -284,12 +285,17 @@ const DIV_SYMBOLS: WellKnownSymbols = _normalizeDefinitions({
     { name: "m8_nextsector", default: -1 },
     { name: "m8_step", default: 32 },
   ],
+
+  wellKnownConstants: [
+    { name: "pi", default: 180000 },
+  ],
 });
 
 function _normalizeDefinitions(definitions: Definitions): WellKnownSymbols {
   return {
     wellKnownGlobals: definitions.wellKnownGlobals.map(normalize),
     wellKnownLocals: definitions.wellKnownLocals.map(normalize),
+    wellKnownConstants: definitions.wellKnownConstants.map(normalize),
   };
 }
 

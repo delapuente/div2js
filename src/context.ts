@@ -135,9 +135,19 @@ Context.prototype = {
       scope = "local";
     } else if (symbols.isPrivate(this._currentProcess, identifier)) {
       scope = "private";
+    } else if (symbols.isConstant(identifier)) {
+      scope = "constant";
     }
     return scope;
   },
+
+  constantValue: function (identifier) {
+    return this._mmap
+      .symbols
+      .constants
+      .find((constant) => constant.name === identifier)
+      .default;
+  }
 };
 
 function Linearization() {
