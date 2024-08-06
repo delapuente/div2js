@@ -73,7 +73,7 @@ class MemoryManager {
     function copyDefaults(
       buffer: MemoryArray,
       cells: MemoryCell[],
-      base: number
+      base: number,
     ) {
       cells.forEach((cell) => {
         const itemSize = cell.size / cell.symbol.length;

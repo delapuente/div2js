@@ -51,7 +51,7 @@ class DivMap {
 
   _readAscii(offset: number, length: number): string {
     return String.fromCharCode(
-      ...this.buffer.subarray(offset, offset + length)
+      ...this.buffer.subarray(offset, offset + length),
     );
   }
 }

@@ -1,7 +1,10 @@
 class IndexedGraphic {
   buffer: Uint8Array;
 
-  constructor(public readonly width: number, public readonly height: number) {
+  constructor(
+    public readonly width: number,
+    public readonly height: number,
+  ) {
     this.buffer = new Uint8Array(width * height);
   }
 

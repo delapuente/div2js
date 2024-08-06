@@ -69,7 +69,7 @@ function FunctionDeclaration(
   defaults = [],
   body,
   generator = false,
-  expression = false
+  expression = false,
 ) {
   this.type = "FunctionDeclaration";
   this.id = id;
@@ -100,7 +100,7 @@ class Literal extends Node {
       throw new Error(
         "Can not construct negative literals. Negative literals are " +
           "formed by negating a positive literal. Use `Literal.for()` which " +
-          "return either a literal or an expression for a negative literal."
+          "return either a literal or an expression for a negative literal.",
       );
     }
     this.type = "Literal";

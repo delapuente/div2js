@@ -40,7 +40,7 @@ function registerFileSystem(program, rootUrl = "") {
     new systems.DefaultFileSystem({
       rootUrl,
     }),
-    "files"
+    "files",
   );
 }
 

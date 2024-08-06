@@ -12,7 +12,7 @@ translators.AssignmentExpression = function (divAssignment, context) {
     translate(divAssignment.right, context),
 
     // XXX: This is good luck. All assignment operators are equal!
-    divAssignment.operator
+    divAssignment.operator,
   );
 };
 
@@ -20,7 +20,7 @@ translators.UnaryExpression = function (divUnary, context) {
   if (divUnary.operator === "+" || divUnary.operator === "-") {
     return new ast.UnaryExpression(
       translate(divUnary.argument, context),
-      divUnary.operator
+      divUnary.operator,
     );
   }
 
@@ -39,13 +39,13 @@ translators.UnaryExpression = function (divUnary, context) {
       throw new Error("Unary operator unknown: " + divUnary.operator);
   }
   return t.callWith(unaryFunction, [translate(divUnary.argument, context)]);
-}
+};
 
 translators.BinaryExpression = function (divBinary, context) {
   return new ast.BinaryExpression(
     translate(divBinary.left, context),
     translate(divBinary.right, context),
-    divBinary.operator
+    divBinary.operator,
   );
 };
 
@@ -78,7 +78,7 @@ translators.CallExpression = function (divCall, context) {
   const parameters = new ast.ArrayExpression(
     divCall.arguments.map(function (arg) {
       return translate(arg, context);
-    })
+    }),
   );
   const id = divCall.callee.name;
   const isProcess = context.isProcess(id);
@@ -111,7 +111,7 @@ translators.Unit = function (divUnit, context) {
   return new ast.Program(
     [globals, locals, privateOffset]
       .concat([programFunction])
-      .concat(processesFunctions)
+      .concat(processesFunctions),
   );
 };
 
@@ -131,7 +131,7 @@ function createPrivateOffset(context) {
   return new ast.VariableDeclaration([
     new ast.VariableDeclarator(
       new ast.Identifier("P_OFFSET"),
-      ast.Literal["for"](mmap.localSegmentSize)
+      ast.Literal["for"](mmap.localSegmentSize),
     ),
   ]);
 }
@@ -140,7 +140,7 @@ function getGlobalBaseDeclaration(context) {
   const offset = context.getMemoryMap().constructor.GLOBAL_OFFSET;
   return new ast.VariableDeclarator(
     t.globalBaseIdentifier,
-    ast.Literal["for"](offset)
+    ast.Literal["for"](offset),
   );
 }
 
@@ -166,12 +166,12 @@ function getSegmentDeclarations(segment, prefixes, cells) {
       definitions.push(
         new ast.VariableDeclarator(
           t[identifierFactory](prefixes),
-          ast.Literal["for"](cell.offset)
-        )
+          ast.Literal["for"](cell.offset),
+        ),
       );
       if (cell.symbol.type === "struct") {
         definitions = definitions.concat(
-          getSegmentDeclarations(segment, prefixes, cell.fields)
+          getSegmentDeclarations(segment, prefixes, cell.fields),
         );
       }
       prefixes.pop();
@@ -196,7 +196,7 @@ translators.Program = function (divProgram, context) {
   const body = translate(divProgram.body, context);
   const translation = t.programFunction(
     name,
-    (privates ? [privates] : []).concat(body)
+    (privates ? [privates] : []).concat(body),
   );
   context.exitProcess();
   return translation;
@@ -209,7 +209,7 @@ translators.Process = function (divProgram, context) {
   const body = translate(divProgram.body, context);
   const translation = t.processFunction(
     name,
-    (privates ? [privates] : []).concat(body)
+    (privates ? [privates] : []).concat(body),
   );
   context.exitProcess();
   return translation;
@@ -285,7 +285,7 @@ translators.WhileSentence = function (divWhile, context) {
   context.goToIf(
     translate(divWhile.test, context),
     loopStartLabel,
-    afterLoopLabel
+    afterLoopLabel,
   );
 
   context.label(loopStartLabel);
@@ -315,7 +315,7 @@ translators.RepeatSentence = function (divRepeat, context) {
   context.goToIf(
     translate(divRepeat.test, context),
     afterLoopLabel,
-    loopStartLabel
+    loopStartLabel,
   );
 
   context.label(afterLoopLabel);
@@ -348,7 +348,7 @@ translators.SwitchSentence = function (divSwitch, context) {
   context.select(
     aux.identifier,
     choices,
-    hasDefault ? defaultCaseLabel : afterSwitchLabel
+    hasDefault ? defaultCaseLabel : afterSwitchLabel,
   );
   choices.forEach(function (choice) {
     context.label(choice.label);
@@ -422,7 +422,7 @@ function translateForLikeLoop(loop, inits, tests, updates, context) {
   const test = t.every(
     tests.map(function (test) {
       return t.toBool(translate(test, context));
-    })
+    }),
   );
 
   const testLabel = context.newLabel();
@@ -448,7 +448,7 @@ function translateForLikeLoop(loop, inits, tests, updates, context) {
 
   function verbatim(divExpression) {
     context.verbatim(
-      new ast.ExpressionStatement(translate(divExpression, context))
+      new ast.ExpressionStatement(translate(divExpression, context)),
     );
   }
 }

@@ -286,9 +286,7 @@ const DIV_SYMBOLS: WellKnownSymbols = _normalizeDefinitions({
     { name: "m8_step", default: 32 },
   ],
 
-  wellKnownConstants: [
-    { name: "pi", default: 180000 },
-  ],
+  wellKnownConstants: [{ name: "pi", default: 180000 }],
 });
 
 function _normalizeDefinitions(definitions: Definitions): WellKnownSymbols {

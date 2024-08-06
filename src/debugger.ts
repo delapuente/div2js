@@ -22,7 +22,7 @@ DebugSession.prototype = {
 function debug(runtime) {
   return new DebugSession(
     runtime.getMemoryBrowser(),
-    runtime.getSystem("video").screen
+    runtime.getSystem("video").screen,
   );
 }
 

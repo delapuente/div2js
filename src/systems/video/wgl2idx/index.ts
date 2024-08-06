@@ -58,7 +58,7 @@ class VideoSystemError extends Error {
 function createShader(
   gl: WebGL2RenderingContext,
   type: number,
-  source: string
+  source: string,
 ): WebGLShader {
   const shader = gl.createShader(type);
   gl.shaderSource(shader, source);
@@ -76,7 +76,7 @@ function createShader(
 function createProgram(
   gl: WebGL2RenderingContext,
   vertexShader: WebGLShader,
-  fragmentShader: WebGLShader
+  fragmentShader: WebGLShader,
 ): WebGLProgram {
   const program = gl.createProgram();
   gl.attachShader(program, vertexShader);
@@ -98,7 +98,7 @@ const DEFAULT_PALETTE_SIZE = 256;
 
 function getDefaultScreen(
   width: number = DEFAULT_RESOLUTION_WIDTH,
-  height: number = DEFAULT_RESOLUTION_HEIGHT
+  height: number = DEFAULT_RESOLUTION_HEIGHT,
 ): IndexedGraphic {
   return new IndexedGraphic(width, height);
 }
@@ -180,7 +180,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   constructor(
     canvas,
     public screen: IndexedGraphic = getDefaultScreen(),
-    public palette: Palette = getDefaultPalette()
+    public palette: Palette = getDefaultPalette(),
   ) {
     this._gl = canvas.getContext("webgl2");
     this._loadedFpgs = [];
@@ -296,7 +296,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
       0,
       gl.ALPHA,
       gl.UNSIGNED_BYTE,
-      buffer
+      buffer,
     );
   }
 
@@ -313,7 +313,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
       0,
       gl.RGB,
       gl.UNSIGNED_BYTE,
-      buffer
+      buffer,
     );
   }
 

@@ -81,7 +81,7 @@ class Scheduler<P extends Process> {
 
   private _scheduleStep() {
     this._nextAnimationFrame = window.requestAnimationFrame(
-      this._step.bind(this)
+      this._step.bind(this),
     );
   }
 
@@ -130,7 +130,7 @@ class Baton implements Record<any, any> {
     Object.keys(data).forEach(
       function (key) {
         this[key] = data[key];
-      }.bind(this)
+      }.bind(this),
     );
   }
 }

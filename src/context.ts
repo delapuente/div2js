@@ -82,7 +82,7 @@ class Context {
     }
     const identifier = new ast.Identifier(name);
     const declaration = new ast.VariableDeclaration(
-      new ast.VariableDeclarator(identifier, initializer)
+      new ast.VariableDeclarator(identifier, initializer),
     );
     return {
       identifier: identifier,
@@ -106,7 +106,7 @@ class Context {
     return this._currentLinearization.goToIf(
       testAst,
       labelIfTrue,
-      labelIfFalse
+      labelIfFalse,
     );
   }
 
@@ -139,10 +139,9 @@ class Context {
   }
 
   constantValue(identifier) {
-    return this._symbolTable
-      .constants
-      .find((constant) => constant.name === identifier)
-      .default;
+    return this._symbolTable.constants.find(
+      (constant) => constant.name === identifier,
+    ).default;
   }
 }
 
@@ -259,11 +258,11 @@ class Linearization {
           _this._programCounterBranch(
             testAst,
             labelIfTrue.label,
-            labelIfFalse.label
+            labelIfFalse.label,
           ),
           new ast.BreakStatement(),
         ];
-      }
+      },
     };
   }
 
@@ -276,7 +275,7 @@ class Linearization {
           _this._programCounterSet(label.label),
           new ast.BreakStatement(),
         ];
-      }
+      },
     };
   }
 
@@ -290,22 +289,22 @@ class Linearization {
           const tests = option.tests;
           return _this._programCounterBranch(
             t.some(evaluation, tests),
-            option.label.label
+            option.label.label,
           );
         });
         return [defaultExpression]
           .concat(cases)
           .concat([new ast.BreakStatement()]);
-      }
+      },
     };
   }
 
   _end() {
-   return {
+    return {
       type: "End",
       get sentences() {
         return [t.processEnd];
-      }
+      },
     };
   }
 
@@ -315,7 +314,7 @@ class Linearization {
       type: type,
       get sentences() {
         return [t.call(kind, resumeLabel.label + 1, name, argList)];
-      }
+      },
     };
   }
 
@@ -324,7 +323,7 @@ class Linearization {
       type: "Clone",
       get sentences() {
         return [t.processClone(childLabel.label + 1, parentLabel.label + 1)];
-      }
+      },
     };
   }
 
@@ -333,7 +332,7 @@ class Linearization {
       type: "Frame",
       get sentences() {
         return [t.processFrame(resumeLabel.label + 1, expression)];
-      }
+      },
     };
   }
 
@@ -342,7 +341,7 @@ class Linearization {
       type: "Debug",
       get sentences() {
         return [t.processDebug(resumeLabel.label + 1)];
-      }
+      },
     };
   }
 
@@ -351,7 +350,7 @@ class Linearization {
       type: "Return",
       get sentences() {
         return [t.processReturn(expression)];
-      }
+      },
     };
   }
 
@@ -362,15 +361,18 @@ class Linearization {
         new ast.ConditionalExpression(
           testAst,
           new ast.Literal(consequent + 1),
-          alternate ? new ast.Literal(alternate + 1) : t.programCounter
-        )
-      )
+          alternate ? new ast.Literal(alternate + 1) : t.programCounter,
+        ),
+      ),
     );
   }
 
   _programCounterSet(label) {
     return new ast.ExpressionStatement(
-      new ast.AssignmentExpression(t.programCounter, new ast.Literal(label + 1))
+      new ast.AssignmentExpression(
+        t.programCounter,
+        new ast.Literal(label + 1),
+      ),
     );
   }
 
@@ -381,7 +383,7 @@ class Linearization {
     this._sentences.push(ast);
     this._pc += 1;
   }
-};
+}
 
 class Label {
   private _proxifiedLabel: any;
@@ -390,11 +392,11 @@ class Label {
   constructor(n?) {
     this.label = n;
   }
-  
+
   proxy(anotherLabel) {
     this._proxifiedLabel = anotherLabel;
     Object.defineProperty(this, "label", {
-     get() {
+      get() {
         return this._proxifiedLabel.label;
       },
     });

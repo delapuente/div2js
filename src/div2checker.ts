@@ -35,11 +35,11 @@ function declarePrivates(symbolTable, processes) {
         if (!symbolTable.isPrivate(processName, varName)) {
           symbolTable.addPrivate(
             processName,
-            definitionFromAst(declarationAst)
+            definitionFromAst(declarationAst),
           );
         } else {
           throw new Error(
-            "The private " + varName + " has been already declared."
+            "The private " + varName + " has been already declared.",
           );
         }
       });

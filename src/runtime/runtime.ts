@@ -59,7 +59,11 @@ interface System {
   run?(memoryBrowser: any, environment: any): void;
 }
 
-type GetSystemReturnType<K> = K extends "video" ? VideoSystem : K extends "files" ? Div2FileSystem : never;
+type GetSystemReturnType<K> = K extends "video"
+  ? VideoSystem
+  : K extends "files"
+    ? Div2FileSystem
+    : never;
 
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
@@ -68,7 +72,7 @@ class Runtime {
   ondebug?: CallableFunction;
   _onfinished?: CallableFunction;
   _systems: System[];
-  _systemMap: { 'video'?: VideoSystem, 'files'?: Div2FileSystem };
+  _systemMap: { video?: VideoSystem; files?: Div2FileSystem };
   _functions: { [key: string]: CallableFunction };
   _memoryManager: MemoryManager;
   _environment: any;
@@ -79,7 +83,7 @@ class Runtime {
   constructor(
     processMap,
     memoryManager: MemoryManager,
-    scheduler: Scheduler<Process>
+    scheduler: Scheduler<Process>,
   ) {
     this.onerror = null;
     this.ondebug = null;

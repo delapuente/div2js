@@ -48,7 +48,7 @@ class SymbolTable {
 
   addPrivate(
     processName: string,
-    definition: SymbolDefinition | DivSymbol
+    definition: SymbolDefinition | DivSymbol,
   ): DivSymbol {
     const normalized = normalize(definition);
     this.privates[processName] = this.privates[processName] || [];
@@ -68,7 +68,7 @@ class SymbolTable {
 
   _add(
     kind: "globals" | "locals" | "constants",
-    definition: SymbolDefinition | DivSymbol
+    definition: SymbolDefinition | DivSymbol,
   ): DivSymbol {
     const normalized = normalize(definition);
     this[kind].push(normalized);

@@ -56,7 +56,7 @@ class MemoryMap {
       0,
       ...Object.keys(this.segments.privates).map((processName) => {
         return this._getSegmentSize(this.segments.privates[processName]);
-      })
+      }),
     );
   }
 
@@ -105,7 +105,7 @@ class MemoryMap {
         privates[processName] = privateMap;
         return privates;
       },
-      {}
+      {},
     );
   }
 
@@ -171,7 +171,7 @@ class MemoryBrowser {
   }
 
   global(
-    name: (keyof WellKnownSymbols["wellKnownGlobals"] & string) | string
+    name: (keyof WellKnownSymbols["wellKnownGlobals"] & string) | string,
   ): MemView {
     return this.seek(this.offset("globals", name));
   }
@@ -205,7 +205,7 @@ class MemoryBrowser {
     segmentName: keyof MemorySegments,
     name: string,
     base = 0,
-    processName?: string
+    processName?: string,
   ): number {
     if (segmentName === "privates" && processName === undefined) {
       throw new Error("processName is required for privates");
@@ -284,7 +284,7 @@ class ProcessView {
 
   private(name): MemView {
     return this._browser.seek(
-      this._browser.offset("privates", name, this._base, this._type)
+      this._browser.offset("privates", name, this._base, this._type),
     );
   }
 

@@ -155,7 +155,7 @@ export default {
     return new ast.BinaryExpression(
       this.globalBaseIdentifier,
       this.identifierForGlobal(name),
-      "+"
+      "+",
     );
   },
 
@@ -164,7 +164,7 @@ export default {
     return new ast.BinaryExpression(
       this._localBase,
       this.identifierForLocal(name),
-      "+"
+      "+",
     );
   },
 
@@ -174,10 +174,10 @@ export default {
       new ast.BinaryExpression(
         this._localBase,
         this.privateOffsetIdentifier,
-        "+"
+        "+",
       ),
       new ast.Identifier(name),
-      "+"
+      "+",
     );
   },
 
@@ -200,7 +200,7 @@ export default {
   _localBase: new ast.MemberExpression(
     new ast.Identifier("exec"),
     new ast.Identifier("base"),
-    false
+    false,
   ),
 
   privateOffsetIdentifier: new ast.Identifier("P_OFFSET"),
@@ -221,8 +221,8 @@ export default {
     return new ast.ReturnStatement(
       this.callWith(
         yieldType,
-        [ast.Literal.for(resume), ast.Literal.for(name)].concat(argList)
-      )
+        [ast.Literal.for(resume), ast.Literal.for(name)].concat(argList),
+      ),
     );
   },
 
@@ -231,7 +231,7 @@ export default {
       this.callWith("__yieldClone", [
         ast.Literal.for(child),
         ast.Literal.for(parent),
-      ])
+      ]),
     );
   },
 
@@ -239,14 +239,14 @@ export default {
   // It is not "process frame", it is just frame.
   processFrame: function (resume, expression) {
     return new ast.ReturnStatement(
-      this.callWith("__yieldFrame", [ast.Literal.for(resume), expression])
+      this.callWith("__yieldFrame", [ast.Literal.for(resume), expression]),
     );
   },
 
   // TODO: Same here.
   processDebug: function (resume) {
     return new ast.ReturnStatement(
-      this.callWith("__yieldDebug", [ast.Literal.for(resume)])
+      this.callWith("__yieldDebug", [ast.Literal.for(resume)]),
     );
   },
 
@@ -255,7 +255,7 @@ export default {
       new ast.Identifier("program_" + name),
       this.processParameters,
       undefined,
-      body
+      body,
     );
   },
 
@@ -264,7 +264,7 @@ export default {
       new ast.Identifier("process_" + name),
       this.processParameters,
       undefined,
-      body
+      body,
     );
   },
 
@@ -286,7 +286,7 @@ export default {
   get programCounter() {
     return new ast.MemberExpression(
       new ast.Identifier("exec"),
-      new ast.Identifier("pc")
+      new ast.Identifier("pc"),
     );
   },
 
@@ -295,10 +295,10 @@ export default {
       new ast.MemberExpression(
         new ast.MemberExpression(
           new ast.Identifier("exec"),
-          new ast.Identifier("retv")
+          new ast.Identifier("retv"),
         ),
-        new ast.Identifier("dequeue")
-      )
+        new ast.Identifier("dequeue"),
+      ),
     );
   },
 
