@@ -6,15 +6,16 @@ function extractContext(div2ast, symbolTable) {
     console.warn("Extracting context from a partial AST.");
   }
 
-  const context = new ctx.Context();
-  declareProcesses(context, div2ast.processes);
+  // Augment symbol table with custom symbols.
+  // TODO: Should process names be added to the symbol table?
   // TODO: Find and add custom globals to symbols
   // TODO: Find and add custom locals to symbols
   declarePrivates(symbolTable, [div2ast.program]);
   declarePrivates(symbolTable, div2ast.processes);
 
   const mmap = new mapper.MemoryMap(symbolTable);
-  context.setMemoryMap(mmap);
+  const context = new ctx.Context(symbolTable, mmap);
+  declareProcesses(context, div2ast.processes);
 
   return context;
 }

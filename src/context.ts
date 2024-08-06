@@ -1,24 +1,16 @@
 import * as ast from "./ast";
 import t from "./templates";
 
-function Context(ctx?) {
+function Context(symbolTable, memoryMap) {
   this._processes = {};
   this._auxNames = {};
   this._currentProcess = undefined;
-
-  for (const key in ctx) {
-    if (ctx.hasOwnProperty(key)) {
-      this[key] = ctx[key];
-    }
-  }
+  this._symbolTable = symbolTable;
+  this._mmap = memoryMap;
 }
 
 Context.prototype = {
   constructor: Context,
-
-  setMemoryMap: function (mmap) {
-    this._mmap = mmap;
-  },
 
   getMemoryMap: function () {
     return this._mmap;
@@ -123,7 +115,7 @@ Context.prototype = {
 
   getScope: function (identifier) {
     let scope;
-    const symbols = this._mmap.symbols;
+    const symbols = this._symbolTable;
     if (symbols.isGlobal(identifier)) {
       scope = "global";
     }
@@ -142,8 +134,7 @@ Context.prototype = {
   },
 
   constantValue: function (identifier) {
-    return this._mmap
-      .symbols
+    return this._symbolTable
       .constants
       .find((constant) => constant.name === identifier)
       .default;
