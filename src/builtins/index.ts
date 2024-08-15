@@ -3,7 +3,7 @@ import Fpg from "../systems/video/wgl2idx/fpg";
 import { Runtime } from "../runtime/runtime";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
-  runtime.getSystem("video").screen.putPixel(x, y, colorIndex);
+  runtime.getSystem("video").putPixel(x, y, colorIndex);
   return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 
@@ -38,4 +38,16 @@ function load_fpg(fpgPath: string, runtime: Runtime) {
     });
 }
 
-export { put_pixel, put_screen, rand, load_pal, load_fpg };
+function xput(file: number, graph: number, x: number, y: number, angle: number, size: number, flags: number, region: number, runtime: Runtime) {
+  return runtime
+    .getSystem("video")
+    .xput(
+      file, graph,
+      x, y,
+      angle, size,
+      flags,
+      region
+    );
+}
+
+export { put_pixel, put_screen, rand, load_pal, load_fpg, xput };

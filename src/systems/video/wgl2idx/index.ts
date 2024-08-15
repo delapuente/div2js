@@ -179,8 +179,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   constructor(
     canvas,
-    public screen: IndexedGraphic = getDefaultScreen(),
-    public palette: Palette = getDefaultPalette(),
+    public readonly screen: IndexedGraphic = getDefaultScreen(),
+    public palette: Palette = getDefaultPalette()
   ) {
     this._gl = canvas.getContext("webgl2");
     this._loadedFpgs = [];
@@ -220,12 +220,23 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     return fpgId;
   }
 
+  putPixel(x: number, y: number, colorIndex: number): void {
+    this.screen.putPixel(x, y, colorIndex);
+  }
+
   putScreen(fpgId: number, mapId: number) {
     // TODO: Validate fpgId and mapId.
     const fpg = this._loadedFpgs[fpgId];
     const map = fpg.map(mapId);
     this.screen.putScreen(map.data, map.width, map.height);
     return 0;
+  }
+
+  xput(fpgId: number, mapId: number, x: number, y: number, angle: number, size: number, flags: number, region: number): void {
+    const fpg = this._loadedFpgs[fpgId];
+    const map = fpg.map(mapId);
+    const center = map.controlPoint(0);
+    this.screen.xput(map.data, map.width, map.height, center.x, center.y, x, y, angle, size, flags, region);
   }
 
   _initShaders() {

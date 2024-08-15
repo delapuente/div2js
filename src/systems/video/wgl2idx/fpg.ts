@@ -34,7 +34,7 @@ class Fpg {
     while (offset < mapBuffer.length) {
       const map = DivMap.fromBuffer(mapBuffer.subarray(offset));
       divMaps.set(map.code, map);
-      offset += map.size;
+      offset += map.length;
     }
     return divMaps;
   }

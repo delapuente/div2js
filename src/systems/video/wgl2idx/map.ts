@@ -1,3 +1,7 @@
+class ControlPoint {
+  constructor(public readonly x: number, public readonly y: number) {}
+}
+
 class DivMap {
   // TODO: double-check with DIV manuals to implement integrity
   // tests and validation.
@@ -40,6 +44,17 @@ class DivMap {
     this.data = this.buffer.subarray(this.dataOffset, this.size);
   }
 
+  controlPoint(index: number): ControlPoint {
+    return new ControlPoint(
+      this._readInt16(64 + index * 4),
+      this._readInt16(64 + index * 4 + 2)
+    );
+  }
+
+  _readInt16(offset: number): number {
+    return this.buffer[offset] | (this.buffer[offset + 1] << 8);
+  }
+
   _readInt32(offset: number): number {
     return (
       this.buffer[offset] |
@@ -56,4 +71,5 @@ class DivMap {
   }
 }
 
+export { ControlPoint };
 export default DivMap;
