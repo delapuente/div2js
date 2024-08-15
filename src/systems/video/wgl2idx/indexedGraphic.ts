@@ -20,10 +20,10 @@ class IndexedGraphic {
     const yStart = Math.max(0, yOffset);
     const xEnd = Math.min(screenWidth, xOffset + width);
     const yEnd = Math.min(screenHeight, yOffset + height);
-    for (let y = yStart; y < yEnd; y += 1) {
-      for (let x = xStart; x < xEnd; x += 1) {
-        const color = data[(y - yOffset) * width + (x - xOffset)];
-        this.putPixel(x, y, color);
+    for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+      for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+        const color = data[(yScreen - yOffset) * width + (xScreen - xOffset)];
+        this.putPixel(xScreen, yScreen, color);
       }
     }
   }
@@ -41,18 +41,25 @@ class IndexedGraphic {
     flags: number,
     region: number
   ) {
-    // Copy the data to the screen buffer at the point (x, y) with offset (centerX, centerY).
+    // TODO: Rotation.
+    // TODO: Scaling.
+    // TODO: Flags: flip.
+    // TODO: Flags: transparent.
+    // TODO: Flags: mirror.
+    // TODO: Region.
     const { width: screenWidth, height: screenHeight } = this;
-    const xOffset = Math.floor(centerX - width / 2);
-    const yOffset = Math.floor(centerY - height / 2);
-    const xStart = Math.max(0, x);
-    const yStart = Math.max(0, y);
-    const xEnd = Math.min(screenWidth, x + width);
-    const yEnd = Math.min(screenHeight, y + height);
-    for (let y = yStart; y < yEnd; y += 1) {
-      for (let x = xStart; x < xEnd; x += 1) {
-        const color = data[(y - yOffset) * width + (x - xOffset)];
-        this.putPixel(x, y, color);
+    const xOffset = x - centerX;
+    const yOffset = y - centerY;
+    const xStart = Math.max(0, xOffset);
+    const yStart = Math.max(0, yOffset);
+    const xEnd = Math.min(screenWidth, xOffset + width);
+    const yEnd = Math.min(screenHeight, yOffset + height);
+    for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+      for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+        const color = data[(yScreen - yOffset) * width + (xScreen - xOffset)];
+        if (color !== 0) {
+          this.putPixel(xScreen, yScreen, color);
+        }
       }
     }   
   }
