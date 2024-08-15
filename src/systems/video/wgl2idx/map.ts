@@ -32,30 +32,33 @@ class DivMap {
   }
 
   constructor(public readonly buffer: Uint8Array) {
-    this.code = this._readInt32(0);
-    this.length = this._readInt32(4);
+    this.code = this._readDoubleWord(0);
+    this.length = this._readDoubleWord(4);
     this.description = this._readAscii(8, 32);
     this.name = this._readAscii(40, 12);
-    this.width = this._readInt32(52);
-    this.height = this._readInt32(56);
-    this.pointCount = this._readInt32(60);
+    this.width = this._readDoubleWord(52);
+    this.height = this._readDoubleWord(56);
+    this.pointCount = this._readDoubleWord(60);
     this.dataOffset = 64 + this.pointCount * 4;
-    this.size = this.dataOffset + this.width * this.height;
-    this.data = this.buffer.subarray(this.dataOffset, this.size);
+    this.data = this.buffer.subarray(this.dataOffset, this.length);
   }
 
   controlPoint(index: number): ControlPoint {
+    const x = this._readWord(64 + index * 4);
+    const y = this._readWord(64 + index * 4 + 2);
+    // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+    // XXX: Also assuming rounding-up in case of odd size values.
     return new ControlPoint(
-      this._readInt16(64 + index * 4),
-      this._readInt16(64 + index * 4 + 2)
+      x == 0xFFFF ? Math.ceil(this.width / 2) : x,
+      y == 0xFFFF ? Math.ceil(this.height / 2) : y,
     );
   }
 
-  _readInt16(offset: number): number {
+  _readWord(offset: number): number {
     return this.buffer[offset] | (this.buffer[offset + 1] << 8);
   }
 
-  _readInt32(offset: number): number {
+  _readDoubleWord(offset: number): number {
     return (
       this.buffer[offset] |
       (this.buffer[offset + 1] << 8) |
