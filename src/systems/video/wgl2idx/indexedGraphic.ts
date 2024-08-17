@@ -29,7 +29,9 @@ class IndexedGraphic {
     const yEnd = Math.min(screenHeight, yOffset + height);
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const color = data[(yScreen - yOffset) * width + (xScreen - xOffset)];
+        const xBackground = xScreen - xOffset;
+        const yBackground = yScreen - yOffset;
+        const color = sample(data, width, height, xBackground, yBackground);
         this.putPixel(xScreen, yScreen, color);
       }
     }
@@ -65,13 +67,13 @@ class IndexedGraphic {
     const isVerticalFlip = (flags & 2) !== 0;
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const spriteX = isHorizontalFlip ?
+        const xSprite = isHorizontalFlip ?
           Math.floor((scaledWidth - (xScreen - xOffset)) / scaleFactor) :
           Math.floor((xScreen - xOffset) / scaleFactor);
-        const spriteY = isVerticalFlip ?
+        const ySprite = isVerticalFlip ?
           Math.floor((scaledHeight - (yScreen - yOffset)) / scaleFactor) :
           Math.floor((yScreen - yOffset) / scaleFactor);
-        const color = sample(data, width, height, spriteX, spriteY);
+        const color = sample(data, width, height, xSprite, ySprite);
         this.blendPixel(xScreen, yScreen, color, 0);
       }
     }   
