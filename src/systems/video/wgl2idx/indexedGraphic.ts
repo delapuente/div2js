@@ -52,8 +52,6 @@ class IndexedGraphic {
   ) {
     // TODO: Flags: transparent.
     // TODO: Region.
-    // TODO: Vertical mirror.
-    // TODO: Horizontal mirror.
     // Calculate transformation parameters.
     const rotation = angle * Math.PI / 180000;
     const scaleFactor = size / 100;
@@ -63,7 +61,10 @@ class IndexedGraphic {
     // Calculate the screen region to update.
     const [xTL, yTL] = movedPoint(
       rotatedPoint(
-        scaledPoint([0, 0], scaleFactor),
+        scaledPoint(
+          movedPoint([0, 0], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
         rotation
       ),
       [x, y]
@@ -71,7 +72,10 @@ class IndexedGraphic {
 
     const [xTR, yTR] = movedPoint(
       rotatedPoint(
-        scaledPoint([width, 0], scaleFactor),
+        scaledPoint(
+          movedPoint([width, 0], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
         rotation
       ),
       [x, y]
@@ -79,7 +83,10 @@ class IndexedGraphic {
 
     const [xBL, yBL] = movedPoint(
       rotatedPoint(
-        scaledPoint([0, height], scaleFactor),
+        scaledPoint(
+          movedPoint([0, height], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
         rotation
       ),
       [x, y]
@@ -87,7 +94,10 @@ class IndexedGraphic {
 
     const [xBR, yBR] = movedPoint(
       rotatedPoint(
-        scaledPoint([width, height], scaleFactor),
+        scaledPoint(
+          movedPoint([width, height], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
         rotation
       ),
       [x, y]
@@ -102,12 +112,21 @@ class IndexedGraphic {
     // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const [xSprite, ySprite] = scaledPoint(
-          rotatedPoint(
-            movedPoint([xScreen, yScreen], [-x, -y]),
-            -rotation
+        const [xSprite, ySprite] = flipSpriteCoordinates(
+          movedPoint(
+            scaledPoint(
+              rotatedPoint(
+                movedPoint([xScreen, yScreen], [-x, -y]),
+                -rotation
+              ),
+              1 / scaleFactor
+            ),
+            [xOrigin, yOrigin]
           ),
-          1 / scaleFactor
+          width,
+          height,
+          isHorizontalFlip,
+          isVerticalFlip
         );
         const maybeColor = sample(data, width, xSprite, ySprite);
         this.blendPixel(xScreen, yScreen, maybeColor ?? 0, 0);
@@ -126,6 +145,10 @@ function scaledPoint([x, y]: [number, number], scaleFactor: number) : [number, n
 
 function movedPoint([xOrigin, yOrigin]: [number, number], [xDistance, yDistance]: [number, number]) : [number, number] {
   return [xOrigin + xDistance, yOrigin + yDistance];
+}
+
+function flipSpriteCoordinates([x, y]: [number, number], width: number, height: number, isHorizontalFlip: boolean, isVerticalFlip: boolean) : [number, number] {
+  return [isHorizontalFlip ? width - x - 1 : x, isVerticalFlip ? height - y - 1 : y];
 }
 
 function sample(data: Uint8Array, width: number, x: number, y: number) : number | null {
