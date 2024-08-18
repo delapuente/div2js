@@ -4,7 +4,7 @@ import * as builtins from "./builtins";
 import { MemoryManager } from "./runtime/memory";
 import { Scheduler } from "./runtime/scheduler";
 
-function load(objText, options = { rootUrl: "" }) {
+function load(objText, options = { rootUrl: "" }): Promise<runtime.Runtime> {
   // tslint:disable-next-line:no-eval
   const unit = eval(objText)(runtime, systems);
   const processMap = unit.pmap;

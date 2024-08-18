@@ -10,7 +10,7 @@ import * as generator from "escodegen";
 parser.yy = parser.yy || {};
 parser.yy.parseError = parser.parseError;
 
-function compile(srcText, sourceURL = "/div-program.js") {
+function compile(srcText, sourceURL = "/div-program.js"): string {
   const symbolTable = new SymbolTable(DIV_SYMBOLS);
   const div2Ast = parser.parse(srcText);
   const context = checker.extractContext(div2Ast, symbolTable);
