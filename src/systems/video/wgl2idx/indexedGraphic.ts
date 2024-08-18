@@ -31,7 +31,7 @@ class IndexedGraphic {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
         const xBackground = xScreen - xOffset;
         const yBackground = yScreen - yOffset;
-        const color = sample(data, width, height, xBackground, yBackground);
+        const color = sample(data, width, xBackground, yBackground);
         this.putPixel(xScreen, yScreen, color);
       }
     }
@@ -41,8 +41,8 @@ class IndexedGraphic {
     data: Uint8Array,
     width: number,
     height: number,
-    centerX: number,
-    centerY: number,
+    xOrigin: number,
+    yOrigin: number,
     x: number,
     y: number,
     angle: number,
@@ -50,38 +50,96 @@ class IndexedGraphic {
     flags: number,
     region: number
   ) {
-    // TODO: Rotation.
     // TODO: Flags: transparent.
     // TODO: Region.
-    const { width: screenWidth, height: screenHeight } = this;
+    // TODO: Vertical mirror.
+    // TODO: Horizontal mirror.
+    // Calculate transformation parameters.
+    const rotation = angle * Math.PI / 180000;
     const scaleFactor = size / 100;
-    const scaledWidth = Math.floor(width * scaleFactor);
-    const scaledHeight = Math.floor(height * scaleFactor);
-    const xOffset = x - Math.floor(centerX * scaleFactor);
-    const yOffset = y - Math.floor(centerY * scaleFactor);
-    const xStart = Math.max(0, xOffset);
-    const yStart = Math.max(0, yOffset);
-    const xEnd = Math.min(screenWidth, xOffset + scaledWidth);
-    const yEnd = Math.min(screenHeight, yOffset + scaledHeight);
     const isHorizontalFlip = (flags & 1) !== 0;
     const isVerticalFlip = (flags & 2) !== 0;
+
+    // Calculate the screen region to update.
+    const [xTL, yTL] = movedPoint(
+      rotatedPoint(
+        scaledPoint([0, 0], scaleFactor),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xTR, yTR] = movedPoint(
+      rotatedPoint(
+        scaledPoint([width, 0], scaleFactor),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xBL, yBL] = movedPoint(
+      rotatedPoint(
+        scaledPoint([0, height], scaleFactor),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xBR, yBR] = movedPoint(
+      rotatedPoint(
+        scaledPoint([width, height], scaleFactor),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const { width: screenWidth, height: screenHeight } = this;
+    const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
+    const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
+    const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
+    const yEnd = Math.min(screenHeight, Math.max(yTL, yTR, yBL, yBR));
+
+    // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const xSprite = isHorizontalFlip ?
-          Math.floor((scaledWidth - (xScreen - xOffset)) / scaleFactor) :
-          Math.floor((xScreen - xOffset) / scaleFactor);
-        const ySprite = isVerticalFlip ?
-          Math.floor((scaledHeight - (yScreen - yOffset)) / scaleFactor) :
-          Math.floor((yScreen - yOffset) / scaleFactor);
-        const color = sample(data, width, height, xSprite, ySprite);
-        this.blendPixel(xScreen, yScreen, color, 0);
+        const [xSprite, ySprite] = scaledPoint(
+          rotatedPoint(
+            movedPoint([xScreen, yScreen], [-x, -y]),
+            -rotation
+          ),
+          1 / scaleFactor
+        );
+        const maybeColor = sample(data, width, xSprite, ySprite);
+        this.blendPixel(xScreen, yScreen, maybeColor ?? 0, 0);
       }
     }   
   }
 }
 
-function sample(data: Uint8Array, width: number, height: number, x: number, y: number) {
-  return data[y * width + x];
+function rotatedPoint([x, y]: [number, number], angle: number) : [number, number] {
+  return [Math.round(Math.cos(angle) * x + Math.sin(angle) * y), Math.round(-Math.sin(angle) * x + Math.cos(angle) * y)];
+}
+
+function scaledPoint([x, y]: [number, number], scaleFactor: number) : [number, number] {
+  return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
+}
+
+function movedPoint([xOrigin, yOrigin]: [number, number], [xDistance, yDistance]: [number, number]) : [number, number] {
+  return [xOrigin + xDistance, yOrigin + yDistance];
+}
+
+function sample(data: Uint8Array, width: number, x: number, y: number) : number | null {
+  // Invalid cases are signaled with null.
+  let idx: number;
+  if (x < 0 ||
+      y < 0 ||
+      width <= 0 ||
+      x >= width ||
+      (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+      idx >= data.length) {
+    return null;
+  }
+  return data[idx];
 }
 
 export default IndexedGraphic;
