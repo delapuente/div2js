@@ -49,8 +49,8 @@ class DivMap {
     // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
     // XXX: Also assuming rounding-up in case of odd size values.
     return new ControlPoint(
-      x == 0xFFFF ? Math.ceil(this.width / 2) : x,
-      y == 0xFFFF ? Math.ceil(this.height / 2) : y,
+      this.pointCount === 0 || x == 0xFFFF ? Math.ceil(this.width / 2) : x,
+      this.pointCount === 0 || y == 0xFFFF ? Math.ceil(this.height / 2) : y,
     );
   }
 
