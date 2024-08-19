@@ -159,6 +159,8 @@ function getDefaultPalette(size: number = DEFAULT_PALETTE_SIZE): Palette {
  * final color.
  */
 class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
+  readonly _transparentIndex: number = 0;
+
   _screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
 
   _screenGeometryVertexCount: number = this._screenCorners.length / 2;
@@ -228,15 +230,115 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     // TODO: Validate fpgId and mapId.
     const fpg = this._loadedFpgs[fpgId];
     const map = fpg.map(mapId);
-    this.screen.putScreen(map.data, map.width, map.height);
+
+    const { data, width, height } = map;
+    const { width: screenWidth, height: screenHeight } = this.screen;
+    const [ x, y ] = [Math.floor(screenWidth / 2), Math.floor(screenHeight / 2)];
+    const [ xSpriteOrigin, ySpriteOrigin ] = [Math.floor(width / 2), Math.floor(height / 2)];
+
+    this._xput(data, width, height, x, y, xSpriteOrigin, ySpriteOrigin, 0, 100, 0, 0, false);
+
     return 0;
   }
 
   xput(fpgId: number, mapId: number, x: number, y: number, angle: number, size: number, flags: number, region: number): void {
+    // TODO: Validate fpgId and mapId.
+    // TODO: Region.
     const fpg = this._loadedFpgs[fpgId];
     const map = fpg.map(mapId);
-    const center = map.controlPoint(0);
-    this.screen.xput(map.data, map.width, map.height, center.x, center.y, x, y, angle, size, flags, region);
+
+    const { data, width, height } = map;
+    const { x: xOrigin, y: yOrigin } = map.controlPoint(0);
+    
+    this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region);
+  }
+
+  _xput(data: Uint8Array, width: number, height: number, x: number, y: number, xOrigin: number, yOrigin: number, angle: number, size: number, flags: number, region: number, withTransparency: boolean = true): void {
+    // TODO: Flags: transparent.
+
+    // Calculate transformation parameters.
+    const rotation = angle * Math.PI / 180000;
+    const scaleFactor = size / 100;
+    const isHorizontalFlip = (flags & 1) !== 0;
+    const isVerticalFlip = (flags & 2) !== 0;
+
+    // Calculate the screen region to update.
+    const [xTL, yTL] = movedPoint(
+      rotatedPoint(
+        scaledPoint(
+          movedPoint([0, 0], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xTR, yTR] = movedPoint(
+      rotatedPoint(
+        scaledPoint(
+          movedPoint([width, 0], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xBL, yBL] = movedPoint(
+      rotatedPoint(
+        scaledPoint(
+          movedPoint([0, height], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const [xBR, yBR] = movedPoint(
+      rotatedPoint(
+        scaledPoint(
+          movedPoint([width, height], [-xOrigin, -yOrigin]),
+          scaleFactor
+        ),
+        rotation
+      ),
+      [x, y]
+    );
+
+    const { width: screenWidth, height: screenHeight } = this.screen;
+    const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
+    const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
+    const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
+    const yEnd = Math.min(screenHeight, Math.max(yTL, yTR, yBL, yBR));
+
+    // Update the region.
+    for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+      for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+        const [xSprite, ySprite] = flipSpriteCoordinates(
+          movedPoint(
+            scaledPoint(
+              rotatedPoint(
+                movedPoint([xScreen, yScreen], [-x, -y]),
+                -rotation
+              ),
+              1 / scaleFactor
+            ),
+            [xOrigin, yOrigin]
+          ),
+          width,
+          height,
+          isHorizontalFlip,
+          isVerticalFlip
+        );
+
+        const color = sample(data, width, xSprite, ySprite) ?? 0;
+        if (!withTransparency || color !== this._transparentIndex) {
+          this.screen.putPixel(xScreen, yScreen, color);
+        }
+      }
+    }
   }
 
   _initShaders() {
@@ -341,6 +443,36 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   _nextFpgId() {
     return this._loadedFpgs.length;
   }
+}
+
+function rotatedPoint([x, y]: [number, number], angle: number) : [number, number] {
+  return [Math.round(Math.cos(angle) * x + Math.sin(angle) * y), Math.round(-Math.sin(angle) * x + Math.cos(angle) * y)];
+}
+
+function scaledPoint([x, y]: [number, number], scaleFactor: number) : [number, number] {
+  return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
+}
+
+function movedPoint([xOrigin, yOrigin]: [number, number], [xDistance, yDistance]: [number, number]) : [number, number] {
+  return [xOrigin + xDistance, yOrigin + yDistance];
+}
+
+function flipSpriteCoordinates([x, y]: [number, number], width: number, height: number, isHorizontalFlip: boolean, isVerticalFlip: boolean) : [number, number] {
+  return [isHorizontalFlip ? width - x - 1 : x, isVerticalFlip ? height - y - 1 : y];
+}
+
+function sample(data: Uint8Array, width: number, x: number, y: number) : number | null {
+  // Invalid cases are signaled with null.
+  let idx: number;
+  if (x < 0 ||
+      y < 0 ||
+      width <= 0 ||
+      x >= width ||
+      (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+      idx >= data.length) {
+    return null;
+  }
+  return data[idx];
 }
 
 export { Div2VideoSystem as VideoSystem };
