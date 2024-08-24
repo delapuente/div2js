@@ -6,7 +6,16 @@ interface Div2VideoSystem {
   putScreen(fpgId: number, mapId: number): number;
   setPalette(palette: Palette): void;
   loadFpg(fpg: Fpg): number;
-  xput(fpgId: number, mapId: number, x: number, y: number, angle: number, size: number, flags: number, region: number): void;
+  xput(
+    fpgId: number,
+    mapId: number,
+    x: number,
+    y: number,
+    angle: number,
+    size: number,
+    flags: number,
+    region: number,
+  ): void;
 }
 
 export { Div2VideoSystem };
