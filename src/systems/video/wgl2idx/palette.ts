@@ -18,6 +18,15 @@ class Palette {
     // TODO: validate buffer size
     this.size = buffer.length / 3;
   }
+
+  color(index: number): [number, number, number] {
+    const offset = index * 3;
+    return [
+      this.buffer[offset],
+      this.buffer[offset + 1],
+      this.buffer[offset + 2],
+    ];
+  }
 }
 
 export default Palette;
