@@ -108,6 +108,8 @@ function getDefaultPalette(size: number = DEFAULT_PALETTE_SIZE): Palette {
   return palette;
 }
 
+type Color = [number, number, number];
+
 /**
  * Render the video data –the screen– into an HTML canvas.
  *
@@ -182,7 +184,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   constructor(
     canvas,
     public readonly screen: IndexedGraphic = getDefaultScreen(),
-    public palette: Palette = getDefaultPalette()
+    public palette: Palette = getDefaultPalette(),
   ) {
     this._gl = canvas.getContext("webgl2");
     this._loadedFpgs = [];
@@ -198,7 +200,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this.setViewportResolution(width, height);
   }
 
-  run(memory, environment) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  run(memory: never, environment: never) {
     this._sendPalette();
     this._sendFrameBuffer();
     this._drawScreen();
@@ -233,15 +236,40 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
     const { data, width, height } = map;
     const { width: screenWidth, height: screenHeight } = this.screen;
-    const [ x, y ] = [Math.floor(screenWidth / 2), Math.floor(screenHeight / 2)];
-    const [ xSpriteOrigin, ySpriteOrigin ] = [Math.floor(width / 2), Math.floor(height / 2)];
+    const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
+    const [xSpriteOrigin, ySpriteOrigin] = [
+      Math.round(width / 2),
+      Math.round(height / 2),
+    ];
 
-    this._xput(data, width, height, x, y, xSpriteOrigin, ySpriteOrigin, 0, 100, 0, 0, false);
+    this._xput(
+      data,
+      width,
+      height,
+      x,
+      y,
+      xSpriteOrigin,
+      ySpriteOrigin,
+      0,
+      100,
+      0,
+      0,
+      true,
+    );
 
     return 0;
   }
 
-  xput(fpgId: number, mapId: number, x: number, y: number, angle: number, size: number, flags: number, region: number): void {
+  xput(
+    fpgId: number,
+    mapId: number,
+    x: number,
+    y: number,
+    angle: number,
+    size: number,
+    flags: number,
+    region: number,
+  ): void {
     // TODO: Validate fpgId and mapId.
     // TODO: Region.
     const fpg = this._loadedFpgs[fpgId];
@@ -249,62 +277,82 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
     const { data, width, height } = map;
     const { x: xOrigin, y: yOrigin } = map.controlPoint(0);
-    
-    this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region);
+
+    this._xput(
+      data,
+      width,
+      height,
+      x,
+      y,
+      xOrigin,
+      yOrigin,
+      angle,
+      size,
+      flags,
+      region,
+    );
   }
 
-  _xput(data: Uint8Array, width: number, height: number, x: number, y: number, xOrigin: number, yOrigin: number, angle: number, size: number, flags: number, region: number, withTransparency: boolean = true): void {
-    // TODO: Flags: transparent.
+  _xput(
+    data: Uint8Array,
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    xOrigin: number,
+    yOrigin: number,
+    angle: number,
+    size: number,
+    flags: number,
+    region: number,
+    ignoreTransparency: boolean = false,
+  ): void {
+    // TODO: Regions.
+    if (region !== 0) {
+      console.warn("Regions are not supported yet.");
+    }
 
     // Calculate transformation parameters.
-    const rotation = angle * Math.PI / 180000;
+    const rotation = (angle * Math.PI) / 180000;
     const scaleFactor = size / 100;
-    const isHorizontalFlip = (flags & 1) !== 0;
-    const isVerticalFlip = (flags & 2) !== 0;
+    const withHorizontalFlip = (flags & 1) !== 0;
+    const withVerticalFlip = (flags & 2) !== 0;
+    const withTransparency = (flags & 4) !== 0;
 
     // Calculate the screen region to update.
     const [xTL, yTL] = movedPoint(
       rotatedPoint(
-        scaledPoint(
-          movedPoint([0, 0], [-xOrigin, -yOrigin]),
-          scaleFactor
-        ),
-        rotation
+        scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor),
+        rotation,
       ),
-      [x, y]
+      [x, y],
     );
 
     const [xTR, yTR] = movedPoint(
       rotatedPoint(
-        scaledPoint(
-          movedPoint([width, 0], [-xOrigin, -yOrigin]),
-          scaleFactor
-        ),
-        rotation
+        scaledPoint(movedPoint([width, 0], [-xOrigin, -yOrigin]), scaleFactor),
+        rotation,
       ),
-      [x, y]
+      [x, y],
     );
 
     const [xBL, yBL] = movedPoint(
       rotatedPoint(
-        scaledPoint(
-          movedPoint([0, height], [-xOrigin, -yOrigin]),
-          scaleFactor
-        ),
-        rotation
+        scaledPoint(movedPoint([0, height], [-xOrigin, -yOrigin]), scaleFactor),
+        rotation,
       ),
-      [x, y]
+      [x, y],
     );
 
     const [xBR, yBR] = movedPoint(
       rotatedPoint(
         scaledPoint(
           movedPoint([width, height], [-xOrigin, -yOrigin]),
-          scaleFactor
+          scaleFactor,
         ),
-        rotation
+        rotation,
       ),
-      [x, y]
+      [x, y],
     );
 
     const { width: screenWidth, height: screenHeight } = this.screen;
@@ -319,26 +367,66 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         const [xSprite, ySprite] = flipSpriteCoordinates(
           movedPoint(
             scaledPoint(
-              rotatedPoint(
-                movedPoint([xScreen, yScreen], [-x, -y]),
-                -rotation
-              ),
-              1 / scaleFactor
+              rotatedPoint(movedPoint([xScreen, yScreen], [-x, -y]), -rotation),
+              1 / scaleFactor,
             ),
-            [xOrigin, yOrigin]
+            [xOrigin, yOrigin],
           ),
           width,
           height,
-          isHorizontalFlip,
-          isVerticalFlip
+          withHorizontalFlip,
+          withVerticalFlip,
         );
 
-        const color = sample(data, width, xSprite, ySprite) ?? 0;
-        if (!withTransparency || color !== this._transparentIndex) {
+        let color = sample(data, width, xSprite, ySprite) ?? 0;
+        const colorIsTransparent = this._isTransparent(color);
+
+        if (withTransparency) {
+          const currentColor = this.screen.getPixel(xScreen, yScreen);
+          color =
+            !ignoreTransparency && colorIsTransparent
+              ? currentColor
+              : this._mixColors(currentColor, color);
+        }
+
+        if (ignoreTransparency || !colorIsTransparent) {
           this.screen.putPixel(xScreen, yScreen, color);
         }
       }
     }
+  }
+
+  _isTransparent(colorIndex: number): boolean {
+    return colorIndex === this._transparentIndex;
+  }
+
+  _mixColors(colorAIndex: number, colorBIndex: number): number {
+    const [rA, gA, bA] = this.palette.color(colorAIndex);
+    const [rB, gB, bB] = this.palette.color(colorBIndex);
+    const mixedComponents = [
+      Math.floor((rA + rB) / 2),
+      Math.floor((gA + gB) / 2),
+      Math.floor((bA + bB) / 2),
+    ] as Color;
+    return this._findClosest(mixedComponents);
+  }
+
+  _findClosest([r, g, b]: Color): number {
+    let closestColorIndex = 0;
+    let closestColorDistance = Number.MAX_SAFE_INTEGER;
+    for (let i = 0; i < this.palette.size; i += 1) {
+      const [rPalette, gPalette, bPalette] = this.palette.color(i);
+      const distance = Math.sqrt(
+        Math.pow(r - rPalette, 2) +
+          Math.pow(g - gPalette, 2) +
+          Math.pow(b - bPalette, 2),
+      );
+      if (distance < closestColorDistance) {
+        closestColorIndex = i;
+        closestColorDistance = distance;
+      }
+    }
+    return closestColorIndex;
   }
 
   _initShaders() {
@@ -445,31 +533,59 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 }
 
-function rotatedPoint([x, y]: [number, number], angle: number) : [number, number] {
-  return [Math.round(Math.cos(angle) * x + Math.sin(angle) * y), Math.round(-Math.sin(angle) * x + Math.cos(angle) * y)];
+function rotatedPoint(
+  [x, y]: [number, number],
+  angle: number,
+): [number, number] {
+  return [
+    Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
+    Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
+  ];
 }
 
-function scaledPoint([x, y]: [number, number], scaleFactor: number) : [number, number] {
+function scaledPoint(
+  [x, y]: [number, number],
+  scaleFactor: number,
+): [number, number] {
   return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
 }
 
-function movedPoint([xOrigin, yOrigin]: [number, number], [xDistance, yDistance]: [number, number]) : [number, number] {
+function movedPoint(
+  [xOrigin, yOrigin]: [number, number],
+  [xDistance, yDistance]: [number, number],
+): [number, number] {
   return [xOrigin + xDistance, yOrigin + yDistance];
 }
 
-function flipSpriteCoordinates([x, y]: [number, number], width: number, height: number, isHorizontalFlip: boolean, isVerticalFlip: boolean) : [number, number] {
-  return [isHorizontalFlip ? width - x - 1 : x, isVerticalFlip ? height - y - 1 : y];
+function flipSpriteCoordinates(
+  [x, y]: [number, number],
+  width: number,
+  height: number,
+  isHorizontalFlip: boolean,
+  isVerticalFlip: boolean,
+): [number, number] {
+  return [
+    isHorizontalFlip ? width - x - 1 : x,
+    isVerticalFlip ? height - y - 1 : y,
+  ];
 }
 
-function sample(data: Uint8Array, width: number, x: number, y: number) : number | null {
+function sample(
+  data: Uint8Array,
+  width: number,
+  x: number,
+  y: number,
+): number | null {
   // Invalid cases are signaled with null.
   let idx: number;
-  if (x < 0 ||
-      y < 0 ||
-      width <= 0 ||
-      x >= width ||
-      (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
-      idx >= data.length) {
+  if (
+    x < 0 ||
+    y < 0 ||
+    width <= 0 ||
+    x >= width ||
+    (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+    idx >= data.length
+  ) {
     return null;
   }
   return data[idx];
