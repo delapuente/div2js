@@ -166,7 +166,7 @@ var used = [];
  * Chai version
  */
 
-exports.version = '4.3.3';
+exports.version = '4.3.8';
 
 /*!
  * Assertion Error
@@ -310,6 +310,8 @@ module.exports = function (_chai, util) {
    *   from within another assertion. It's also temporarily set to `true` before
    *   an overwritten assertion gets called by the overwriting assertion.
    *
+   * - `eql`: This flag contains the deepEqual function to be used by the assertion.
+   *
    * @param {Mixed} obj target of the assertion
    * @param {String} msg (optional) custom error message
    * @param {Function} ssfi (optional) starting point for removing stack frames
@@ -322,6 +324,7 @@ module.exports = function (_chai, util) {
     flag(this, 'lockSsfi', lockSsfi);
     flag(this, 'object', obj);
     flag(this, 'message', msg);
+    flag(this, 'eql', config.deepEqual || util.eql);
 
     return util.proxify(this);
   }
@@ -533,7 +536,33 @@ module.exports = {
    * @api public
    */
 
-  proxyExcludedKeys: ['then', 'catch', 'inspect', 'toJSON']
+  proxyExcludedKeys: ['then', 'catch', 'inspect', 'toJSON'],
+
+  /**
+   * ### config.deepEqual
+   *
+   * User configurable property, defines which a custom function to use for deepEqual
+   * comparisons.
+   * By default, the function used is the one from the `deep-eql` package without custom comparator.
+   *
+   *     // use a custom comparator
+   *     chai.config.deepEqual = (expected, actual) => {
+   *        return chai.util.eql(expected, actual, {
+   *           comparator: (expected, actual) => {
+   *              // for non number comparison, use the default behavior
+   *              if(typeof expected !== 'number') return null;
+   *              // allow a difference of 10 between compared numbers
+   *              return typeof actual === 'number' && Math.abs(actual - expected) < 10
+   *           }
+   *        })
+   *     };
+   *
+   * @param {Function}
+   * @api public
+   */
+
+  deepEqual: null
+
 };
 
 
@@ -1025,7 +1054,8 @@ module.exports = function (chai, _) {
       , negate = flag(this, 'negate')
       , ssfi = flag(this, 'ssfi')
       , isDeep = flag(this, 'deep')
-      , descriptor = isDeep ? 'deep ' : '';
+      , descriptor = isDeep ? 'deep ' : ''
+      , isEql = isDeep ? flag(this, 'eql') : SameValueZero;
 
     flagMsg = flagMsg ? flagMsg + ': ' : '';
 
@@ -1049,7 +1079,6 @@ module.exports = function (chai, _) {
         break;
 
       case 'map':
-        var isEql = isDeep ? _.eql : SameValueZero;
         obj.forEach(function (item) {
           included = included || isEql(item, val);
         });
@@ -1058,7 +1087,7 @@ module.exports = function (chai, _) {
       case 'set':
         if (isDeep) {
           obj.forEach(function (item) {
-            included = included || _.eql(item, val);
+            included = included || isEql(item, val);
           });
         } else {
           included = obj.has(val);
@@ -1068,7 +1097,7 @@ module.exports = function (chai, _) {
       case 'array':
         if (isDeep) {
           included = obj.some(function (item) {
-            return _.eql(item, val);
+            return isEql(item, val);
           })
         } else {
           included = obj.indexOf(val) !== -1;
@@ -1640,8 +1669,9 @@ module.exports = function (chai, _) {
 
   function assertEql(obj, msg) {
     if (msg) flag(this, 'message', msg);
+    var eql = flag(this, 'eql');
     this.assert(
-        _.eql(obj, flag(this, 'object'))
+        eql(obj, flag(this, 'object'))
       , 'expected #{this} to deeply equal #{exp}'
       , 'expected #{this} to not deeply equal #{exp}'
       , obj
@@ -2409,7 +2439,8 @@ module.exports = function (chai, _) {
     var isDeep = flag(this, 'deep')
       , negate = flag(this, 'negate')
       , pathInfo = isNested ? _.getPathInfo(obj, name) : null
-      , value = isNested ? pathInfo.value : obj[name];
+      , value = isNested ? pathInfo.value : obj[name]
+      , isEql = isDeep ? flag(this, 'eql') : (val1, val2) => val1 === val2;;
 
     var descriptor = '';
     if (isDeep) descriptor += 'deep ';
@@ -2436,7 +2467,7 @@ module.exports = function (chai, _) {
 
     if (arguments.length > 1) {
       this.assert(
-          hasProperty && (isDeep ? _.eql(val, value) : val === value)
+          hasProperty && isEql(val, value)
         , 'expected #{this} to have ' + descriptor + _.inspect(name) + ' of #{exp}, but got #{act}'
         , 'expected #{this} to not have ' + descriptor + _.inspect(name) + ' of #{act}'
         , val
@@ -2584,9 +2615,10 @@ module.exports = function (chai, _) {
     if (msg) flag(this, 'message', msg);
     var obj = flag(this, 'object');
     var actualDescriptor = Object.getOwnPropertyDescriptor(Object(obj), name);
+    var eql = flag(this, 'eql');
     if (actualDescriptor && descriptor) {
       this.assert(
-          _.eql(descriptor, actualDescriptor)
+          eql(descriptor, actualDescriptor)
         , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to match ' + _.inspect(descriptor) + ', got ' + _.inspect(actualDescriptor)
         , 'expected the own property descriptor for ' + _.inspect(name) + ' on #{this} to not match ' + _.inspect(descriptor)
         , descriptor
@@ -2940,7 +2972,8 @@ module.exports = function (chai, _) {
     var len = keys.length
       , any = flag(this, 'any')
       , all = flag(this, 'all')
-      , expected = keys;
+      , expected = keys
+      , isEql = isDeep ? flag(this, 'eql') : (val1, val2) => val1 === val2;
 
     if (!any && !all) {
       all = true;
@@ -2950,11 +2983,7 @@ module.exports = function (chai, _) {
     if (any) {
       ok = expected.some(function(expectedKey) {
         return actual.some(function(actualKey) {
-          if (isDeep) {
-            return _.eql(expectedKey, actualKey);
-          } else {
-            return expectedKey === actualKey;
-          }
+          return isEql(expectedKey, actualKey);
         });
       });
     }
@@ -2963,11 +2992,7 @@ module.exports = function (chai, _) {
     if (all) {
       ok = expected.every(function(expectedKey) {
         return actual.some(function(actualKey) {
-          if (isDeep) {
-            return _.eql(expectedKey, actualKey);
-          } else {
-            return expectedKey === actualKey;
-          }
+          return isEql(expectedKey, actualKey);
         });
       });
 
@@ -3655,7 +3680,7 @@ module.exports = function (chai, _) {
       failNegateMsg = 'expected #{this} to not have the same ' + subject + ' as #{exp}';
     }
 
-    var cmp = flag(this, 'deep') ? _.eql : undefined;
+    var cmp = flag(this, 'deep') ? flag(this, 'eql') : undefined;
 
     this.assert(
         isSubsetOf(subset, obj, cmp, contains, ordered)
@@ -3711,7 +3736,8 @@ module.exports = function (chai, _) {
       , flagMsg = flag(this, 'message')
       , ssfi = flag(this, 'ssfi')
       , contains = flag(this, 'contains')
-      , isDeep = flag(this, 'deep');
+      , isDeep = flag(this, 'deep')
+      , eql = flag(this, 'eql');
     new Assertion(list, flagMsg, ssfi, true).to.be.an('array');
 
     if (contains) {
@@ -3725,7 +3751,7 @@ module.exports = function (chai, _) {
     } else {
       if (isDeep) {
         this.assert(
-          list.some(function(possibility) { return _.eql(expected, possibility) })
+          list.some(function(possibility) { return eql(expected, possibility) })
           , 'expected #{this} to deeply equal one of #{exp}'
           , 'expected #{this} to deeply equal one of #{exp}'
           , list
@@ -8272,7 +8298,7 @@ module.exports = function compareByInspect(a, b) {
 
 var AssertionError = __webpack_require__(/*! assertion-error */ "./node_modules/assertion-error/index.js");
 var flag = __webpack_require__(/*! ./flag */ "./node_modules/chai/lib/chai/utils/flag.js");
-var type = __webpack_require__(/*! type-detect */ "./node_modules/type-detect/type-detect.js");
+var type = __webpack_require__(/*! type-detect */ "./node_modules/chai/node_modules/type-detect/type-detect.js");
 
 module.exports = function expectTypes(obj, types) {
   var flagMsg = flag(obj, 'message');
@@ -8444,7 +8470,7 @@ module.exports = function getMessage(obj, args) {
   \*********************************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var type = __webpack_require__(/*! type-detect */ "./node_modules/type-detect/type-detect.js");
+var type = __webpack_require__(/*! type-detect */ "./node_modules/chai/node_modules/type-detect/type-detect.js");
 
 var flag = __webpack_require__(/*! ./flag */ "./node_modules/chai/lib/chai/utils/flag.js");
 
@@ -8653,7 +8679,7 @@ exports.test = __webpack_require__(/*! ./test */ "./node_modules/chai/lib/chai/u
  * type utility
  */
 
-exports.type = __webpack_require__(/*! type-detect */ "./node_modules/type-detect/type-detect.js");
+exports.type = __webpack_require__(/*! type-detect */ "./node_modules/chai/node_modules/type-detect/type-detect.js");
 
 /*!
  * expectTypes utility
@@ -8952,6 +8978,7 @@ var config = __webpack_require__(/*! ../config */ "./node_modules/chai/lib/chai/
  * messages or should be truncated.
  *
  * @param {Mixed} javascript object to inspect
+ * @returns {string} stringified object
  * @name objDisplay
  * @namespace Utils
  * @api public
@@ -9446,7 +9473,7 @@ var flag = __webpack_require__(/*! ./flag */ "./node_modules/chai/lib/chai/utils
 /**
  * ### .test(object, expression)
  *
- * Test and object for expression.
+ * Test an object for expression.
  *
  * @param {Object} object (constructed Assertion)
  * @param {Arguments} chai.Assertion.prototype.assert arguments
@@ -9518,11 +9545,159 @@ module.exports = function transferFlags(assertion, object, includeAll) {
 
 /***/ }),
 
+/***/ "./node_modules/chai/node_modules/type-detect/type-detect.js":
+/*!*******************************************************************!*\
+  !*** ./node_modules/chai/node_modules/type-detect/type-detect.js ***!
+  \*******************************************************************/
+/***/ (function(module) {
+
+(function (global, factory) {
+     true ? module.exports = factory() :
+    0;
+})(this, (function () { 'use strict';
+
+    var promiseExists = typeof Promise === 'function';
+    var globalObject = (function (Obj) {
+        if (typeof globalThis === 'object') {
+            return globalThis;
+        }
+        Object.defineProperty(Obj, 'typeDetectGlobalObject', {
+            get: function get() {
+                return this;
+            },
+            configurable: true,
+        });
+        var global = typeDetectGlobalObject;
+        delete Obj.typeDetectGlobalObject;
+        return global;
+    })(Object.prototype);
+    var symbolExists = typeof Symbol !== 'undefined';
+    var mapExists = typeof Map !== 'undefined';
+    var setExists = typeof Set !== 'undefined';
+    var weakMapExists = typeof WeakMap !== 'undefined';
+    var weakSetExists = typeof WeakSet !== 'undefined';
+    var dataViewExists = typeof DataView !== 'undefined';
+    var symbolIteratorExists = symbolExists && typeof Symbol.iterator !== 'undefined';
+    var symbolToStringTagExists = symbolExists && typeof Symbol.toStringTag !== 'undefined';
+    var setEntriesExists = setExists && typeof Set.prototype.entries === 'function';
+    var mapEntriesExists = mapExists && typeof Map.prototype.entries === 'function';
+    var setIteratorPrototype = setEntriesExists && Object.getPrototypeOf(new Set().entries());
+    var mapIteratorPrototype = mapEntriesExists && Object.getPrototypeOf(new Map().entries());
+    var arrayIteratorExists = symbolIteratorExists && typeof Array.prototype[Symbol.iterator] === 'function';
+    var arrayIteratorPrototype = arrayIteratorExists && Object.getPrototypeOf([][Symbol.iterator]());
+    var stringIteratorExists = symbolIteratorExists && typeof String.prototype[Symbol.iterator] === 'function';
+    var stringIteratorPrototype = stringIteratorExists && Object.getPrototypeOf(''[Symbol.iterator]());
+    var toStringLeftSliceLength = 8;
+    var toStringRightSliceLength = -1;
+    function typeDetect(obj) {
+        var typeofObj = typeof obj;
+        if (typeofObj !== 'object') {
+            return typeofObj;
+        }
+        if (obj === null) {
+            return 'null';
+        }
+        if (obj === globalObject) {
+            return 'global';
+        }
+        if (Array.isArray(obj) &&
+            (symbolToStringTagExists === false || !(Symbol.toStringTag in obj))) {
+            return 'Array';
+        }
+        if (typeof window === 'object' && window !== null) {
+            if (typeof window.location === 'object' && obj === window.location) {
+                return 'Location';
+            }
+            if (typeof window.document === 'object' && obj === window.document) {
+                return 'Document';
+            }
+            if (typeof window.navigator === 'object') {
+                if (typeof window.navigator.mimeTypes === 'object' &&
+                    obj === window.navigator.mimeTypes) {
+                    return 'MimeTypeArray';
+                }
+                if (typeof window.navigator.plugins === 'object' &&
+                    obj === window.navigator.plugins) {
+                    return 'PluginArray';
+                }
+            }
+            if ((typeof window.HTMLElement === 'function' ||
+                typeof window.HTMLElement === 'object') &&
+                obj instanceof window.HTMLElement) {
+                if (obj.tagName === 'BLOCKQUOTE') {
+                    return 'HTMLQuoteElement';
+                }
+                if (obj.tagName === 'TD') {
+                    return 'HTMLTableDataCellElement';
+                }
+                if (obj.tagName === 'TH') {
+                    return 'HTMLTableHeaderCellElement';
+                }
+            }
+        }
+        var stringTag = (symbolToStringTagExists && obj[Symbol.toStringTag]);
+        if (typeof stringTag === 'string') {
+            return stringTag;
+        }
+        var objPrototype = Object.getPrototypeOf(obj);
+        if (objPrototype === RegExp.prototype) {
+            return 'RegExp';
+        }
+        if (objPrototype === Date.prototype) {
+            return 'Date';
+        }
+        if (promiseExists && objPrototype === Promise.prototype) {
+            return 'Promise';
+        }
+        if (setExists && objPrototype === Set.prototype) {
+            return 'Set';
+        }
+        if (mapExists && objPrototype === Map.prototype) {
+            return 'Map';
+        }
+        if (weakSetExists && objPrototype === WeakSet.prototype) {
+            return 'WeakSet';
+        }
+        if (weakMapExists && objPrototype === WeakMap.prototype) {
+            return 'WeakMap';
+        }
+        if (dataViewExists && objPrototype === DataView.prototype) {
+            return 'DataView';
+        }
+        if (mapExists && objPrototype === mapIteratorPrototype) {
+            return 'Map Iterator';
+        }
+        if (setExists && objPrototype === setIteratorPrototype) {
+            return 'Set Iterator';
+        }
+        if (arrayIteratorExists && objPrototype === arrayIteratorPrototype) {
+            return 'Array Iterator';
+        }
+        if (stringIteratorExists && objPrototype === stringIteratorPrototype) {
+            return 'String Iterator';
+        }
+        if (objPrototype === null) {
+            return 'Object';
+        }
+        return Object
+            .prototype
+            .toString
+            .call(obj)
+            .slice(toStringLeftSliceLength, toStringRightSliceLength);
+    }
+
+    return typeDetect;
+
+}));
+
+
+/***/ }),
+
 /***/ "./node_modules/check-error/index.js":
 /*!*******************************************!*\
   !*** ./node_modules/check-error/index.js ***!
   \*******************************************/
-/***/ ((module) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
@@ -9533,6 +9708,7 @@ module.exports = function transferFlags(assertion, object, includeAll) {
  * MIT Licensed
  */
 
+var getFunctionName = __webpack_require__(/*! get-func-name */ "./node_modules/get-func-name/index.js");
 /**
  * ### .checkError
  *
@@ -9613,34 +9789,6 @@ function compatibleMessage(thrown, errMatcher) {
 }
 
 /**
- * ### .getFunctionName(constructorFn)
- *
- * Returns the name of a function.
- * This also includes a polyfill function if `constructorFn.name` is not defined.
- *
- * @name getFunctionName
- * @param {Function} constructorFn
- * @namespace Utils
- * @api private
- */
-
-var functionNameMatch = /\s*function(?:\s|\s*\/\*[^(?:*\/)]+\*\/\s*)*([^\(\/]+)/;
-function getFunctionName(constructorFn) {
-  var name = '';
-  if (typeof constructorFn.name === 'undefined') {
-    // Here we run a polyfill if constructorFn.name is not defined
-    var match = String(constructorFn).match(functionNameMatch);
-    if (match) {
-      name = match[1];
-    }
-  } else {
-    name = constructorFn.name;
-  }
-
-  return name;
-}
-
-/**
  * ### .getConstructorName(errorLike)
  *
  * Gets the constructor name for an Error instance or constructor itself.
@@ -9659,8 +9807,11 @@ function getConstructorName(errorLike) {
     // If `err` is not an instance of Error it is an error constructor itself or another function.
     // If we've got a common function we get its name, otherwise we may need to create a new instance
     // of the error just in case it's a poorly-constructed error. Please see chaijs/chai/issues/45 to know more.
-    constructorName = getFunctionName(errorLike).trim() ||
-        getFunctionName(new errorLike()); // eslint-disable-line new-cap
+    constructorName = getFunctionName(errorLike);
+    if (constructorName === '') {
+      var newConstructorName = getFunctionName(new errorLike()); // eslint-disable-line new-cap
+      constructorName = newConstructorName || constructorName;
+    }
   }
 
   return constructorName;
@@ -9722,10 +9873,10 @@ function FakeMap() {
 }
 
 FakeMap.prototype = {
-  get: function getMap(key) {
+  get: function get(key) {
     return key[this._key];
   },
-  set: function setMap(key, value) {
+  set: function set(key, value) {
     if (Object.isExtensible(key)) {
       Object.defineProperty(key, this._key, {
         value: value,
@@ -9917,8 +10068,9 @@ function extensiveDeepEqualByType(leftHandOperand, rightHandOperand, leftHandTyp
     case 'function':
     case 'WeakMap':
     case 'WeakSet':
-    case 'Error':
       return leftHandOperand === rightHandOperand;
+    case 'Error':
+      return keysEqual(leftHandOperand, rightHandOperand, [ 'name', 'message', 'code' ], options);
     case 'Arguments':
     case 'Int8Array':
     case 'Uint8Array':
@@ -9943,6 +10095,19 @@ function extensiveDeepEqualByType(leftHandOperand, rightHandOperand, leftHandTyp
       return entriesEqual(leftHandOperand, rightHandOperand, options);
     case 'Map':
       return entriesEqual(leftHandOperand, rightHandOperand, options);
+    case 'Temporal.PlainDate':
+    case 'Temporal.PlainTime':
+    case 'Temporal.PlainDateTime':
+    case 'Temporal.Instant':
+    case 'Temporal.ZonedDateTime':
+    case 'Temporal.PlainYearMonth':
+    case 'Temporal.PlainMonthDay':
+      return leftHandOperand.equals(rightHandOperand);
+    case 'Temporal.Duration':
+      return leftHandOperand.total('nanoseconds') === rightHandOperand.total('nanoseconds');
+    case 'Temporal.TimeZone':
+    case 'Temporal.Calendar':
+      return leftHandOperand.toString() === rightHandOperand.toString();
     default:
       return objectEqual(leftHandOperand, rightHandOperand, options);
   }
@@ -9970,12 +10135,17 @@ function regexpEqual(leftHandOperand, rightHandOperand) {
  */
 
 function entriesEqual(leftHandOperand, rightHandOperand, options) {
-  // IE11 doesn't support Set#entries or Set#@@iterator, so we need manually populate using Set#forEach
-  if (leftHandOperand.size !== rightHandOperand.size) {
+  try {
+    // IE11 doesn't support Set#entries or Set#@@iterator, so we need manually populate using Set#forEach
+    if (leftHandOperand.size !== rightHandOperand.size) {
+      return false;
+    }
+    if (leftHandOperand.size === 0) {
+      return true;
+    }
+  } catch (sizeError) {
+    // things that aren't actual Maps or Sets will throw here
     return false;
-  }
-  if (leftHandOperand.size === 0) {
-    return true;
   }
   var leftHandItems = [];
   var rightHandItems = [];
@@ -10088,6 +10258,18 @@ function getEnumerableKeys(target) {
   return keys;
 }
 
+function getEnumerableSymbols(target) {
+  var keys = [];
+  var allKeys = Object.getOwnPropertySymbols(target);
+  for (var i = 0; i < allKeys.length; i += 1) {
+    var key = allKeys[i];
+    if (Object.getOwnPropertyDescriptor(target, key).enumerable) {
+      keys.push(key);
+    }
+  }
+  return keys;
+}
+
 /*!
  * Determines if two objects have matching values, given a set of keys. Defers to deepEqual for the equality check of
  * each key. If any value of the given key is not equal, the function will return false (early).
@@ -10120,14 +10302,16 @@ function keysEqual(leftHandOperand, rightHandOperand, keys, options) {
  * @param {Object} [options] (Optional)
  * @return {Boolean} result
  */
-
 function objectEqual(leftHandOperand, rightHandOperand, options) {
   var leftHandKeys = getEnumerableKeys(leftHandOperand);
   var rightHandKeys = getEnumerableKeys(rightHandOperand);
+  var leftHandSymbols = getEnumerableSymbols(leftHandOperand);
+  var rightHandSymbols = getEnumerableSymbols(rightHandOperand);
+  leftHandKeys = leftHandKeys.concat(leftHandSymbols);
+  rightHandKeys = rightHandKeys.concat(rightHandSymbols);
+
   if (leftHandKeys.length && leftHandKeys.length === rightHandKeys.length) {
-    leftHandKeys.sort();
-    rightHandKeys.sort();
-    if (iterableEqual(leftHandKeys, rightHandKeys) === false) {
+    if (iterableEqual(mapSymbols(leftHandKeys).sort(), mapSymbols(rightHandKeys).sort()) === false) {
       return false;
     }
     return keysEqual(leftHandOperand, rightHandOperand, leftHandKeys, options);
@@ -10164,6 +10348,16 @@ function isPrimitive(value) {
   return value === null || typeof value !== 'object';
 }
 
+function mapSymbols(arr) {
+  return arr.map(function mapSymbol(entry) {
+    if (typeof entry === 'symbol') {
+      return entry.toString();
+    }
+
+    return entry;
+  });
+}
+
 
 /***/ }),
 
@@ -10186,6 +10380,7 @@ function isPrimitive(value) {
   Copyright (C) 2012 Joost-Wim Boekesteijn <joost-wim@boekesteijn.nl>
   Copyright (C) 2012 Kris Kowal <kris.kowal@cixar.com>
   Copyright (C) 2012 Arpad Borsos <arpad.borsos@googlemail.com>
+  Copyright (C) 2020 Apple Inc. All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
   modification, are permitted provided that the following conditions are met:
@@ -10260,29 +10455,31 @@ function isPrimitive(value) {
         Assignment: 1,
         Conditional: 2,
         ArrowFunction: 2,
-        LogicalOR: 3,
-        LogicalAND: 4,
-        BitwiseOR: 5,
-        BitwiseXOR: 6,
-        BitwiseAND: 7,
-        Equality: 8,
-        Relational: 9,
-        BitwiseSHIFT: 10,
-        Additive: 11,
-        Multiplicative: 12,
-        Exponentiation: 13,
-        Await: 14,
-        Unary: 14,
-        Postfix: 15,
-        OptionalChaining: 16,
-        Call: 17,
-        New: 18,
-        TaggedTemplate: 19,
-        Member: 20,
-        Primary: 21
+        Coalesce: 3,
+        LogicalOR: 4,
+        LogicalAND: 5,
+        BitwiseOR: 6,
+        BitwiseXOR: 7,
+        BitwiseAND: 8,
+        Equality: 9,
+        Relational: 10,
+        BitwiseSHIFT: 11,
+        Additive: 12,
+        Multiplicative: 13,
+        Exponentiation: 14,
+        Await: 15,
+        Unary: 15,
+        Postfix: 16,
+        OptionalChaining: 17,
+        Call: 18,
+        New: 19,
+        TaggedTemplate: 20,
+        Member: 21,
+        Primary: 22
     };
 
     BinaryPrecedence = {
+        '??': Precedence.Coalesce,
         '||': Precedence.LogicalOR,
         '&&': Precedence.LogicalAND,
         '|': Precedence.BitwiseOR,
@@ -10317,7 +10514,8 @@ function isPrimitive(value) {
         F_ALLOW_UNPARATH_NEW = 1 << 2,
         F_FUNC_BODY = 1 << 3,
         F_DIRECTIVE_CTX = 1 << 4,
-        F_SEMICOLON_OPT = 1 << 5;
+        F_SEMICOLON_OPT = 1 << 5,
+        F_FOUND_COALESCE = 1 << 6;
 
     //Expression flag sets
     //NOTE: Flag order:
@@ -11993,7 +12191,7 @@ function isPrimitive(value) {
             }
             return parenthesize(
                 [
-                    this.generateExpression(expr.test, Precedence.LogicalOR, flags),
+                    this.generateExpression(expr.test, Precedence.Coalesce, flags),
                     space + '?' + space,
                     this.generateExpression(expr.consequent, Precedence.Assignment, flags),
                     space + ':' + space,
@@ -12005,6 +12203,9 @@ function isPrimitive(value) {
         },
 
         LogicalExpression: function (expr, precedence, flags) {
+            if (expr.operator === '??') {
+                flags |= F_FOUND_COALESCE;
+            }
             return this.BinaryExpression(expr, precedence, flags);
         },
 
@@ -12040,6 +12241,9 @@ function isPrimitive(value) {
             }
 
             if (expr.operator === 'in' && !(flags & F_ALLOW_IN)) {
+                return ['(', result, ')'];
+            }
+            if ((expr.operator === '||' || expr.operator === '&&') && (flags & F_FOUND_COALESCE)) {
                 return ['(', result, ')'];
             }
             return parenthesize(result, currentPrecedence, precedence);
@@ -12521,6 +12725,16 @@ function isPrimitive(value) {
 
             if (expr.regex) {
               return '/' + expr.regex.pattern + '/' + expr.regex.flags;
+            }
+
+            if (typeof expr.value === 'bigint') {
+                return expr.value.toString() + 'n';
+            }
+
+            // `expr.value` can be null if `expr.bigint` exists. We need to check
+            // `expr.bigint` first.
+            if (expr.bigint) {
+                return expr.bigint + 'n';
             }
 
             if (expr.value === null) {
@@ -13226,7 +13440,7 @@ function isPrimitive(value) {
     function isProperty(nodeType, key) {
         return (nodeType === Syntax.ObjectExpression || nodeType === Syntax.ObjectPattern) && 'properties' === key;
     }
-
+  
     function candidateExistsInLeaveList(leavelist, candidate) {
         for (var i = leavelist.length - 1; i >= 0; --i) {
             if (leavelist[i].node === candidate) {
@@ -14186,6 +14400,7 @@ function isPrimitive(value) {
 
 var toString = Function.prototype.toString;
 var functionNameMatch = /\s*function(?:\s|\s*\/\*[^(?:*\/)]+\*\/\s*)*([^\s\(\/]+)/;
+var maxFunctionSourceLength = 512;
 function getFuncName(aFunc) {
   if (typeof aFunc !== 'function') {
     return null;
@@ -14193,8 +14408,15 @@ function getFuncName(aFunc) {
 
   var name = '';
   if (typeof Function.prototype.name === 'undefined' && typeof aFunc.name === 'undefined') {
+    // eslint-disable-next-line prefer-reflect
+    var functionSource = toString.call(aFunc);
+    // To avoid unconstrained resource consumption due to pathalogically large function names,
+    // we limit the available return value to be less than 512 characters.
+    if (functionSource.indexOf('(') > maxFunctionSourceLength) {
+      return name;
+    }
     // Here we run a polyfill if Function does not support the `name` property and if aFunc.name is not defined
-    var match = toString.call(aFunc).match(functionNameMatch);
+    var match = functionSource.match(functionNameMatch);
     if (match) {
       name = match[1];
     }
@@ -14527,6 +14749,7 @@ module.exports = getFuncName;
 
   var toString = Function.prototype.toString;
   var functionNameMatch = /\s*function(?:\s|\s*\/\*[^(?:*\/)]+\*\/\s*)*([^\s\(\/]+)/;
+  var maxFunctionSourceLength = 512;
   function getFuncName(aFunc) {
     if (typeof aFunc !== 'function') {
       return null;
@@ -14534,8 +14757,15 @@ module.exports = getFuncName;
 
     var name = '';
     if (typeof Function.prototype.name === 'undefined' && typeof aFunc.name === 'undefined') {
+      // eslint-disable-next-line prefer-reflect
+      var functionSource = toString.call(aFunc);
+      // To avoid unconstrained resource consumption due to pathalogically large function names,
+      // we limit the available return value to be less than 512 characters.
+      if (functionSource.indexOf('(') > maxFunctionSourceLength) {
+        return name;
+      }
       // Here we run a polyfill if Function does not support the `name` property and if aFunc.name is not defined
-      var match = toString.call(aFunc).match(functionNameMatch);
+      var match = functionSource.match(functionNameMatch);
       if (match) {
         name = match[1];
       }
@@ -14597,9 +14827,15 @@ module.exports = getFuncName;
   }
 
   function inspectDate(dateObject, options) {
-    // If we need to - truncate the time portion, but never the date
-    var split = dateObject.toJSON().split('T');
-    var date = split[0];
+    var stringRepresentation = dateObject.toJSON();
+
+    if (stringRepresentation === null) {
+      return 'Invalid Date';
+    }
+
+    var split = stringRepresentation.split('T');
+    var date = split[0]; // If we need to - truncate the time portion, but never the date
+
     return options.stylize("".concat(date, "T").concat(truncate(split[1], options.truncate - date.length - 1)), 'date');
   }
 
@@ -14896,7 +15132,32 @@ module.exports = getFuncName;
     nodeInspect = false;
   }
 
-  var constructorMap = new WeakMap();
+  function FakeMap() {
+    // eslint-disable-next-line prefer-template
+    this.key = 'chai/loupe__' + Math.random() + Date.now();
+  }
+
+  FakeMap.prototype = {
+    // eslint-disable-next-line object-shorthand
+    get: function get(key) {
+      return key[this.key];
+    },
+    // eslint-disable-next-line object-shorthand
+    has: function has(key) {
+      return this.key in key;
+    },
+    // eslint-disable-next-line object-shorthand
+    set: function set(key, value) {
+      if (Object.isExtensible(key)) {
+        Object.defineProperty(key, this.key, {
+          // eslint-disable-next-line object-shorthand
+          value: value,
+          configurable: true
+        });
+      }
+    }
+  };
+  var constructorMap = new (typeof WeakMap === 'function' ? WeakMap : FakeMap)();
   var stringTagMap = {};
   var baseTypesMap = {
     undefined: function undefined$1(value, options) {
@@ -15046,7 +15307,7 @@ module.exports = getFuncName;
       return false;
     }
 
-    constructorMap.add(constructor, inspector);
+    constructorMap.set(constructor, inspector);
     return true;
   }
   function registerStringTag(stringTag, inspector) {
@@ -17137,7 +17398,7 @@ IndexedSourceMapConsumer.prototype.sourceContentFor =
  * and an object is returned with the following properties:
  *
  *   - line: The line number in the generated source, or null.  The
- *     line number is 1-based.
+ *     line number is 1-based. 
  *   - column: The column number in the generated source, or null.
  *     The column number is 0-based.
  */
@@ -19956,29 +20217,29 @@ if (true) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "ArrayExpression": () => (/* binding */ ArrayExpression),
-/* harmony export */   "AssignmentExpression": () => (/* binding */ AssignmentExpression),
-/* harmony export */   "BinaryExpression": () => (/* binding */ BinaryExpression),
-/* harmony export */   "BlockStatement": () => (/* binding */ BlockStatement),
-/* harmony export */   "BreakStatement": () => (/* binding */ BreakStatement),
-/* harmony export */   "CallExpression": () => (/* binding */ CallExpression),
-/* harmony export */   "ConditionalExpression": () => (/* binding */ ConditionalExpression),
-/* harmony export */   "ExpressionStatement": () => (/* binding */ ExpressionStatement),
-/* harmony export */   "FunctionDeclaration": () => (/* binding */ FunctionDeclaration),
-/* harmony export */   "Identifier": () => (/* binding */ Identifier),
-/* harmony export */   "Literal": () => (/* binding */ Literal),
-/* harmony export */   "LogicalExpression": () => (/* binding */ LogicalExpression),
-/* harmony export */   "MemberExpression": () => (/* binding */ MemberExpression),
-/* harmony export */   "ObjectExpression": () => (/* binding */ ObjectExpression),
-/* harmony export */   "Program": () => (/* binding */ Program),
-/* harmony export */   "ReturnStatement": () => (/* binding */ ReturnStatement),
-/* harmony export */   "SwitchCase": () => (/* binding */ SwitchCase),
-/* harmony export */   "SwitchStatement": () => (/* binding */ SwitchStatement),
-/* harmony export */   "UnaryExpression": () => (/* binding */ UnaryExpression),
-/* harmony export */   "VariableDeclaration": () => (/* binding */ VariableDeclaration),
-/* harmony export */   "VariableDeclarator": () => (/* binding */ VariableDeclarator),
-/* harmony export */   "WhileStatement": () => (/* binding */ WhileStatement),
-/* harmony export */   "fromJson": () => (/* binding */ fromJson)
+/* harmony export */   ArrayExpression: () => (/* binding */ ArrayExpression),
+/* harmony export */   AssignmentExpression: () => (/* binding */ AssignmentExpression),
+/* harmony export */   BinaryExpression: () => (/* binding */ BinaryExpression),
+/* harmony export */   BlockStatement: () => (/* binding */ BlockStatement),
+/* harmony export */   BreakStatement: () => (/* binding */ BreakStatement),
+/* harmony export */   CallExpression: () => (/* binding */ CallExpression),
+/* harmony export */   ConditionalExpression: () => (/* binding */ ConditionalExpression),
+/* harmony export */   ExpressionStatement: () => (/* binding */ ExpressionStatement),
+/* harmony export */   FunctionDeclaration: () => (/* binding */ FunctionDeclaration),
+/* harmony export */   Identifier: () => (/* binding */ Identifier),
+/* harmony export */   Literal: () => (/* binding */ Literal),
+/* harmony export */   LogicalExpression: () => (/* binding */ LogicalExpression),
+/* harmony export */   MemberExpression: () => (/* binding */ MemberExpression),
+/* harmony export */   ObjectExpression: () => (/* binding */ ObjectExpression),
+/* harmony export */   Program: () => (/* binding */ Program),
+/* harmony export */   ReturnStatement: () => (/* binding */ ReturnStatement),
+/* harmony export */   SwitchCase: () => (/* binding */ SwitchCase),
+/* harmony export */   SwitchStatement: () => (/* binding */ SwitchStatement),
+/* harmony export */   UnaryExpression: () => (/* binding */ UnaryExpression),
+/* harmony export */   VariableDeclaration: () => (/* binding */ VariableDeclaration),
+/* harmony export */   VariableDeclarator: () => (/* binding */ VariableDeclarator),
+/* harmony export */   WhileStatement: () => (/* binding */ WhileStatement),
+/* harmony export */   fromJson: () => (/* binding */ fromJson)
 /* harmony export */ });
 class Node {
     pojo() {
@@ -20199,46 +20460,58 @@ function fromJson(json) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "load_fpg": () => (/* binding */ load_fpg),
-/* harmony export */   "load_pal": () => (/* binding */ load_pal),
-/* harmony export */   "put_pixel": () => (/* binding */ put_pixel),
-/* harmony export */   "put_screen": () => (/* binding */ put_screen),
-/* harmony export */   "rand": () => (/* binding */ rand)
+/* harmony export */   load_fpg: () => (/* binding */ load_fpg),
+/* harmony export */   load_pal: () => (/* binding */ load_pal),
+/* harmony export */   put: () => (/* binding */ put),
+/* harmony export */   put_pixel: () => (/* binding */ put_pixel),
+/* harmony export */   put_screen: () => (/* binding */ put_screen),
+/* harmony export */   rand: () => (/* binding */ rand),
+/* harmony export */   xput: () => (/* binding */ xput)
 /* harmony export */ });
-/* harmony import */ var _systems_video_palette__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../systems/video/palette */ "./src/systems/video/palette.ts");
-/* harmony import */ var _systems_video_fpg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../systems/video/fpg */ "./src/systems/video/fpg.ts");
+/* harmony import */ var _systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../systems/video/wgl2idx/palette */ "./src/systems/video/wgl2idx/palette.ts");
+/* harmony import */ var _systems_video_wgl2idx_fpg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../systems/video/wgl2idx/fpg */ "./src/systems/video/wgl2idx/fpg.ts");
 
 
-function put_pixel(x, y, colorIndex, systems) {
-    systems.getSystem("video").screen.putPixel(x, y, colorIndex);
-    return x; // XXX: !!put_pixel returns the x value. Checked empirically.
+function put_pixel(x, y, colorIndex, runtime) {
+    runtime.getSystem("video").putPixel(x, y, colorIndex);
+    return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
-function put_screen(file, graph, systems) {
-    return systems.getSystem("video").putScreen(file, graph);
+function put_screen(file, graph, runtime) {
+    return runtime.getSystem("video").putScreen(file, graph);
 }
 function rand(min, max) {
     const result = Math.floor(Math.random() * (max - min + 1)) + min;
     return result;
 }
-function load_pal(palettePath, systems) {
-    return systems
+function load_pal(palettePath, runtime) {
+    return runtime
         .getSystem("files")
         .loadPal(palettePath)
         .then((palFile) => {
-        systems.getSystem("video").setPalette(_systems_video_palette__WEBPACK_IMPORTED_MODULE_0__["default"].fromBuffer(palFile.buffer));
+        runtime.getSystem("video").setPalette(_systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__["default"].fromBuffer(palFile.buffer));
         return 1;
     });
 }
-function load_fpg(fpgPath, systems) {
-    return systems
+function load_fpg(fpgPath, runtime) {
+    return runtime
         .getSystem("files")
         .loadFpg(fpgPath)
         .then((fpgFile) => {
-        const fpgId = systems
+        const fpgId = runtime
             .getSystem("video")
-            .loadFpg(_systems_video_fpg__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(fpgFile.buffer));
+            .loadFpg(_systems_video_wgl2idx_fpg__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(fpgFile.buffer));
         return fpgId;
     });
+}
+function put(file, graph, x, y, runtime) {
+    return runtime
+        .getSystem("video")
+        .xput(file, graph, x, y, 0, 100, 0, 0);
+}
+function xput(file, graph, x, y, angle, size, flags, region, runtime) {
+    return runtime
+        .getSystem("video")
+        .xput(file, graph, x, y, angle, size, flags, region);
 }
 
 
@@ -20254,7 +20527,7 @@ function load_fpg(fpgPath, systems) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "compile": () => (/* binding */ compile)
+/* harmony export */   compile: () => (/* binding */ compile)
 /* harmony export */ });
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./div2lang */ "./src/div2lang.js");
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_div2lang__WEBPACK_IMPORTED_MODULE_0__);
@@ -20274,7 +20547,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) || {};
-(_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy.parseError) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
+(_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy).parseError = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
 function compile(srcText, sourceURL = "/div-program.js") {
     const symbolTable = new _memoryBrowser_symbols__WEBPACK_IMPORTED_MODULE_4__.SymbolTable(_memoryBrowser_definitions__WEBPACK_IMPORTED_MODULE_5__.DIV_SYMBOLS);
     const div2Ast = _div2lang__WEBPACK_IMPORTED_MODULE_0___default().parse(srcText);
@@ -20364,7 +20637,7 @@ function startsWith(str, prefix) {
 // XXX: This is the AST for runtime/wrapper.js
 // XXX: It is kept in sync with the command `npm run embed-wrapper`
 /* eslint-disable */
-let wrapperTemplate = { "type": "Program", "body": [{ "type": "ExpressionStatement", "expression": { "type": "FunctionExpression", "id": null, "params": [{ "type": "Identifier", "name": "rt" }], "body": { "type": "BlockStatement", "body": [{ "type": "ExpressionStatement", "expression": { "type": "Literal", "value": "use strict", "raw": "'use strict'" }, "directive": "use strict" }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldFrame" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "completion" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "frame", "raw": "'frame'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "completion" }, "computed": false, "value": { "type": "Identifier", "name": "completion" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldDebug" }, "params": [{ "type": "Identifier", "name": "npc" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "debug", "raw": "'debug'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldNewProcess" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "processName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "newprocess", "raw": "'newprocess'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "processName" }, "computed": false, "value": { "type": "Identifier", "name": "processName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldCallFunction" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "functionName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "call", "raw": "'call'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "functionName" }, "computed": false, "value": { "type": "Identifier", "name": "functionName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "VariableDeclaration", "declarations": [{ "type": "VariableDeclarator", "id": { "type": "Identifier", "name": "__yieldEnd" }, "init": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "end", "raw": "'end'" }] } }], "kind": "var" }, { "type": "ReturnStatement", "argument": { "type": "ObjectExpression", "properties": [] } }] }, "generator": false, "expression": false, "async": false } }], "sourceType": "script" };
+let wrapperTemplate = { "type": "Program", "body": [{ "type": "ExpressionStatement", "expression": { "type": "FunctionExpression", "id": null, "params": [{ "type": "Identifier", "name": "rt" }], "body": { "type": "BlockStatement", "body": [{ "type": "ExpressionStatement", "expression": { "type": "Literal", "value": "use strict", "raw": "'use strict'" }, "directive": "use strict" }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldFrame" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "completion" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "frame", "raw": "'frame'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "completion" }, "computed": false, "value": { "type": "Identifier", "name": "completion" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldDebug" }, "params": [{ "type": "Identifier", "name": "npc" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "debug", "raw": "'debug'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldNewProcess" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "processName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "newProcess", "raw": "'newProcess'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "processName" }, "computed": false, "value": { "type": "Identifier", "name": "processName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "FunctionDeclaration", "id": { "type": "Identifier", "name": "__yieldCallFunction" }, "params": [{ "type": "Identifier", "name": "npc" }, { "type": "Identifier", "name": "functionName" }, { "type": "Identifier", "name": "args" }], "body": { "type": "BlockStatement", "body": [{ "type": "ReturnStatement", "argument": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "call", "raw": "'call'" }, { "type": "ObjectExpression", "properties": [{ "type": "Property", "key": { "type": "Identifier", "name": "npc" }, "computed": false, "value": { "type": "Identifier", "name": "npc" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "functionName" }, "computed": false, "value": { "type": "Identifier", "name": "functionName" }, "kind": "init", "method": false, "shorthand": false }, { "type": "Property", "key": { "type": "Identifier", "name": "args" }, "computed": false, "value": { "type": "Identifier", "name": "args" }, "kind": "init", "method": false, "shorthand": false }] }] } }] }, "generator": false, "expression": false, "async": false }, { "type": "VariableDeclaration", "declarations": [{ "type": "VariableDeclarator", "id": { "type": "Identifier", "name": "__yieldEnd" }, "init": { "type": "NewExpression", "callee": { "type": "MemberExpression", "computed": false, "object": { "type": "Identifier", "name": "rt" }, "property": { "type": "Identifier", "name": "Baton" } }, "arguments": [{ "type": "Literal", "value": "end", "raw": "'end'" }] } }], "kind": "var" }, { "type": "ReturnStatement", "argument": { "type": "ObjectExpression", "properties": [] } }] }, "generator": false, "expression": false, "async": false } }], "sourceType": "script" };
 /* eslint-enable */
 
 
@@ -20380,72 +20653,65 @@ let wrapperTemplate = { "type": "Program", "body": [{ "type": "ExpressionStateme
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Context": () => (/* binding */ Context),
-/* harmony export */   "Linearization": () => (/* binding */ Linearization)
+/* harmony export */   Context: () => (/* binding */ Context),
+/* harmony export */   Linearization: () => (/* binding */ Linearization)
 /* harmony export */ });
 /* harmony import */ var _ast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ast */ "./src/ast.ts");
 /* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./templates */ "./src/templates.ts");
 
 
-function Context(ctx) {
-    this._processes = {};
-    this._auxNames = {};
-    this._currentProcess = undefined;
-    for (const key in ctx) {
-        if (ctx.hasOwnProperty(key)) {
-            this[key] = ctx[key];
-        }
+class Context {
+    constructor(symbolTable, memoryMap) {
+        this._processes = {};
+        this._auxNames = {};
+        this._currentProcess = undefined;
+        this._symbolTable = symbolTable;
+        this._mmap = memoryMap;
     }
-}
-Context.prototype = {
-    constructor: Context,
-    setMemoryMap: function (mmap) {
-        this._mmap = mmap;
-    },
-    getMemoryMap: function () {
+    getMemoryMap() {
         return this._mmap;
-    },
-    startLinearization: function () {
+    }
+    startLinearization() {
         this._auxNames = {};
         this._currentLinearization = new Linearization();
-    },
-    getLinearizationCases: function () {
+    }
+    getLinearizationCases() {
         return this._currentLinearization.getCases();
-    },
-    end: function () {
+    }
+    end() {
         return this._currentLinearization.end();
-    },
-    callFunction: function (resumeLabel, name, argList) {
+    }
+    callFunction(resumeLabel, name, argList) {
         return this._currentLinearization.callFunction(resumeLabel, name, argList);
-    },
-    newProcess: function (resumeLabel, name, argList) {
+    }
+    newProcess(resumeLabel, name, argList) {
         return this._currentLinearization.newProcess(resumeLabel, name, argList);
-    },
-    clone: function (childLabel, parentLabel) {
+    }
+    clone(childLabel, parentLabel) {
         return this._currentLinearization.clone(childLabel, parentLabel);
-    },
-    frame: function (resumeLabel, expression) {
+    }
+    frame(resumeLabel, expression) {
         return this._currentLinearization.frame(resumeLabel, expression);
-    },
-    debug: function (resumeLabel) {
+    }
+    debug(resumeLabel) {
         return this._currentLinearization.debug(resumeLabel);
-    },
-    declareProcess: function (name) {
+    }
+    declareProcess(name) {
         this._processes[name] = true;
-    },
-    isProcess: function (name) {
+    }
+    isProcess(name) {
         return name in this._processes;
-    },
-    enterProcess: function (name) {
+    }
+    enterProcess(name) {
         this._currentProcess = name;
-    },
-    exitProcess: function () {
+    }
+    exitProcess() {
         this._currentProcess = undefined;
-    },
-    return: function (expression) {
+    }
+    return(expression) {
         return this._currentLinearization.return(expression);
-    },
-    newAux: function (name, initializer) {
+    }
+    newAux(name, initializer) {
         const nameCount = this._auxNames[name] || 0;
         const suffix = (this._auxNames[name] = nameCount + 1);
         if (nameCount > 0) {
@@ -20457,28 +20723,28 @@ Context.prototype = {
             identifier: identifier,
             declaration: declaration,
         };
-    },
-    newLabel: function () {
+    }
+    newLabel() {
         return this._currentLinearization.newLabel();
-    },
-    label: function (label) {
+    }
+    label(label) {
         return this._currentLinearization.label(label);
-    },
-    verbatim: function (ast) {
+    }
+    verbatim(ast) {
         return this._currentLinearization.verbatim(ast);
-    },
-    goToIf: function (testAst, labelIfTrue, labelIfFalse) {
+    }
+    goToIf(testAst, labelIfTrue, labelIfFalse) {
         return this._currentLinearization.goToIf(testAst, labelIfTrue, labelIfFalse);
-    },
-    goTo: function (label) {
+    }
+    goTo(label) {
         return this._currentLinearization.goTo(label);
-    },
-    select: function (evaluation, options, defaultLabel) {
+    }
+    select(evaluation, options, defaultLabel) {
         return this._currentLinearization.select(evaluation, options, defaultLabel);
-    },
-    getScope: function (identifier) {
+    }
+    getScope(identifier) {
         let scope;
-        const symbols = this._mmap.symbols;
+        const symbols = this._symbolTable;
         if (symbols.isGlobal(identifier)) {
             scope = "global";
         }
@@ -20492,16 +20758,21 @@ Context.prototype = {
         else if (symbols.isPrivate(this._currentProcess, identifier)) {
             scope = "private";
         }
+        else if (symbols.isConstant(identifier)) {
+            scope = "constant";
+        }
         return scope;
-    },
-};
-function Linearization() {
-    this._pc = -1;
-    this._sentences = [];
+    }
+    constantValue(identifier) {
+        return this._symbolTable.constants.find((constant) => constant.name === identifier).default;
+    }
 }
-Linearization.prototype = {
-    constructor: Linearization,
-    getCases: function () {
+class Linearization {
+    constructor() {
+        this._pc = -1;
+        this._sentences = [];
+    }
+    getCases() {
         const cases = [];
         const sentences = this._sentences;
         let currentCase = null;
@@ -20525,11 +20796,11 @@ Linearization.prototype = {
             caseIsFinished = isReturn || (caseIsFinished && !isLabel);
         }
         return cases;
-    },
-    newLabel: function () {
+    }
+    newLabel() {
         return new Label();
-    },
-    label: function (label) {
+    }
+    label(label) {
         const lastSentence = this._sentences[this._sentences.length - 1];
         if (lastSentence instanceof Label) {
             label.proxy(lastSentence);
@@ -20538,47 +20809,47 @@ Linearization.prototype = {
             label.label = this._pc + 1;
             this._sentences.push(label);
         }
-    },
-    verbatim: function (sentence) {
+    }
+    verbatim(sentence) {
         this._addSentence(this._verbatim(sentence));
-    },
-    goToIf: function (testAst, labelIfTrue, labelIfFalse) {
+    }
+    goToIf(testAst, labelIfTrue, labelIfFalse) {
         this._addSentence(this._goToIf(testAst, labelIfTrue, labelIfFalse));
-    },
-    goTo: function (label) {
+    }
+    goTo(label) {
         this._addSentence(this._goTo(label));
-    },
-    select: function (evaluation, options, defaultLabel) {
+    }
+    select(evaluation, options, defaultLabel) {
         this._addSentence(this._select(evaluation, options, defaultLabel));
-    },
-    end: function () {
+    }
+    end() {
         this._addSentence(this._end());
-    },
-    callFunction: function (resumeLabel, name, argList) {
+    }
+    callFunction(resumeLabel, name, argList) {
         this._addSentence(this._call("function", resumeLabel, name, argList));
-    },
-    newProcess: function (resumeLabel, name, argList) {
+    }
+    newProcess(resumeLabel, name, argList) {
         this._addSentence(this._call("process", resumeLabel, name, argList));
-    },
-    clone: function (childLabel, parentLabel) {
+    }
+    clone(childLabel, parentLabel) {
         this._addSentence(this._clone(childLabel, parentLabel));
-    },
-    frame: function (resumeLabel, expression) {
+    }
+    frame(resumeLabel, expression) {
         this._addSentence(this._frame(resumeLabel, expression));
-    },
-    debug: function (resumeLabel) {
+    }
+    debug(resumeLabel) {
         this._addSentence(this._debug(resumeLabel));
-    },
-    return: function (expression) {
+    }
+    return(expression) {
         this._addSentence(this._return(expression));
-    },
-    _verbatim: function (sentence) {
+    }
+    _verbatim(sentence) {
         return {
             type: "Verbatim",
             sentences: [sentence],
         };
-    },
-    _goToIf: function (testAst, labelIfTrue, labelIfFalse) {
+    }
+    _goToIf(testAst, labelIfTrue, labelIfFalse) {
         const _this = this;
         return {
             type: "GoToIf",
@@ -20589,8 +20860,8 @@ Linearization.prototype = {
                 ];
             },
         };
-    },
-    _goTo: function (label) {
+    }
+    _goTo(label) {
         const _this = this;
         return {
             type: "GoTo",
@@ -20601,8 +20872,8 @@ Linearization.prototype = {
                 ];
             },
         };
-    },
-    _select: function (evaluation, options, defaultLabel) {
+    }
+    _select(evaluation, options, defaultLabel) {
         const _this = this;
         return {
             type: "Select",
@@ -20617,16 +20888,16 @@ Linearization.prototype = {
                     .concat([new _ast__WEBPACK_IMPORTED_MODULE_0__.BreakStatement()]);
             },
         };
-    },
-    _end: function () {
+    }
+    _end() {
         return {
             type: "End",
             get sentences() {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processEnd];
             },
         };
-    },
-    _call: function (kind, resumeLabel, name, argList) {
+    }
+    _call(kind, resumeLabel, name, argList) {
         const type = { function: "CallFunction", process: "NewProcess" }[kind];
         return {
             type: type,
@@ -20634,70 +20905,69 @@ Linearization.prototype = {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].call(kind, resumeLabel.label + 1, name, argList)];
             },
         };
-    },
-    _clone: function (childLabel, parentLabel) {
+    }
+    _clone(childLabel, parentLabel) {
         return {
             type: "Clone",
             get sentences() {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processClone(childLabel.label + 1, parentLabel.label + 1)];
             },
         };
-    },
-    _frame: function (resumeLabel, expression) {
+    }
+    _frame(resumeLabel, expression) {
         return {
             type: "Frame",
             get sentences() {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processFrame(resumeLabel.label + 1, expression)];
             },
         };
-    },
-    _debug: function (resumeLabel) {
+    }
+    _debug(resumeLabel) {
         return {
             type: "Debug",
             get sentences() {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processDebug(resumeLabel.label + 1)];
             },
         };
-    },
-    _return: function (expression) {
+    }
+    _return(expression) {
         return {
             type: "Return",
             get sentences() {
                 return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processReturn(expression)];
             },
         };
-    },
-    _programCounterBranch: function (testAst, consequent, alternate) {
+    }
+    _programCounterBranch(testAst, consequent, alternate) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.ConditionalExpression(testAst, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(consequent + 1), alternate ? new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(alternate + 1) : _templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter)));
-    },
-    _programCounterSet: function (label) {
+    }
+    _programCounterSet(label) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(label + 1)));
-    },
-    _addSentence: function (ast) {
+    }
+    _addSentence(ast) {
         if (!this._sentences.length) {
             this._sentences.push(new Label(0));
         }
         this._sentences.push(ast);
         this._pc += 1;
-    },
-};
-function Label(n) {
-    this.label = n;
+    }
 }
-Label.prototype = {
-    constructor: Label,
-    proxy: function (anotherLabel) {
+class Label {
+    constructor(n) {
+        this.label = n;
+    }
+    proxy(anotherLabel) {
         this._proxifiedLabel = anotherLabel;
         Object.defineProperty(this, "label", {
-            get: function () {
+            get() {
                 return this._proxifiedLabel.label;
             },
         });
-    },
+    }
     get sentences() {
         return [];
-    },
-};
+    }
+}
 
 
 
@@ -20712,7 +20982,7 @@ Label.prototype = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "extractContext": () => (/* binding */ extractContext)
+/* harmony export */   extractContext: () => (/* binding */ extractContext)
 /* harmony export */ });
 /* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./context */ "./src/context.ts");
 /* harmony import */ var _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./memoryBrowser/mapper */ "./src/memoryBrowser/mapper.ts");
@@ -20722,14 +20992,15 @@ function extractContext(div2ast, symbolTable) {
     if (div2ast.type !== "Unit") {
         console.warn("Extracting context from a partial AST.");
     }
-    const context = new _context__WEBPACK_IMPORTED_MODULE_0__.Context();
-    declareProcesses(context, div2ast.processes);
+    // Augment symbol table with custom symbols.
+    // TODO: Should process names be added to the symbol table?
     // TODO: Find and add custom globals to symbols
     // TODO: Find and add custom locals to symbols
     declarePrivates(symbolTable, [div2ast.program]);
     declarePrivates(symbolTable, div2ast.processes);
     const mmap = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__.MemoryMap(symbolTable);
-    context.setMemoryMap(mmap);
+    const context = new _context__WEBPACK_IMPORTED_MODULE_0__.Context(symbolTable, mmap);
+    declareProcesses(context, div2ast.processes);
     return context;
 }
 function declareProcesses(context, processes) {
@@ -20774,10 +21045,10 @@ function definitionFromAst(declarationAst) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "compile": () => (/* binding */ compile),
-/* harmony export */   "load": () => (/* binding */ load),
-/* harmony export */   "parser": () => (/* reexport default from dynamic */ _div2lang__WEBPACK_IMPORTED_MODULE_0___default.a),
-/* harmony export */   "translator": () => (/* reexport module object */ _div2trans__WEBPACK_IMPORTED_MODULE_2__)
+/* harmony export */   compile: () => (/* binding */ compile),
+/* harmony export */   load: () => (/* binding */ load),
+/* harmony export */   parser: () => (/* reexport default from dynamic */ _div2lang__WEBPACK_IMPORTED_MODULE_0___default.a),
+/* harmony export */   translator: () => (/* reexport module object */ _div2trans__WEBPACK_IMPORTED_MODULE_2__)
 /* harmony export */ });
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./div2lang */ "./src/div2lang.js");
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_div2lang__WEBPACK_IMPORTED_MODULE_0__);
@@ -20789,7 +21060,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) || {};
-(_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy.parseError) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
+(_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy).parseError = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
 const compile = _compiler__WEBPACK_IMPORTED_MODULE_3__.compile;
 const load = _loader__WEBPACK_IMPORTED_MODULE_1__.load;
 
@@ -20806,20 +21077,40 @@ const load = _loader__WEBPACK_IMPORTED_MODULE_1__.load;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "translate": () => (/* binding */ translate)
+/* harmony export */   translate: () => (/* binding */ translate)
 /* harmony export */ });
 /* harmony import */ var _ast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ast */ "./src/ast.ts");
 /* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./templates */ "./src/templates.ts");
 
 
 const translators = Object.create(null);
-// TODO: Consider switching these to MemortBrowser-based assignment and read
+// TODO: Consider switching these to MemoryBrowser-based assignment and read
 // so the JS code can be optimized and inlined later. This would decouple
 // translation from memory layout.
 translators.AssignmentExpression = function (divAssignment, context) {
-    return new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(translate(divAssignment.left, context), translate(divAssignment.right, context),
+    return new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(translate(divAssignment.left, context), translate(divAssignment.right, context), 
     // XXX: This is good luck. All assignment operators are equal!
     divAssignment.operator);
+};
+translators.UnaryExpression = function (divUnary, context) {
+    if (divUnary.operator === "+" || divUnary.operator === "-") {
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.UnaryExpression(translate(divUnary.argument, context), divUnary.operator);
+    }
+    let unaryFunction;
+    switch (divUnary.operator) {
+        case "&":
+            unaryFunction = "__offset";
+            break;
+        case "*":
+            unaryFunction = "__deref";
+            break;
+        case "!":
+            unaryFunction = "__not";
+            break;
+        default:
+            throw new Error("Unary operator unknown: " + divUnary.operator);
+    }
+    return _templates__WEBPACK_IMPORTED_MODULE_1__["default"].callWith(unaryFunction, [translate(divUnary.argument, context)]);
 };
 translators.BinaryExpression = function (divBinary, context) {
     return new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(translate(divBinary.left, context), translate(divBinary.right, context), divBinary.operator);
@@ -20976,6 +21267,11 @@ translators.Identifier = function (divIdentifier, context) {
     if (!scope) {
         throw new Error("Unknown name " + name);
     }
+    // In DIV, consts are substitutions, not variables.
+    if (scope === "constant") {
+        const value = context.constantValue(name);
+        return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(value);
+    }
     const scopeTranslator = "memory" + scope[0].toUpperCase() + scope.substr(1);
     if (!(scopeTranslator in _templates__WEBPACK_IMPORTED_MODULE_1__["default"])) {
         throw new Error("Unknown scope " + scope);
@@ -20999,7 +21295,7 @@ translators.ExpressionSentence = function (divExpression, context) {
     context.verbatim(new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(expression));
 };
 translators.Literal = function (divLiteral) {
-    return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](divLiteral.value);
+    return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(divLiteral.value);
 };
 translators.WhileSentence = function (divWhile, context) {
     const loopStartLabel = context.newLabel();
@@ -21159,7 +21455,7 @@ function translateBody(divBodySentence, context, bodyProperty = "body") {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DivError": () => (/* binding */ DivError)
+/* harmony export */   DivError: () => (/* binding */ DivError)
 /* harmony export */ });
 class DivError extends Error {
     constructor(errorCode, message = _getErrorMessage(errorCode)) {
@@ -21168,7 +21464,8 @@ class DivError extends Error {
     }
 }
 const _errorMessages = {
-    102: "Could not load the palette, file not found.",
+    102: "Could not load the file, file not found.",
+    121: "There was an attempt to use a graphic that does not exist.",
 };
 function _getErrorMessage(errorCode) {
     const errorMessage = _errorMessages[errorCode];
@@ -21191,11 +21488,15 @@ function _getErrorMessage(errorCode) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "load": () => (/* binding */ load)
+/* harmony export */   load: () => (/* binding */ load)
 /* harmony export */ });
 /* harmony import */ var _runtime_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./runtime/runtime */ "./src/runtime/runtime.ts");
 /* harmony import */ var _systems_systems__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./systems/systems */ "./src/systems/systems.ts");
 /* harmony import */ var _builtins__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./builtins */ "./src/builtins/index.ts");
+/* harmony import */ var _runtime_memory__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./runtime/memory */ "./src/runtime/memory.ts");
+/* harmony import */ var _runtime_scheduler__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./runtime/scheduler */ "./src/runtime/scheduler.ts");
+
+
 
 
 
@@ -21204,7 +21505,9 @@ function load(objText, options = { rootUrl: "" }) {
     const unit = eval(objText)(_runtime_runtime__WEBPACK_IMPORTED_MODULE_0__, _systems_systems__WEBPACK_IMPORTED_MODULE_1__);
     const processMap = unit.pmap;
     const memoryMap = unit.mmap;
-    const program = new _runtime_runtime__WEBPACK_IMPORTED_MODULE_0__.Runtime(processMap, memoryMap);
+    const memoryManager = new _runtime_memory__WEBPACK_IMPORTED_MODULE_3__.MemoryManager(memoryMap);
+    const scheduler = new _runtime_scheduler__WEBPACK_IMPORTED_MODULE_4__.Scheduler();
+    const program = new _runtime_runtime__WEBPACK_IMPORTED_MODULE_0__.Runtime(processMap, memoryManager, scheduler);
     // TODO: Let's think how to register new systems in a configurable way
     registerRenderSystem(program);
     // TODO: Let's also think how to configure the systems in a configurable way
@@ -21251,8 +21554,8 @@ function registerFunctions(program, builtins) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DIV_SYMBOLS": () => (/* binding */ DIV_SYMBOLS),
-/* harmony export */   "normalize": () => (/* binding */ normalize)
+/* harmony export */   DIV_SYMBOLS: () => (/* binding */ DIV_SYMBOLS),
+/* harmony export */   normalize: () => (/* binding */ normalize)
 /* harmony export */ });
 /**
  * Compendium of all the well known DIV symbols, common to all DIV programs.
@@ -21491,11 +21794,13 @@ const DIV_SYMBOLS = _normalizeDefinitions({
         { name: "m8_nextsector", default: -1 },
         { name: "m8_step", default: 32 },
     ],
+    wellKnownConstants: [{ name: "pi", default: 180000 }],
 });
 function _normalizeDefinitions(definitions) {
     return {
         wellKnownGlobals: definitions.wellKnownGlobals.map(normalize),
         wellKnownLocals: definitions.wellKnownLocals.map(normalize),
+        wellKnownConstants: definitions.wellKnownConstants.map(normalize),
     };
 }
 function normalize(symbol) {
@@ -21532,10 +21837,10 @@ function normalize(symbol) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MemoryBrowser": () => (/* binding */ MemoryBrowser),
-/* harmony export */   "MemoryMap": () => (/* binding */ MemoryMap),
-/* harmony export */   "ProcessView": () => (/* binding */ ProcessView),
-/* harmony export */   "exportToJson": () => (/* binding */ exportToJson)
+/* harmony export */   MemoryBrowser: () => (/* binding */ MemoryBrowser),
+/* harmony export */   MemoryMap: () => (/* binding */ MemoryMap),
+/* harmony export */   ProcessView: () => (/* binding */ ProcessView),
+/* harmony export */   exportToJson: () => (/* binding */ exportToJson)
 /* harmony export */ });
 /* harmony import */ var chai__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! chai */ "./node_modules/chai/index.mjs");
 // TODO: In DIV, the binary has process pool and globals in the data segment
@@ -21553,13 +21858,6 @@ __webpack_require__.r(__webpack_exports__);
  * since it does not have any reference to the program's actual memory.
  */
 class MemoryMap {
-    constructor(symbols) {
-        this.maxProcess = 5919; /* XXX: This is the max process count for empty
-                                   programs. Still trying to figure out why. */
-        this.symbols = symbols;
-        this.segments = Object.create(null);
-        this._buildMap();
-    }
     get globalSegmentSize() {
         return this._getSegmentSize(this.segments["globals"]) / MemoryMap.ALIGNMENT;
     }
@@ -21583,6 +21881,13 @@ class MemoryMap {
         // it warrants all the process to start in an ODD address so the id
         // is ALWAYS ODD and thus, always TRUE.
         return size % 2 === 0 ? size : size + 1;
+    }
+    constructor(symbols) {
+        this.maxProcess = 5919; /* XXX: This is the max process count for empty
+                                   programs. Still trying to figure out why. */
+        this.symbols = symbols;
+        this.segments = Object.create(null);
+        this._buildMap();
     }
     static exportToJson(map) {
         return map.symbols;
@@ -21724,16 +22029,16 @@ class MemView {
     }
 }
 class ProcessView {
-    constructor(browser, base, type) {
-        this._browser = browser;
-        this._base = base;
-        this._type = type;
-    }
     get id() {
         return this.local("reserved.process_id").value;
     }
     get offset() {
         return this._base;
+    }
+    constructor(browser, base, type) {
+        this._browser = browser;
+        this._base = base;
+        this._type = type;
     }
     local(name) {
         return this._browser.seek(this._browser.offset("locals", name, this._base));
@@ -21760,7 +22065,7 @@ const { exportToJson } = MemoryMap;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "SymbolTable": () => (/* binding */ SymbolTable)
+/* harmony export */   SymbolTable: () => (/* binding */ SymbolTable)
 /* harmony export */ });
 /* harmony import */ var _definitions__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./definitions */ "./src/memoryBrowser/definitions.ts");
 
@@ -21769,10 +22074,12 @@ __webpack_require__.r(__webpack_exports__);
  * program. It keeps information about the memory locations and semantics
  * of the program symbols.
  */
+// TODO: This should not be part of the memory browser. Notice constants are symbols but not memory cells.
 class SymbolTable {
     constructor(definitions) {
         this.globals = definitions.wellKnownGlobals;
         this.locals = definitions.wellKnownLocals;
+        this.constants = definitions.wellKnownConstants;
         this.privates = {};
     }
     addGlobal(definition) {
@@ -21780,6 +22087,9 @@ class SymbolTable {
     }
     addLocal(definition) {
         return this._add("locals", (0,_definitions__WEBPACK_IMPORTED_MODULE_0__.normalize)(definition));
+    }
+    isConstant(name) {
+        return this._isKnown("constants", name.toLowerCase());
     }
     isGlobal(name) {
         return this._isKnown("globals", name.toLowerCase());
@@ -21827,7 +22137,7 @@ class SymbolTable {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "MemoryManager": () => (/* binding */ MemoryManager)
+/* harmony export */   MemoryManager: () => (/* binding */ MemoryManager)
 /* harmony export */ });
 /* harmony import */ var _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../memoryBrowser/mapper */ "./src/memoryBrowser/mapper.ts");
 
@@ -21837,18 +22147,18 @@ __webpack_require__.r(__webpack_exports__);
  * API to access the memory via the MemoryBrowser.
  */
 class MemoryManager {
+    get browser() {
+        return this._browser;
+    }
+    get rawMemory() {
+        return this._mem;
+    }
     constructor(symbols) {
         this._map = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__.MemoryMap(symbols);
         const { globalSegmentSize, processPoolSize } = this._map;
         this._mem = new Int32Array(globalSegmentSize + processPoolSize);
         this._browser = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__.MemoryBrowser(this._mem, this._map);
         this._createProcessTemplate();
-    }
-    get browser() {
-        return this._browser;
-    }
-    get rawMemory() {
-        return this._mem;
     }
     allocateProcess() {
         for (let index = 0, l = this._map.maxProcess; index < l; index++) {
@@ -21913,12 +22223,12 @@ class MemoryManager {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Baton": () => (/* reexport safe */ _scheduler__WEBPACK_IMPORTED_MODULE_1__.Baton),
-/* harmony export */   "Runtime": () => (/* binding */ Runtime)
+/* harmony export */   Baton: () => (/* reexport safe */ _scheduler__WEBPACK_IMPORTED_MODULE_0__.Baton),
+/* harmony export */   Runtime: () => (/* binding */ Runtime)
 /* harmony export */ });
-/* harmony import */ var _memory__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./memory */ "./src/runtime/memory.ts");
-/* harmony import */ var _scheduler__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./scheduler */ "./src/runtime/scheduler.ts");
-/* harmony import */ var _builtins__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../builtins */ "./src/builtins/index.ts");
+/* harmony import */ var _scheduler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./scheduler */ "./src/runtime/scheduler.ts");
+/* harmony import */ var _builtins__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../builtins */ "./src/builtins/index.ts");
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../errors */ "./src/errors.ts");
 
 
 
@@ -21955,81 +22265,70 @@ function Environment() {
 }
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
-function Runtime(processMap, memorySymbols) {
-    this._onerror = null;
-    this._ondebug = null;
-    this._onfinished = null;
-    this._systems = [];
-    this._systemMap = {};
-    this._functions = {};
-    this._memoryManager = new _memory__WEBPACK_IMPORTED_MODULE_0__.MemoryManager(memorySymbols);
-    this._environment = new Environment();
-    this._pmap = processMap;
-    this._mem = this._memoryManager.rawMemory;
-    this._scheduler = new _scheduler__WEBPACK_IMPORTED_MODULE_1__.Scheduler({
-        onyield: this._schedule.bind(this),
-        // XXX: Update means after all processes have run entirely
-        onupdate: this._runSystems.bind(this),
-    });
-}
-Runtime.prototype = {
-    constructor: Runtime,
+class Runtime {
+    constructor(processMap, memoryManager, scheduler) {
+        this.onerror = null;
+        this.ondebug = null;
+        this._onfinished = null;
+        this._systems = [];
+        this._systemMap = {};
+        this._functions = {};
+        this._memoryManager = memoryManager;
+        this._environment = new Environment();
+        this._pmap = processMap;
+        this._mem = this._memoryManager.rawMemory;
+        this._scheduler = scheduler;
+    }
     addProcess(name, base) {
         const runnable = this._pmap["process_" + name];
         const processEnvironment = new ProcessImpl(runnable, base, this._mem);
         this._scheduler.add(processEnvironment);
-    },
+    }
     addProgram(base) {
         const runnable = this._pmap["program"];
         const processEnvironment = new ProcessImpl(runnable, base, this._mem);
         this._scheduler.add(processEnvironment);
-    },
-    registerSystem: function (system, name) {
+    }
+    registerSystem(system, name) {
         if (name && typeof this._systemMap[name] !== "undefined") {
             throw new Error("System already registered with name: " + name);
         }
         system.initialize();
         this._systems.push(system);
         this._systemMap[name] = system;
-    },
-    registerFunction: function (fn, name) {
+    }
+    registerFunction(fn, name) {
         if (name && typeof this._functions[name] !== "undefined") {
             throw new Error("Function already registered with name: " + name);
         }
         this._functions[name] = fn;
-    },
-    getSystem: function (name) {
+    }
+    getSystem(name) {
+        if (name === "video") {
+            return this._systemMap[name];
+        }
+        if (name === "files") {
+            return this._systemMap[name];
+        }
         return this._systemMap[name];
-    },
-    getMemoryBrowser: function () {
+    }
+    getMemoryBrowser() {
         return this._memoryManager.browser;
-    },
-    set onerror(callback) {
-        this._onerror = callback;
-    },
-    get onerror() {
-        return this._onerror;
-    },
+    }
     set onfinished(callback) {
         this._onfinished = callback;
-        if (this._scheduler instanceof _scheduler__WEBPACK_IMPORTED_MODULE_1__.Scheduler) {
-            this._scheduler.onfinished = this._onfinished.bind(this);
-        }
-    },
+        this._scheduler.onfinished = this._onfinished.bind(this);
+    }
     get onfinished() {
         return this._onfinished;
-    },
-    set ondebug(callback) {
-        this._ondebug = callback;
-    },
-    get ondebug() {
-        return this._ondebug;
-    },
-    resume: function () {
+    }
+    resume() {
         this._scheduler.run();
-    },
-    run: function () {
+    }
+    start() {
         // TODO: Should check for running or paused.
+        this._scheduler.onyield = this._handle.bind(this);
+        this._scheduler.onupdate = this._runSystems.bind(this);
         this._scheduler.reset();
         this._memoryManager.reset();
         const id = this._memoryManager.allocateProcess();
@@ -22037,41 +22336,33 @@ Runtime.prototype = {
         this._loadDefaults().then(() => {
             this._scheduler.run();
         });
-    },
-    _runSystems: function () {
-        const memoryBrowser = this.getMemoryBrowser();
-        const environment = this._environment;
-        this._systems.forEach(function (system) {
-            system.run(memoryBrowser, environment);
-        });
-    },
-    _schedule: function (baton, process) {
-        const name = "_" + baton.type;
-        if (!(name in this)) {
-            throw Error("Unknown execution message: " + baton.type);
-        }
-        return this[name](baton, process);
-    },
-    _debug: function () {
+    }
+    debug() {
         this._scheduler.stop();
-        this._ondebug();
-    },
-    _newprocess: function (baton) {
-        const name = baton.processName;
+        this.ondebug();
+    }
+    newProcess(processName) {
         const id = this._memoryManager.allocateProcess();
-        if (!id) {
-            throw new Error("Max number of process reached!");
-        }
-        this.addProcess(name, id);
-    },
-    _call: function (baton, process) {
-        const functionName = baton.functionName;
+        this.addProcess(processName, id);
+    }
+    call(functionName, args, process) {
         if (functionName in this._functions) {
-            const result = this._functions[functionName](...baton.args, this);
+            let result = null;
+            try {
+                result = this._functions[functionName](...args, this);
+            }
+            catch (error) {
+                if (error instanceof _errors__WEBPACK_IMPORTED_MODULE_2__.DivError) {
+                    this.onerror(error);
+                }
+                else {
+                    throw error;
+                }
+            }
             if (result instanceof Promise) {
                 this._scheduler.stop();
                 result
-                    .catch((error) => setTimeout(this._onerror.bind(this, error)))
+                    .catch((error) => setTimeout(this.onerror.bind(this, error)))
                     .then((returnValue) => {
                     process.retv.enqueue(returnValue);
                     this._scheduler.run();
@@ -22081,19 +22372,58 @@ Runtime.prototype = {
                 process.retv.enqueue(result);
             }
         }
-    },
-    _loadDefaults: function () {
-        return (0,_builtins__WEBPACK_IMPORTED_MODULE_2__.load_pal)("PAL/DIV2.PAL", this);
-    },
+        else {
+            throw new Error("Function not found: " + functionName);
+        }
+    }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    _frame: function (baton) { },
+    frame() { }
     // TODO: Consider passing the id through the baton
-    _end: function (baton) {
+    end() {
         const currentProcessId = this._scheduler.currentProcess.id;
         this._memoryManager.freeProcess(currentProcessId);
         this._scheduler.deleteCurrent();
-    },
-};
+    }
+    _runSystems() {
+        const memoryBrowser = this.getMemoryBrowser();
+        const environment = this._environment;
+        this._systems.forEach(function (system) {
+            if (typeof system.run === "function") {
+                system.run(memoryBrowser, environment);
+            }
+        });
+    }
+    _handle(baton, originator) {
+        const name = `_${baton.type}`;
+        if (!(name in this)) {
+            throw Error("Unknown execution message: " + baton.type);
+        }
+        return this[name](baton, originator);
+    }
+    _debug() {
+        return this.debug();
+    }
+    _newProcess(baton) {
+        const name = baton.processName;
+        return this.newProcess(name);
+    }
+    _call(baton, process) {
+        const functionName = baton.functionName;
+        const args = baton.args;
+        return this.call(functionName, args, process);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    _frame() {
+        return this.frame();
+    }
+    // TODO: Consider passing the id through the baton
+    _end() {
+        return this.end();
+    }
+    _loadDefaults() {
+        return (0,_builtins__WEBPACK_IMPORTED_MODULE_1__.load_pal)("PAL/DIV.PAL", this);
+    }
+}
 
 
 
@@ -22108,8 +22438,8 @@ Runtime.prototype = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Baton": () => (/* binding */ Baton),
-/* harmony export */   "Scheduler": () => (/* binding */ Scheduler)
+/* harmony export */   Baton: () => (/* binding */ Baton),
+/* harmony export */   Scheduler: () => (/* binding */ Scheduler)
 /* harmony export */ });
 /* harmony import */ var chai__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! chai */ "./node_modules/chai/index.mjs");
 
@@ -22120,12 +22450,6 @@ __webpack_require__.r(__webpack_exports__);
  * runtime.
  */
 class Scheduler {
-    constructor(hooks = {}) {
-        this.onyield = hooks === null || hooks === void 0 ? void 0 : hooks.onyield;
-        this.onfinished = hooks === null || hooks === void 0 ? void 0 : hooks.onfinished;
-        this.onupdate = hooks === null || hooks === void 0 ? void 0 : hooks.onupdate;
-        this.reset();
-    }
     get currentProcess() {
         return this._processList[this._current];
     }
@@ -22217,29 +22541,29 @@ class Baton {
 
 /***/ }),
 
-/***/ "./src/systems/files/fpg.ts":
-/*!**********************************!*\
-  !*** ./src/systems/files/fpg.ts ***!
-  \**********************************/
+/***/ "./src/systems/files/urlFiles/fpg.ts":
+/*!*******************************************!*\
+  !*** ./src/systems/files/urlFiles/fpg.ts ***!
+  \*******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "FPGFile": () => (/* binding */ FPGFile)
+/* harmony export */   FPGFile: () => (/* binding */ FPGFile)
 /* harmony export */ });
 const VERSION_OFFSET = 7;
 const CONTENT_OFFSET = 8;
 class FPGFile {
-    constructor(version, contentBytes) {
-        this.version = version;
-        this.buffer = contentBytes;
-    }
     static fromArrayBuffer(buffer) {
         const fpgBytes = _assertFpg(buffer);
         const version = fpgBytes[VERSION_OFFSET];
         const contentBytes = fpgBytes.slice(CONTENT_OFFSET);
         return new FPGFile(version, contentBytes);
+    }
+    constructor(version, contentBytes) {
+        this.version = version;
+        this.buffer = contentBytes;
     }
 }
 function _assertFpg(buffer) {
@@ -22256,51 +22580,10 @@ function _assertFpg(buffer) {
 
 /***/ }),
 
-/***/ "./src/systems/files/pal.ts":
-/*!**********************************!*\
-  !*** ./src/systems/files/pal.ts ***!
-  \**********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "PALFile": () => (/* binding */ PALFile)
-/* harmony export */ });
-const VERSION_OFFSET = 7;
-const PAL_OFFSET = 8;
-const GAMMA_OFFSET = 776;
-class PALFile {
-    constructor(version, colorBytes) {
-        this.length = 256;
-        this.version = version;
-        this.buffer = colorBytes;
-    }
-    static fromArrayBuffer(buffer) {
-        const palBytes = _assertPal(buffer);
-        const version = palBytes[VERSION_OFFSET];
-        const colorBytes = palBytes.slice(PAL_OFFSET, PAL_OFFSET + 256 * 3);
-        return new PALFile(version, colorBytes);
-    }
-}
-function _assertPal(buffer) {
-    const bytes = new Uint8Array(buffer);
-    ["p", "a", "l", 0x1a, 0x0d, 0x0a, 0x00].forEach((code, index) => {
-        const char = typeof code === "string" ? code.charCodeAt(0) : code;
-        if (bytes[index] !== char) {
-            throw new Error("The file is not a PAL file");
-        }
-    });
-    return bytes;
-}
-
-
-/***/ }),
-
-/***/ "./src/systems/files/urlFiles.ts":
-/*!***************************************!*\
-  !*** ./src/systems/files/urlFiles.ts ***!
-  \***************************************/
+/***/ "./src/systems/files/urlFiles/index.ts":
+/*!*********************************************!*\
+  !*** ./src/systems/files/urlFiles/index.ts ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -22308,9 +22591,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ UrlFileSystem)
 /* harmony export */ });
-/* harmony import */ var _pal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./pal */ "./src/systems/files/pal.ts");
-/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../errors */ "./src/errors.ts");
-/* harmony import */ var _fpg__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fpg */ "./src/systems/files/fpg.ts");
+/* harmony import */ var _pal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./pal */ "./src/systems/files/urlFiles/pal.ts");
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../errors */ "./src/errors.ts");
+/* harmony import */ var _fpg__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fpg */ "./src/systems/files/urlFiles/fpg.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -22332,14 +22615,14 @@ class UrlFileSystem {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     run() { }
     loadPal(path) {
-        const normalizedPath = this._normalizePath(path);
+        const normalizedPath = this.normalizePath(path);
         return _loadPal(this._convertToUrl(normalizedPath));
     }
     loadFpg(path) {
-        const normalizedPath = this._normalizePath(path);
+        const normalizedPath = this.normalizePath(path);
         return _loadFpg(this._convertToUrl(normalizedPath));
     }
-    _normalizePath(path) {
+    normalizePath(path) {
         if (path.includes("/")) {
             return path;
         }
@@ -22395,6 +22678,47 @@ function _loadFpg(url) {
 
 /***/ }),
 
+/***/ "./src/systems/files/urlFiles/pal.ts":
+/*!*******************************************!*\
+  !*** ./src/systems/files/urlFiles/pal.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   PALFile: () => (/* binding */ PALFile)
+/* harmony export */ });
+const VERSION_OFFSET = 7;
+const PAL_OFFSET = 8;
+const GAMMA_OFFSET = 776;
+class PALFile {
+    static fromArrayBuffer(buffer) {
+        const palBytes = _assertPal(buffer);
+        const version = palBytes[VERSION_OFFSET];
+        const colorBytes = palBytes.slice(PAL_OFFSET, PAL_OFFSET + 256 * 3);
+        return new PALFile(version, colorBytes);
+    }
+    constructor(version, colorBytes) {
+        this.length = 256;
+        this.version = version;
+        this.buffer = colorBytes;
+    }
+}
+function _assertPal(buffer) {
+    const bytes = new Uint8Array(buffer);
+    ["p", "a", "l", 0x1a, 0x0d, 0x0a, 0x00].forEach((code, index) => {
+        const char = typeof code === "string" ? code.charCodeAt(0) : code;
+        if (bytes[index] !== char) {
+            throw new Error("The file is not a PAL file");
+        }
+    });
+    return bytes;
+}
+
+
+/***/ }),
+
 /***/ "./src/systems/systems.ts":
 /*!********************************!*\
   !*** ./src/systems/systems.ts ***!
@@ -22404,11 +22728,13 @@ function _loadFpg(url) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "DefaultFileSystem": () => (/* reexport safe */ _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__["default"]),
-/* harmony export */   "DefaultRender": () => (/* reexport safe */ _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */   DefaultFileSystem: () => (/* reexport safe */ _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__["default"]),
+/* harmony export */   DefaultRender: () => (/* reexport safe */ _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__["default"]),
+/* harmony export */   urlFileSystem: () => (/* reexport safe */ _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__["default"]),
+/* harmony export */   wgl2idx: () => (/* reexport safe */ _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__["default"])
 /* harmony export */ });
-/* harmony import */ var _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./video/wgl2idx */ "./src/systems/video/wgl2idx.ts");
-/* harmony import */ var _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./files/urlFiles */ "./src/systems/files/urlFiles.ts");
+/* harmony import */ var _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./video/wgl2idx */ "./src/systems/video/wgl2idx/index.ts");
+/* harmony import */ var _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./files/urlFiles */ "./src/systems/files/urlFiles/index.ts");
 
 
 
@@ -22416,10 +22742,10 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./src/systems/video/fpg.ts":
-/*!**********************************!*\
-  !*** ./src/systems/video/fpg.ts ***!
-  \**********************************/
+/***/ "./src/systems/video/wgl2idx/fpg.ts":
+/*!******************************************!*\
+  !*** ./src/systems/video/wgl2idx/fpg.ts ***!
+  \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -22427,41 +22753,46 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./map */ "./src/systems/video/map.ts");
-/* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./palette */ "./src/systems/video/palette.ts");
+/* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../errors */ "./src/errors.ts");
+/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./map */ "./src/systems/video/wgl2idx/map.ts");
+/* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./palette */ "./src/systems/video/wgl2idx/palette.ts");
+
 
 
 const mapsOffset = 1344;
 class Fpg {
-    constructor(buffer) {
-        this.buffer = buffer;
-        this._divMaps = [];
-        this.palette = this._extractPalette();
-        this._divMaps = this._extractDivMaps();
-    }
     static fromBuffer(buffer) {
         const fpg = new Fpg(buffer);
         return fpg;
     }
+    constructor(buffer) {
+        this.buffer = buffer;
+        this._divMaps = new Map();
+        this.palette = this._extractPalette();
+        this._divMaps = this._extractDivMaps();
+    }
     map(index) {
-        // TODO: validate index.
-        return this._divMaps[index];
+        const map = this._divMaps.get(index);
+        if (!map) {
+            throw new _errors__WEBPACK_IMPORTED_MODULE_0__.DivError(121);
+        }
+        return map;
     }
     _extractDivMaps() {
-        const divMaps = [];
+        const divMaps = new Map();
         const mapBuffer = this.buffer.subarray(mapsOffset);
         let offset = 0;
         while (offset < mapBuffer.length) {
-            const map = _map__WEBPACK_IMPORTED_MODULE_0__["default"].fromBuffer(mapBuffer.subarray(offset));
-            divMaps.push(map);
-            offset += map.size;
+            const map = _map__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(mapBuffer.subarray(offset));
+            divMaps.set(map.code, map);
+            offset += map.length;
         }
         return divMaps;
     }
     _extractPalette() {
         // TODO: extract the palette position accurately.
         const paletteBuffer = this.buffer.subarray(0, mapsOffset);
-        const palette = _palette__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(paletteBuffer);
+        const palette = _palette__WEBPACK_IMPORTED_MODULE_2__["default"].fromBuffer(paletteBuffer);
         return palette;
     }
 }
@@ -22470,10 +22801,10 @@ class Fpg {
 
 /***/ }),
 
-/***/ "./src/systems/video/indexedGraphic.ts":
-/*!*********************************************!*\
-  !*** ./src/systems/video/indexedGraphic.ts ***!
-  \*********************************************/
+/***/ "./src/systems/video/wgl2idx/index.ts":
+/*!********************************************!*\
+  !*** ./src/systems/video/wgl2idx/index.ts ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -22481,128 +22812,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-class IndexedGraphic {
-    constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.buffer = new Uint8Array(width * height);
-    }
-    putPixel(x, y, color) {
-        this.buffer[y * this.width + x] = color;
-    }
-    putScreen(data, width, height) {
-        const xOffset = Math.floor((this.width - width) / 2);
-        const yOffset = Math.floor((this.height - height) / 2);
-        for (let y = 0; y < height; y += 1) {
-            for (let x = 0; x < width; x += 1) {
-                const color = data[y * width + x];
-                // XXX: Inlined putPixel() for performance.
-                this.buffer[(yOffset + y) * this.width + xOffset + x] = color;
-            }
-        }
-    }
+/* harmony import */ var _indexedGraphic__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./indexedGraphic */ "./src/systems/video/wgl2idx/indexedGraphic.ts");
+/* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./palette */ "./src/systems/video/wgl2idx/palette.ts");
+
+
+// XXX: Just for enabling syntax highlighting for the shaders.
+function glsl(strings, ...values) {
+    return String.raw({ raw: strings }, ...values);
 }
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (IndexedGraphic);
-
-
-/***/ }),
-
-/***/ "./src/systems/video/map.ts":
-/*!**********************************!*\
-  !*** ./src/systems/video/map.ts ***!
-  \**********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-class DivMap {
-    constructor(buffer) {
-        this.buffer = buffer;
-        this.code = this._readInt32(0);
-        this.length = this._readInt32(4);
-        this.description = this._readAscii(8, 32);
-        this.name = this._readAscii(40, 12);
-        this.width = this._readInt32(52);
-        this.height = this._readInt32(56);
-        this.pointCount = this._readInt32(60);
-        this.dataOffset = 64 + this.pointCount * 4;
-        this.size = this.dataOffset + this.width * this.height;
-        this.data = this.buffer.subarray(this.dataOffset, this.size);
-    }
-    static fromBuffer(buffer) {
-        const map = new DivMap(buffer);
-        return map;
-    }
-    _readInt32(offset) {
-        return (this.buffer[offset] |
-            (this.buffer[offset + 1] << 8) |
-            (this.buffer[offset + 2] << 16) |
-            (this.buffer[offset + 3] << 24));
-    }
-    _readAscii(offset, length) {
-        return String.fromCharCode(...this.buffer.subarray(offset, offset + length));
-    }
-}
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DivMap);
-
-
-/***/ }),
-
-/***/ "./src/systems/video/palette.ts":
-/*!**************************************!*\
-  !*** ./src/systems/video/palette.ts ***!
-  \**************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-class Palette {
-    constructor(buffer) {
-        this.buffer = buffer;
-        // TODO: validate buffer size
-        this.size = buffer.length / 3;
-    }
-    static fromBuffer(buffer) {
-        const palette = new Palette(buffer);
-        return palette;
-    }
-    static withSize(size) {
-        const buffer = new Uint8Array(size * 3);
-        return new Palette(buffer);
-    }
-    setColor(index, r, g, b) {
-        this.buffer[index * 3] = r;
-        this.buffer[index * 3 + 1] = g;
-        this.buffer[index * 3 + 2] = b;
-    }
-}
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Palette);
-
-
-/***/ }),
-
-/***/ "./src/systems/video/wgl2idx.ts":
-/*!**************************************!*\
-  !*** ./src/systems/video/wgl2idx.ts ***!
-  \**************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var _indexedGraphic__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./indexedGraphic */ "./src/systems/video/indexedGraphic.ts");
-/* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./palette */ "./src/systems/video/palette.ts");
-
-
-const vsSource = `#version 300 es
+const vsSource = glsl `#version 300 es
+#pragma vscode_glsllint_stage: vert
 
 in vec4 a_position;
 
@@ -22614,7 +22833,8 @@ void main() {
   // ...to texture coordiantes: origin at top left (0, 0).
   v_texcoord = a_position.xy * vec2(0.5, -0.5) + 0.5;
 }`;
-const psSource = `#version 300 es
+const psSource = glsl `#version 300 es
+#pragma vscode_glsllint_stage: frag
 
 precision mediump float;
 
@@ -22769,12 +22989,21 @@ class WebGL2IndexedScreenVideoSystem {
         this._loadedFpgs.push(fpg);
         return fpgId;
     }
+    putPixel(x, y, colorIndex) {
+        this.screen.putPixel(x, y, colorIndex);
+    }
     putScreen(fpgId, mapId) {
         // TODO: Validate fpgId and mapId.
         const fpg = this._loadedFpgs[fpgId];
         const map = fpg.map(mapId);
         this.screen.putScreen(map.data, map.width, map.height);
         return 0;
+    }
+    xput(fpgId, mapId, x, y, angle, size, flags, region) {
+        const fpg = this._loadedFpgs[fpgId];
+        const map = fpg.map(mapId);
+        const center = map.controlPoint(0);
+        this.screen.xput(map.data, map.width, map.height, center.x, center.y, x, y, angle, size, flags, region);
     }
     _initShaders() {
         const gl = this._gl;
@@ -22854,6 +23083,199 @@ class WebGL2IndexedScreenVideoSystem {
 
 /***/ }),
 
+/***/ "./src/systems/video/wgl2idx/indexedGraphic.ts":
+/*!*****************************************************!*\
+  !*** ./src/systems/video/wgl2idx/indexedGraphic.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+class IndexedGraphic {
+    constructor(width, height) {
+        this.width = width;
+        this.height = height;
+        this.buffer = new Uint8Array(width * height);
+    }
+    // XXX: Captures the semantics of putting a pixel with some transformation regarding the color behind.
+    blendPixel(x, y, color, transparentColor) {
+        if (color !== transparentColor) {
+            this.putPixel(x, y, color);
+        }
+    }
+    putPixel(x, y, color) {
+        this.buffer[y * this.width + x] = color;
+    }
+    putScreen(data, width, height) {
+        const { width: screenWidth, height: screenHeight } = this;
+        const xOffset = Math.floor((screenWidth - width) / 2);
+        const yOffset = Math.floor((screenHeight - height) / 2);
+        const xStart = Math.max(0, xOffset);
+        const yStart = Math.max(0, yOffset);
+        const xEnd = Math.min(screenWidth, xOffset + width);
+        const yEnd = Math.min(screenHeight, yOffset + height);
+        for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+            for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+                const xBackground = xScreen - xOffset;
+                const yBackground = yScreen - yOffset;
+                const color = sample(data, width, xBackground, yBackground);
+                this.putPixel(xScreen, yScreen, color);
+            }
+        }
+    }
+    xput(data, width, height, xOrigin, yOrigin, x, y, angle, size, flags, region) {
+        // TODO: Flags: transparent.
+        // TODO: Region.
+        // Calculate transformation parameters.
+        const rotation = angle * Math.PI / 180000;
+        const scaleFactor = size / 100;
+        const isHorizontalFlip = (flags & 1) !== 0;
+        const isVerticalFlip = (flags & 2) !== 0;
+        // Calculate the screen region to update.
+        const [xTL, yTL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xTR, yTR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xBL, yBL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xBR, yBR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const { width: screenWidth, height: screenHeight } = this;
+        const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
+        const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
+        const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
+        const yEnd = Math.min(screenHeight, Math.max(yTL, yTR, yBL, yBR));
+        // Update the region.
+        for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+            for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+                const [xSprite, ySprite] = flipSpriteCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint([xScreen, yScreen], [-x, -y]), -rotation), 1 / scaleFactor), [xOrigin, yOrigin]), width, height, isHorizontalFlip, isVerticalFlip);
+                const maybeColor = sample(data, width, xSprite, ySprite);
+                this.blendPixel(xScreen, yScreen, maybeColor !== null && maybeColor !== void 0 ? maybeColor : 0, 0);
+            }
+        }
+    }
+}
+function rotatedPoint([x, y], angle) {
+    return [Math.round(Math.cos(angle) * x + Math.sin(angle) * y), Math.round(-Math.sin(angle) * x + Math.cos(angle) * y)];
+}
+function scaledPoint([x, y], scaleFactor) {
+    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
+}
+function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
+    return [xOrigin + xDistance, yOrigin + yDistance];
+}
+function flipSpriteCoordinates([x, y], width, height, isHorizontalFlip, isVerticalFlip) {
+    return [isHorizontalFlip ? width - x - 1 : x, isVerticalFlip ? height - y - 1 : y];
+}
+function sample(data, width, x, y) {
+    // Invalid cases are signaled with null.
+    let idx;
+    if (x < 0 ||
+        y < 0 ||
+        width <= 0 ||
+        x >= width ||
+        (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+        idx >= data.length) {
+        return null;
+    }
+    return data[idx];
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (IndexedGraphic);
+
+
+/***/ }),
+
+/***/ "./src/systems/video/wgl2idx/map.ts":
+/*!******************************************!*\
+  !*** ./src/systems/video/wgl2idx/map.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ControlPoint: () => (/* binding */ ControlPoint),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+class ControlPoint {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+class DivMap {
+    static fromBuffer(buffer) {
+        const map = new DivMap(buffer);
+        return map;
+    }
+    constructor(buffer) {
+        this.buffer = buffer;
+        this.code = this._readDoubleWord(0);
+        this.length = this._readDoubleWord(4);
+        this.description = this._readAscii(8, 32);
+        this.name = this._readAscii(40, 12);
+        this.width = this._readDoubleWord(52);
+        this.height = this._readDoubleWord(56);
+        this.pointCount = this._readDoubleWord(60);
+        this.dataOffset = 64 + this.pointCount * 4;
+        this.data = this.buffer.subarray(this.dataOffset, this.length);
+    }
+    controlPoint(index) {
+        const x = this._readWord(64 + index * 4);
+        const y = this._readWord(64 + index * 4 + 2);
+        // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+        // XXX: Also assuming rounding-up in case of odd size values.
+        return new ControlPoint(this.pointCount === 0 || x == 0xFFFF ? Math.ceil(this.width / 2) : x, this.pointCount === 0 || y == 0xFFFF ? Math.ceil(this.height / 2) : y);
+    }
+    _readWord(offset) {
+        return this.buffer[offset] | (this.buffer[offset + 1] << 8);
+    }
+    _readDoubleWord(offset) {
+        return (this.buffer[offset] |
+            (this.buffer[offset + 1] << 8) |
+            (this.buffer[offset + 2] << 16) |
+            (this.buffer[offset + 3] << 24));
+    }
+    _readAscii(offset, length) {
+        return String.fromCharCode(...this.buffer.subarray(offset, offset + length));
+    }
+}
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DivMap);
+
+
+/***/ }),
+
+/***/ "./src/systems/video/wgl2idx/palette.ts":
+/*!**********************************************!*\
+  !*** ./src/systems/video/wgl2idx/palette.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+class Palette {
+    static fromBuffer(buffer) {
+        const palette = new Palette(buffer);
+        return palette;
+    }
+    static withSize(size) {
+        const buffer = new Uint8Array(size * 3);
+        return new Palette(buffer);
+    }
+    constructor(buffer) {
+        this.buffer = buffer;
+        // TODO: validate buffer size
+        this.size = buffer.length / 3;
+    }
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Palette);
+
+
+/***/ }),
+
 /***/ "./src/templates.ts":
 /*!**************************!*\
   !*** ./src/templates.ts ***!
@@ -22880,7 +23302,7 @@ __webpack_require__.r(__webpack_exports__);
         return this.infiniteLoop(switchStatement);
     },
     concurrentLabel: function (label) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.SwitchCase(_ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](label));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.SwitchCase(_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(label));
     },
     get endToken() {
         return {
@@ -22988,7 +23410,7 @@ __webpack_require__.r(__webpack_exports__);
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.WhileStatement(this.trueLiteral, body);
     },
     labeledBlock: function (label) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.SwitchCase(_ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](label));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.SwitchCase(_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(label));
     },
     memoryGlobal: function (name) {
         return this._memory(this._globalAddress(name));
@@ -23037,22 +23459,22 @@ __webpack_require__.r(__webpack_exports__);
             function: "__yieldCallFunction",
             process: "__yieldNewProcess",
         }[kind];
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith(yieldType, [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](resume), _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](name)].concat(argList)));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith(yieldType, [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(resume), _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(name)].concat(argList)));
     },
     processClone: function (child, parent) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldClone", [
-            _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](child),
-            _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](parent),
+            _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(child),
+            _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(parent),
         ]));
     },
     // TODO: Ok, the former means process clone but what does this mean?
     // It is not "process frame", it is just frame.
     processFrame: function (resume, expression) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldFrame", [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](resume), expression]));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldFrame", [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(resume), expression]));
     },
     // TODO: Same here.
     processDebug: function (resume) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldDebug", [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](resume)]));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldDebug", [_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(resume)]));
     },
     programFunction: function (name, body) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.FunctionDeclaration(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("program_" + name), this.processParameters, undefined, body);
@@ -23086,7 +23508,7 @@ __webpack_require__.r(__webpack_exports__);
         return this.callWith("__bool", ast);
     },
     get trueLiteral() {
-        return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](true);
+        return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(true);
     },
 });
 
@@ -23529,17 +23951,17 @@ return typeDetect;
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "Assertion": () => (/* binding */ Assertion),
-/* harmony export */   "AssertionError": () => (/* binding */ AssertionError),
-/* harmony export */   "assert": () => (/* binding */ assert),
-/* harmony export */   "config": () => (/* binding */ config),
-/* harmony export */   "core": () => (/* binding */ core),
+/* harmony export */   Assertion: () => (/* binding */ Assertion),
+/* harmony export */   AssertionError: () => (/* binding */ AssertionError),
+/* harmony export */   assert: () => (/* binding */ assert),
+/* harmony export */   config: () => (/* binding */ config),
+/* harmony export */   core: () => (/* binding */ core),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
-/* harmony export */   "expect": () => (/* binding */ expect),
-/* harmony export */   "should": () => (/* binding */ should),
-/* harmony export */   "use": () => (/* binding */ use),
-/* harmony export */   "util": () => (/* binding */ util),
-/* harmony export */   "version": () => (/* binding */ version)
+/* harmony export */   expect: () => (/* binding */ expect),
+/* harmony export */   should: () => (/* binding */ should),
+/* harmony export */   use: () => (/* binding */ use),
+/* harmony export */   util: () => (/* binding */ util),
+/* harmony export */   version: () => (/* binding */ version)
 /* harmony export */ });
 /* harmony import */ var _index_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./index.js */ "./node_modules/chai/index.js");
 
@@ -23567,7 +23989,7 @@ const core = _index_js__WEBPACK_IMPORTED_MODULE_0__.core;
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code generator","homepage":"http://github.com/estools/escodegen","main":"escodegen.js","bin":{"esgenerate":"./bin/esgenerate.js","escodegen":"./bin/escodegen.js"},"files":["LICENSE.BSD","README.md","bin","escodegen.js","package.json"],"version":"2.0.0","engines":{"node":">=6.0"},"maintainers":[{"name":"Yusuke Suzuki","email":"utatane.tea@gmail.com","web":"http://github.com/Constellation"}],"repository":{"type":"git","url":"http://github.com/estools/escodegen.git"},"dependencies":{"estraverse":"^5.2.0","esutils":"^2.0.2","esprima":"^4.0.1","optionator":"^0.8.1"},"optionalDependencies":{"source-map":"~0.6.1"},"devDependencies":{"acorn":"^7.3.1","bluebird":"^3.4.7","bower-registry-client":"^1.0.0","chai":"^4.2.0","chai-exclude":"^2.0.2","commonjs-everywhere":"^0.9.7","gulp":"^3.8.10","gulp-eslint":"^3.0.1","gulp-mocha":"^3.0.1","semver":"^5.1.0"},"license":"BSD-2-Clause","scripts":{"test":"gulp travis","unit-test":"gulp test","lint":"gulp lint","release":"node tools/release.js","build-min":"./node_modules/.bin/cjsify -ma path: tools/entry-point.js > escodegen.browser.min.js","build":"./node_modules/.bin/cjsify -a path: tools/entry-point.js > escodegen.browser.js"}}');
+module.exports = /*#__PURE__*/JSON.parse('{"name":"escodegen","description":"ECMAScript code generator","homepage":"http://github.com/estools/escodegen","main":"escodegen.js","bin":{"esgenerate":"./bin/esgenerate.js","escodegen":"./bin/escodegen.js"},"files":["LICENSE.BSD","README.md","bin","escodegen.js","package.json"],"version":"2.1.0","engines":{"node":">=6.0"},"maintainers":[{"name":"Yusuke Suzuki","email":"utatane.tea@gmail.com","web":"http://github.com/Constellation"}],"repository":{"type":"git","url":"http://github.com/estools/escodegen.git"},"dependencies":{"estraverse":"^5.2.0","esutils":"^2.0.2","esprima":"^4.0.1"},"optionalDependencies":{"source-map":"~0.6.1"},"devDependencies":{"acorn":"^8.0.4","bluebird":"^3.4.7","bower-registry-client":"^1.0.0","chai":"^4.2.0","chai-exclude":"^2.0.2","commonjs-everywhere":"^0.9.7","gulp":"^4.0.2","gulp-eslint":"^6.0.0","gulp-mocha":"^7.0.2","minimist":"^1.2.5","optionator":"^0.9.1","semver":"^7.3.4"},"license":"BSD-2-Clause","scripts":{"test":"gulp travis","unit-test":"gulp test","lint":"gulp lint","release":"node tools/release.js","build-min":"./node_modules/.bin/cjsify -ma path: tools/entry-point.js > escodegen.browser.min.js","build":"./node_modules/.bin/cjsify -a path: tools/entry-point.js > escodegen.browser.js"}}');
 
 /***/ })
 
@@ -23575,7 +23997,7 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/
+/******/ 	
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -23589,20 +24011,20 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
-/******/
+/******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+/******/ 	
 /******/ 		// Flag the module as loaded
 /******/ 		module.loaded = true;
-/******/
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
+/******/ 	
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = __webpack_module_cache__;
-/******/
+/******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/compat get default export */
 /******/ 	(() => {
@@ -23615,7 +24037,7 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			return getter;
 /******/ 		};
 /******/ 	})();
-/******/
+/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -23627,7 +24049,7 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			}
 /******/ 		};
 /******/ 	})();
-/******/
+/******/ 	
 /******/ 	/* webpack/runtime/global */
 /******/ 	(() => {
 /******/ 		__webpack_require__.g = (function() {
@@ -23639,12 +24061,12 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			}
 /******/ 		})();
 /******/ 	})();
-/******/
+/******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
 /******/ 	(() => {
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
-/******/
+/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -23655,7 +24077,7 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
 /******/ 	})();
-/******/
+/******/ 	
 /******/ 	/* webpack/runtime/node module decorator */
 /******/ 	(() => {
 /******/ 		__webpack_require__.nmd = (module) => {
@@ -23664,14 +24086,14 @@ module.exports = JSON.parse('{"name":"escodegen","description":"ECMAScript code 
 /******/ 			return module;
 /******/ 		};
 /******/ 	})();
-/******/
+/******/ 	
 /************************************************************************/
-/******/
+/******/ 	
 /******/ 	// module cache are used so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	var __webpack_exports__ = __webpack_require__(__webpack_require__.s = "./src/div2js.ts");
-/******/
+/******/ 	
 /******/ 	return __webpack_exports__;
 /******/ })()
 ;
