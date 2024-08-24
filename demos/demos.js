@@ -33,7 +33,10 @@ function load() {
 }
 
 function run() {
-  const source = demoSource.value;
+  const source = demoSource.value.trim();
+  if (!source) {
+    return;
+  }
   const binary = div2.compile(source);
   div2
     .load(binary)
