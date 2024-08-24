@@ -38,28 +38,30 @@ function load_fpg(fpgPath: string, runtime: Runtime) {
     });
 }
 
-function put(file: number, graph: number, x: number, y: number, runtime: Runtime) {
-  return runtime
-    .getSystem("video")
-    .xput(
-      file, graph,
-      x, y,
-      0, 100,
-      0,
-      0
-    );
+function put(
+  file: number,
+  graph: number,
+  x: number,
+  y: number,
+  runtime: Runtime,
+) {
+  return runtime.getSystem("video").xput(file, graph, x, y, 0, 100, 0, 0);
 }
 
-function xput(file: number, graph: number, x: number, y: number, angle: number, size: number, flags: number, region: number, runtime: Runtime) {
+function xput(
+  file: number,
+  graph: number,
+  x: number,
+  y: number,
+  angle: number,
+  size: number,
+  flags: number,
+  region: number,
+  runtime: Runtime,
+) {
   return runtime
     .getSystem("video")
-    .xput(
-      file, graph,
-      x, y,
-      angle, size,
-      flags,
-      region
-    );
+    .xput(file, graph, x, y, angle, size, flags, region);
 }
 
 export { put_pixel, put_screen, rand, load_pal, load_fpg, put, xput };
