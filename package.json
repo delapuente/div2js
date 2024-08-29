@@ -34,6 +34,7 @@
   },
   "homepage": "https://github.com/delapuente/div2js",
   "devDependencies": {
+    "@ephesoft/webpack.istanbul.loader": "^2.2.0",
     "@types/chai": "^4.3.1",
     "@types/escodegen": "0.0.10",
     "@types/mocha": "^10.0.7",
@@ -46,7 +47,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "esprima": "^4.0.1",
-    "@ephesoft/webpack.istanbul.loader": "^2.2.0",
     "jison": "^0.4.18",
     "karma": "^6.4.4",
     "karma-chrome-launcher": "^3.2.0",
@@ -57,6 +57,7 @@
     "karma-sinon-chai": "^2.0.2",
     "karma-webpack": "^5.0.1",
     "mocha": "^10.7.0",
+    "pixelmatch": "^6.0.0",
     "pre-commit": "^1.2.2",
     "prettier": "^3.3.3",
     "sinon": "^18.0.0",
