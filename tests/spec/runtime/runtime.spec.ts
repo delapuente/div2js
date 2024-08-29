@@ -32,7 +32,7 @@ describe("The Runtime class", () => {
     it("raises when registering a function twice under the same name", () => {
       runtime.registerFunction(() => void 0, "test");
       expect(() => runtime.registerFunction(() => void 0, "test")).to.throw(
-        Error
+        Error,
       );
     });
   });
@@ -63,7 +63,7 @@ describe("The Runtime class", () => {
 
     it("raises when calling a function that does not exist", () => {
       expect(() => runtime.call("non_existent", [], fakeProcess)).to.throw(
-        Error
+        Error,
       );
     });
 
