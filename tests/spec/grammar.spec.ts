@@ -8,7 +8,7 @@ describe("DIV2 parser", function () {
   const parser = div2lang;
 
   function samplePath(name) {
-    return "base/tests/spec/samples/" + name;
+    return `base/tests/spec/samples/code-to-ast/${name}`;
   }
 
   const programs = [
@@ -64,7 +64,7 @@ describe("DIV2 parser", function () {
           return Promise.all(
             responses.map(function (response) {
               return response.text();
-            })
+            }),
           );
         })
         .then(function (sources) {
