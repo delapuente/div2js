@@ -1,43 +1,16 @@
-import * as compiler from "../../src/compiler";
-import * as loader from "../../src/loader";
-import * as dbgr from "../../src/debugger";
 import { expect } from "chai";
+import { load, withDebugSession } from "./helpers";
+
+const loadPrg = (programName) => load(samplePath(programName));
 
 function samplePath(name) {
-  return "/base/tests/spec/samples/execution/" + name;
-}
-
-function get(path) {
-  return fetch(path).then(function (response) {
-    if (response.status === 404) {
-      throw new Error(path + " does not exist.");
-    }
-    return response.text();
-  });
-}
-
-function load(programName) {
-  const programUrl = samplePath(programName);
-  return get(programUrl)
-    .then(function (src) {
-      return compiler.compile(src);
-    })
-    .then(function (obj) {
-      return loader.load(obj, { rootUrl: "/base/demos/" });
-    });
-}
-
-function withDebugSession(callback) {
-  return function () {
-    const session = dbgr.debug(this);
-    callback(session);
-  };
+  return `/base/tests/spec/samples/execution/${name}`;
 }
 
 describe("Graphic functions", function () {
   describe("default video mode", function () {
     it("is m320x200", function () {
-      return load("default-video-mode.prg").then(function (program) {
+      return loadPrg("default-video-mode.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
@@ -54,7 +27,7 @@ describe("Graphic functions", function () {
 
   describe("put_pixel()", function () {
     it("sets a pixel to a given color", function () {
-      return load("put_pixel.prg").then(function (program) {
+      return loadPrg("put_pixel.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
@@ -70,7 +43,7 @@ describe("Graphic functions", function () {
 
   describe("put_screen()", function () {
     it("centers a small map in a file in the screen", function () {
-      return load("put_screen.prg").then(function (program) {
+      return loadPrg("put_screen.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
@@ -99,7 +72,7 @@ describe("Graphic functions", function () {
     });
 
     it("centers a big map in a file in the screen", function () {
-      return load("put_screen_with_big_map.prg").then(function (program) {
+      return loadPrg("put_screen_with_big_map.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const screen = session.screen;
@@ -117,7 +90,7 @@ describe("Graphic functions", function () {
 
   describe("load_pal()", function () {
     it("loads and set a palette", function () {
-      return load("load_pal.prg").then(function (program) {
+      return loadPrg("load_pal.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
@@ -134,7 +107,7 @@ describe("Graphic functions", function () {
     });
 
     it("errors when trying to load a non existent palette", function () {
-      return load("load_pal_error.prg").then(function (program) {
+      return loadPrg("load_pal_error.prg").then(function (program) {
         return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
@@ -150,7 +123,7 @@ describe("Graphic functions", function () {
 
   describe("load_fpg()", function () {
     it("loads a file", function () {
-      return load("load_fpg.prg").then(function (program) {
+      return loadPrg("load_fpg.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
             const program = session.process({
@@ -167,7 +140,7 @@ describe("Graphic functions", function () {
     });
 
     it("errors when trying to load a non existent file", function () {
-      return load("load_fpg_error.prg").then(function (program) {
+      return loadPrg("load_fpg_error.prg").then(function (program) {
         return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
@@ -181,7 +154,7 @@ describe("Graphic functions", function () {
     });
 
     it("errors when trying to use a non existent map", function () {
-      return load("load_fpg_map_error.prg").then(function (program) {
+      return loadPrg("load_fpg_map_error.prg").then(function (program) {
         return new Promise(function (fulfill, reject) {
           program.onfinished = () =>
             reject(new Error("Should not have finished but errored, instead."));
