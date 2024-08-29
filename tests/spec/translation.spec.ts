@@ -2,7 +2,10 @@ import * as translator from "../../src/div2trans";
 import * as checker from "../../src/div2checker";
 import { SymbolTable } from "../../src/memoryBrowser/symbols";
 import { expect } from "chai";
-import { WellKnownSymbols, normalize } from "../../src/memoryBrowser/definitions";
+import {
+  WellKnownSymbols,
+  normalize,
+} from "../../src/memoryBrowser/definitions";
 
 const simpleDefinitions: WellKnownSymbols = {
   wellKnownGlobals: [normalize("text_z")],
@@ -76,16 +79,19 @@ describe("AST translation from DIV2 to JavaScript", function () {
 
     it("Translates `" + sourceAst + "`", function () {
       let ast, expectedAst;
-      return Promise.all([get(sourceAst), get(targetAst)]).then(function (
-        abstractSyntaxTrees
-      ) {
-        const divAst = abstractSyntaxTrees[0];
-        const symbolTable = new SymbolTable(simpleDefinitions);
-        const translationContext = checker.extractContext(divAst, symbolTable);
-        ast = translate(findTestNode(divAst) || divAst, translationContext);
-        expectedAst = abstractSyntaxTrees[1];
-        expect(ast.pojo()).to.be.deep.equal(expectedAst);
-      });
+      return Promise.all([get(sourceAst), get(targetAst)]).then(
+        function (abstractSyntaxTrees) {
+          const divAst = abstractSyntaxTrees[0];
+          const symbolTable = new SymbolTable(simpleDefinitions);
+          const translationContext = checker.extractContext(
+            divAst,
+            symbolTable,
+          );
+          ast = translate(findTestNode(divAst) || divAst, translationContext);
+          expectedAst = abstractSyntaxTrees[1];
+          expect(ast.pojo()).to.be.deep.equal(expectedAst);
+        },
+      );
     });
   });
 
