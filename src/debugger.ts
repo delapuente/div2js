@@ -1,6 +1,9 @@
-function DebugSession(memBrowser, screen) {
+import { Runtime } from "./runtime/runtime";
+
+function DebugSession(memBrowser, screen, framebuffer) {
   this._browser = memBrowser;
   this._screen = screen;
+  this._framebuffer = framebuffer;
 }
 
 DebugSession.prototype = {
@@ -17,12 +20,17 @@ DebugSession.prototype = {
   get screen() {
     return this._screen;
   },
+
+  get framebuffer() {
+    return this._framebuffer;
+  },
 };
 
-function debug(runtime) {
+function debug(runtime: Runtime) {
   return new DebugSession(
     runtime.getMemoryBrowser(),
-    runtime.getSystem("video").screen,
+    (runtime.getSystem("video") as any).screen,
+    (runtime.getSystem("video") as any).framebuffer,
   );
 }
 

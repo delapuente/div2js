@@ -1,10 +1,71 @@
 import { expect } from "chai";
 import { load, withDebugSession } from "./helpers";
+import pixelmatch from "pixelmatch";
 
 const loadPrg = (programName) => load(samplePath(programName));
 
 function samplePath(name) {
   return `/base/tests/spec/samples/execution/${name}`;
+}
+
+function refImagePath(name) {
+  return `/base/tests/spec/samples/reference-images/${name}`;
+}
+
+function match(
+  referenceUrl: string,
+  actualData: Uint8ClampedArray,
+  threshold = 0.1,
+): Promise<number> {
+  return new Promise((fulfill) => {
+    const diffCanvas = document.createElement("canvas");
+    const referenceCanvas = document.createElement("canvas");
+    const referenceImage = new Image();
+    referenceImage.onload = compareCanvasData;
+    referenceImage.src = referenceUrl;
+
+    function compareCanvasData() {
+      diffCanvas.style.imageRendering = "pixelated";
+      diffCanvas.width = referenceImage.width;
+      diffCanvas.height = referenceImage.height;
+      const diffContext = diffCanvas.getContext(
+        "2d",
+      ) as CanvasRenderingContext2D;
+
+      const diffData = diffContext.createImageData(
+        referenceImage.width,
+        referenceImage.height,
+      );
+
+      referenceCanvas.style.imageRendering = "pixelated";
+      referenceCanvas.width = referenceImage.width;
+      referenceCanvas.height = referenceImage.height;
+      const referenceContext = referenceCanvas.getContext(
+        "2d",
+      ) as CanvasRenderingContext2D;
+
+      referenceContext.drawImage(referenceImage, 0, 0);
+      const referenceData = referenceContext.getImageData(
+        0,
+        0,
+        referenceImage.width,
+        referenceImage.height,
+      );
+
+      const count = pixelmatch(
+        referenceData.data,
+        actualData,
+        diffData.data,
+        referenceImage.width,
+        referenceImage.height,
+        { threshold },
+      );
+
+      diffContext.putImageData(diffData, 0, 0);
+      document.body.appendChild(diffCanvas);
+      fulfill(count);
+    }
+  });
 }
 
 describe("Graphic functions", function () {
@@ -28,12 +89,14 @@ describe("Graphic functions", function () {
   describe("put_pixel()", function () {
     it("sets a pixel to a given color", function () {
       return loadPrg("put_pixel.prg").then(function (program) {
-        return new Promise(function (fulfill) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = withDebugSession(function (session) {
-            const screen = session.screen;
-            const pixelIndex = 99 * 320 + 159;
-            expect(screen.buffer[pixelIndex]).to.equal(15);
-            fulfill(void 0);
+            match(refImagePath("put_pixel.png"), session.framebuffer)
+              .then(function (difference) {
+                expect(difference).to.equal(0);
+                fulfill(void 0);
+              })
+              .catch(reject);
           });
           program.start();
         });
@@ -44,27 +107,14 @@ describe("Graphic functions", function () {
   describe("put_screen()", function () {
     it("centers a small map in a file in the screen", function () {
       return loadPrg("put_screen.prg").then(function (program) {
-        return new Promise(function (fulfill) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = withDebugSession(function (session) {
-            const screen = session.screen;
-            const testPattern = [
-              [31, 0, 0, 31],
-              [0, 15, 31, 0],
-              [0, 31, 15, 0],
-              [31, 0, 0, 31],
-            ];
-            for (let y = 0; y < 4; y++) {
-              for (let x = 0; x < 4; x++) {
-                // XXX: 158 and 98 are the offsets to center the 4x4 test map
-                // in the 320x200 screen.
-                const pixelIndex = (y + 98) * 320 + (x + 158);
-                expect(screen.buffer[pixelIndex]).to.equal(
-                  testPattern[y][x],
-                  `Pixel at (${x}, ${y}) should be ${testPattern[y][x]}`,
-                );
-              }
-            }
-            fulfill(void 0);
+            match(refImagePath("put_screen.png"), session.framebuffer)
+              .then(function (difference) {
+                expect(difference).to.equal(0);
+                fulfill(void 0);
+              })
+              .catch(reject);
           });
           program.start();
         });
@@ -73,14 +123,17 @@ describe("Graphic functions", function () {
 
     it("centers a big map in a file in the screen", function () {
       return loadPrg("put_screen_with_big_map.prg").then(function (program) {
-        return new Promise(function (fulfill) {
+        return new Promise(function (fulfill, reject) {
           program.onfinished = withDebugSession(function (session) {
-            const screen = session.screen;
-            expect(screen.buffer[0 * 320 + 0]).to.equal(31);
-            expect(screen.buffer[0 * 320 + 319]).to.equal(31);
-            expect(screen.buffer[199 * 320 + 0]).to.equal(31);
-            expect(screen.buffer[199 * 320 + 319]).to.equal(31);
-            fulfill(void 0);
+            match(
+              refImagePath("put_screen_with_big_map.png"),
+              session.framebuffer,
+            )
+              .then(function (difference) {
+                expect(difference).to.equal(0);
+                fulfill(void 0);
+              })
+              .catch(reject);
           });
           program.start();
         });

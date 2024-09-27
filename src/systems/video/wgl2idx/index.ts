@@ -171,6 +171,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   _gpuProgram: WebGLProgram;
 
+  _framebuffer: Uint8Array;
+
   // TODO: Double check if it is possible to access the FPG data directly from
   // the DIV program. If so, we should imitate the DIV behavior and store the
   // FPG the program memory. The system could keep indices to conveninet places
@@ -186,8 +188,14 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     public readonly screen: IndexedGraphic = getDefaultScreen(),
     public palette: Palette = getDefaultPalette(),
   ) {
-    this._gl = canvas.getContext("webgl2");
+    // XXX: The preserveDrawingBuffer option is necessary for the tests to work.
+    // It should be possible to make it dependant on the type of build (dev, or prod).
+    // Or, we could invoke the debug handler in the same event loop cycle to avoid
+    // the automatic clearing of the buffer. See:
+    // https://stackoverflow.com/questions/44510299/webgl-2-when-to-clear-the-drawing-buffer
+    this._gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true });
     this._loadedFpgs = [];
+    this._framebuffer = new Uint8Array(screen.width * screen.height * 4);
   }
 
   initialize() {
@@ -198,6 +206,25 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._configurePaletteTexture();
     const { width, height } = this.screen;
     this.setViewportResolution(width, height);
+  }
+
+  get framebuffer(): Uint8Array {
+    // XXX: The framebuffer is flipped in the Y axis. The DIV engine uses the
+    // top-left corner as the origin, while WebGL uses the bottom-left corner.
+    this._gl.readPixels(
+      0,
+      0,
+      this.screen.width,
+      this.screen.height,
+      this._gl.RGBA,
+      this._gl.UNSIGNED_BYTE,
+      this._framebuffer,
+    );
+    return flipBufferY(
+      this._framebuffer,
+      this.screen.width,
+      this.screen.height,
+    );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -589,6 +616,31 @@ function sample(
     return null;
   }
   return data[idx];
+}
+
+function flipBufferY(pixels: Uint8Array, width: number, height: number) {
+  const rowSize = width * 4; // 4 bytes per pixel (RGBA)
+  const halfHeight = Math.floor(height / 2);
+  const tempRow = new Uint8Array(rowSize); // Temporary buffer for one row
+
+  for (let y = 0; y < halfHeight; y++) {
+    const topRowStart = y * rowSize;
+    const bottomRowStart = (height - y - 1) * rowSize;
+
+    // Copy the top row into the temporary buffer
+    tempRow.set(pixels.subarray(topRowStart, topRowStart + rowSize));
+
+    // Copy the bottom row into the top row
+    pixels.set(
+      pixels.subarray(bottomRowStart, bottomRowStart + rowSize),
+      topRowStart,
+    );
+
+    // Copy the temporary buffer (original top row) into the bottom row
+    pixels.set(tempRow, bottomRowStart);
+  }
+
+  return pixels;
 }
 
 export { Div2VideoSystem as VideoSystem };
