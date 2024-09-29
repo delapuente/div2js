@@ -1,36 +1,51 @@
+import { MemoryBrowser } from "./memoryBrowser/mapper";
 import { Runtime } from "./runtime/runtime";
 
-function DebugSession(memBrowser, screen, framebuffer) {
-  this._browser = memBrowser;
-  this._screen = screen;
-  this._framebuffer = framebuffer;
+interface ScreenData {
+  width: number;
+  height: number;
 }
 
-DebugSession.prototype = {
-  constructor: DebugSession,
+class DebugSession {
+  private _browser: MemoryBrowser;
+  private _screenData: ScreenData;
+  private _framebuffer: Uint8Array;
+
+  constructor(
+    memBrowser: MemoryBrowser,
+    screenData: ScreenData,
+    framebuffer: Uint8Array,
+  ) {
+    this._browser = memBrowser;
+    this._screenData = screenData;
+    this._framebuffer = framebuffer;
+  }
 
   get global() {
     return this._browser.global.bind(this._browser);
-  },
+  }
 
   get process() {
     return this._browser.process.bind(this._browser);
-  },
-
-  get screen() {
-    return this._screen;
-  },
+  }
 
   get framebuffer() {
     return this._framebuffer;
-  },
-};
+  }
+
+  get screenData() {
+    return this._screenData;
+  }
+}
 
 function debug(runtime: Runtime) {
   return new DebugSession(
     runtime.getMemoryBrowser(),
-    (runtime.getSystem("video") as any).screen,
-    (runtime.getSystem("video") as any).framebuffer,
+    {
+      width: runtime.getSystem("video").screenWidth,
+      height: runtime.getSystem("video").screenHeight,
+    },
+    runtime.getSystem("video").framebuffer,
   );
 }
 

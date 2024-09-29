@@ -227,6 +227,14 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     );
   }
 
+  get screenWidth(): number {
+    return this.screen.width;
+  }
+
+  get screenHeight(): number {
+    return this.screen.height;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   run(memory: never, environment: never) {
     this._sendPalette();

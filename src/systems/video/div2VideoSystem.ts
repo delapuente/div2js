@@ -16,6 +16,9 @@ interface Div2VideoSystem {
     flags: number,
     region: number,
   ): void;
+  screenWidth: number;
+  screenHeight: number;
+  framebuffer: Uint8Array;
 }
 
 export { Div2VideoSystem };

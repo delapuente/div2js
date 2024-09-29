@@ -14,7 +14,7 @@ function refImagePath(name) {
 
 function match(
   referenceUrl: string,
-  actualData: Uint8ClampedArray,
+  actualData: Uint8Array,
   threshold = 0.1,
 ): Promise<number> {
   return new Promise((fulfill) => {
@@ -74,10 +74,10 @@ describe("Graphic functions", function () {
       return loadPrg("default-video-mode.prg").then(function (program) {
         return new Promise(function (fulfill) {
           program.onfinished = withDebugSession(function (session) {
-            const screen = session.screen;
+            const screen = session.screenData;
             expect(screen.width).to.equal(320);
             expect(screen.height).to.equal(200);
-            expect(screen.buffer.length).to.equal(320 * 200);
+            expect(session.framebuffer.length).to.equal(320 * 200 * 4);
             fulfill(void 0);
           });
           program.start();

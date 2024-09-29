@@ -21,7 +21,7 @@ function load(programUrl) {
     });
 }
 
-function withDebugSession(callback) {
+function withDebugSession(callback: (session: dbgr.DebugSession) => void) {
   return function () {
     const session = dbgr.debug(this);
     callback(session);
