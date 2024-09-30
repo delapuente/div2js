@@ -16,7 +16,7 @@ function rand(min: number, max: number) {
   return result;
 }
 
-function load_pal(palettePath: string, runtime: Runtime) {
+function load_pal(palettePath: string, runtime: Runtime): Promise<number> {
   return runtime
     .getSystem("files")
     .loadPal(palettePath)
@@ -26,7 +26,7 @@ function load_pal(palettePath: string, runtime: Runtime) {
     });
 }
 
-function load_fpg(fpgPath: string, runtime: Runtime) {
+function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
   return runtime
     .getSystem("files")
     .loadFpg(fpgPath)

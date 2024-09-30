@@ -355,6 +355,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     const withTransparency = (flags & 4) !== 0;
 
     // Calculate the screen region to update.
+    // T stands for top, L for left, B for bottom, and R for right.
     const [xTL, yTL] = movedPoint(
       rotatedPoint(
         scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor),
