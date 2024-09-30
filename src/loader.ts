@@ -4,7 +4,7 @@ import * as builtins from "./builtins";
 import { MemoryManager } from "./runtime/memory";
 import { Scheduler } from "./runtime/scheduler";
 
-function load(objText, options = { rootUrl: "" }): Promise<runtime.Runtime> {
+function load(objText, options): Promise<runtime.Runtime> {
   // tslint:disable-next-line:no-eval
   const unit = eval(objText)(runtime, systems);
   const processMap = unit.pmap;
@@ -35,7 +35,7 @@ function registerRenderSystem(program) {
   }
 }
 
-function registerFileSystem(program, rootUrl = "") {
+function registerFileSystem(program, rootUrl) {
   program.registerSystem(
     new systems.DefaultFileSystem({
       rootUrl,

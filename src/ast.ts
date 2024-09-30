@@ -14,7 +14,7 @@ inherits(AssignmentExpression, Node);
 
 function ArrayExpression(elements) {
   this.type = "ArrayExpression";
-  this.elements = elements || [];
+  this.elements = elements;
 }
 inherits(AssignmentExpression, Node);
 
@@ -64,8 +64,8 @@ inherits(ExpressionStatement, Node);
 
 /* jshint maxparams: 6 */
 function FunctionDeclaration(
-  id = null,
-  params = [],
+  id,
+  params,
   defaults = [],
   body,
   generator = false,
@@ -145,7 +145,7 @@ inherits(Program, Node);
 
 function ReturnStatement(expression) {
   this.type = "ReturnStatement";
-  this.argument = expression || null;
+  this.argument = expression;
 }
 inherits(ReturnStatement, Node);
 
@@ -159,7 +159,7 @@ inherits(SwitchCase, Node);
 function SwitchStatement(discriminant, cases) {
   this.type = "SwitchStatement";
   this.discriminant = discriminant;
-  this.cases = cases || [];
+  this.cases = cases;
 }
 inherits(SwitchStatement, Node);
 

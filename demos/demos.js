@@ -39,7 +39,7 @@ function run() {
   }
   const binary = div2.compile(source);
   div2
-    .load(binary)
+    .load(binary, { rootUrl: "" })
     .then((program) => {
       reloadButton.disabled = false;
       runButton.disabled = false;
