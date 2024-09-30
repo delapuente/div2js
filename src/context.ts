@@ -177,7 +177,7 @@ class Linearization {
         cases.push(currentCase);
       }
       consequent = currentCase.consequent;
-      consequent.push.apply(consequent, wrapper.sentences);
+      consequent.push(...wrapper.sentences);
 
       caseIsFinished = isReturn || (caseIsFinished && !isLabel);
     }
@@ -292,7 +292,7 @@ class Linearization {
             option.label.label,
           );
         });
-        return [defaultExpression]
+        return [defaultExpression as any]
           .concat(cases)
           .concat([new ast.BreakStatement()]);
       },
