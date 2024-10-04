@@ -1,64 +1,82 @@
 class ControlPoint {
-  constructor(public readonly x: number, public readonly y: number) {}
+  constructor(
+    public readonly x: number,
+    public readonly y: number,
+  ) {}
 }
 
 class DivMap {
   // TODO: double-check with DIV manuals to implement integrity
   // tests and validation.
 
-  readonly code: number;
-
-  readonly length: number;
-
-  readonly description: string;
-
-  readonly name: string;
-
-  readonly width: number;
-
-  readonly height: number;
-
-  readonly pointCount: number;
-
-  readonly dataOffset: number;
-
-  readonly size: number;
-
-  readonly data: Uint8Array;
-
   static fromBuffer(buffer: Uint8Array): DivMap {
-    const map = new DivMap(buffer);
+    const reader = new ByteReader(buffer);
+    const code = reader.readDoubleWord(0);
+    const length = reader.readDoubleWord(4);
+    const description = reader.readAscii(8, 32);
+    const name = reader.readAscii(40, 12);
+    const width = reader.readDoubleWord(52);
+    const height = reader.readDoubleWord(56);
+    const center = new ControlPoint(
+      Math.ceil(width / 2),
+      Math.ceil(height / 2),
+    );
+    const pointCount = reader.readDoubleWord(60);
+    const controlPoints = Array.from({ length: pointCount }, (_, index) => {
+      const x = reader.readWord(64 + index * 4);
+      const y = reader.readWord(64 + index * 4 + 2);
+      // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+      // XXX: Also assuming rounding-up in case of odd size values.
+      return new ControlPoint(
+        x == 0xffff ? Math.ceil(width / 2) : x,
+        y == 0xffff ? Math.ceil(height / 2) : y,
+      );
+    });
+    const dataOffset = 64 + pointCount * 4;
+    const data = buffer.subarray(dataOffset, length);
+    const map = new DivMap(
+      code,
+      length,
+      description,
+      name,
+      width,
+      height,
+      center,
+      controlPoints,
+      data,
+    );
     return map;
   }
 
-  constructor(public readonly buffer: Uint8Array) {
-    this.code = this._readDoubleWord(0);
-    this.length = this._readDoubleWord(4);
-    this.description = this._readAscii(8, 32);
-    this.name = this._readAscii(40, 12);
-    this.width = this._readDoubleWord(52);
-    this.height = this._readDoubleWord(56);
-    this.pointCount = this._readDoubleWord(60);
-    this.dataOffset = 64 + this.pointCount * 4;
-    this.data = this.buffer.subarray(this.dataOffset, this.length);
+  constructor(
+    readonly code: number,
+    readonly length: number,
+    readonly description: string,
+    readonly name: string,
+    readonly width: number,
+    readonly height: number,
+    readonly center: ControlPoint,
+    private readonly controlPoints: ControlPoint[],
+    readonly data: Uint8Array,
+  ) {}
+
+  get controlPointCount(): number {
+    return this.controlPoints.length;
   }
 
   controlPoint(index: number): ControlPoint {
-    const x = this._readWord(64 + index * 4);
-    const y = this._readWord(64 + index * 4 + 2);
-    // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
-    // XXX: Also assuming rounding-up in case of odd size values.
-    return new ControlPoint(
-      this.pointCount === 0 || x == 0xFFFF ? Math.ceil(this.width / 2) : x,
-      this.pointCount === 0 || y == 0xFFFF ? Math.ceil(this.height / 2) : y,
-    );
+    return this.controlPoints[index];
   }
+}
 
-  _readWord(offset: number): number {
+class ByteReader {
+  constructor(public readonly buffer: Uint8Array) {}
+
+  readWord(offset: number): number {
     return this.buffer[offset] | (this.buffer[offset + 1] << 8);
   }
 
-  _readDoubleWord(offset: number): number {
+  readDoubleWord(offset: number): number {
     return (
       this.buffer[offset] |
       (this.buffer[offset + 1] << 8) |
@@ -67,7 +85,7 @@ class DivMap {
     );
   }
 
-  _readAscii(offset: number, length: number): string {
+  readAscii(offset: number, length: number): string {
     return String.fromCharCode(
       ...this.buffer.subarray(offset, offset + length),
     );

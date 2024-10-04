@@ -311,7 +311,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     const map = fpg.map(mapId);
 
     const { data, width, height } = map;
-    const { x: xOrigin, y: yOrigin } = map.controlPoint(0);
+    const { x: xOrigin, y: yOrigin } =
+      map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
 
     this._xput(
       data,
