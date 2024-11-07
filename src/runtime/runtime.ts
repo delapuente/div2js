@@ -191,7 +191,12 @@ class Runtime {
       if (result instanceof Promise) {
         this._scheduler.stop();
         result
-          .catch((error) => setTimeout(this.onerror.bind(this, error)))
+          .catch((error) => {
+            if (!this.onerror) {
+              throw error;
+            }
+            setTimeout(this.onerror.bind(this, error));
+          })
           .then((returnValue) => {
             process.retv.enqueue(returnValue);
             this._scheduler.run();
