@@ -1,4 +1,5 @@
 import Fpg from "./wgl2idx/fpg";
+import Map from "./wgl2idx/map";
 import Palette from "./wgl2idx/palette";
 
 interface Div2VideoSystem {
@@ -6,6 +7,7 @@ interface Div2VideoSystem {
   putScreen(fpgId: number, mapId: number): number;
   setPalette(palette: Palette): void;
   loadFpg(fpg: Fpg): number;
+  loadMap(map: Map): number;
   xput(
     fpgId: number,
     mapId: number,

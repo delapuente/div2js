@@ -1,6 +1,7 @@
 import { PALFile } from "./pal";
 import { DivError } from "../../../errors";
 import { FPGFile } from "./fpg";
+import { MAPFile } from "./map";
 import { System } from "../../../runtime/runtime";
 import { Div2FileSystem } from "../div2FileSystem";
 
@@ -16,6 +17,11 @@ export default class UrlFileSystem implements System, Div2FileSystem {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   run() {}
+
+  loadMap(path: string): Promise<MAPFile> {
+    const normalizedPath = this.normalizePath(path);
+    return _loadMap(this._convertToUrl(normalizedPath));
+  }
 
   loadPal(path: string): Promise<PALFile> {
     const normalizedPath = this.normalizePath(path);
@@ -37,6 +43,9 @@ export default class UrlFileSystem implements System, Div2FileSystem {
 
   _getDefaultDir(path: string): string {
     const extension = this._getExtension(path);
+    if (extension.toLowerCase() === "map") {
+      return "MAP";
+    }
     if (extension.toLowerCase() === "pal") {
       return "PAL";
     }
@@ -64,20 +73,25 @@ export default class UrlFileSystem implements System, Div2FileSystem {
   }
 }
 
+async function _loadMap(url: string): Promise<PALFile> {
+  const buffer = await _loadAsset(url);
+  return PALFile.fromArrayBuffer(buffer);
+}
+
 async function _loadPal(url: string): Promise<PALFile> {
-  const response = await fetch(url);
-  if (response.status === 404) {
-    throw new DivError(102);
-  }
-  const buffer = await response.arrayBuffer();
+  const buffer = await _loadAsset(url);
   return PALFile.fromArrayBuffer(buffer);
 }
 
 async function _loadFpg(url: string): Promise<FPGFile> {
+  const buffer = await _loadAsset(url);
+  return FPGFile.fromArrayBuffer(buffer);
+}
+
+async function _loadAsset(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (response.status === 404) {
     throw new DivError(102);
   }
-  const buffer = await response.arrayBuffer();
-  return FPGFile.fromArrayBuffer(buffer);
+  return response.arrayBuffer();
 }

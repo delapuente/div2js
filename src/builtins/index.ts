@@ -38,6 +38,10 @@ function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
     });
 }
 
+function load_map(mapPath: string, runtime: Runtime): Promise<number> {
+  return Promise.resolve(1);
+}
+
 function put(
   file: number,
   graph: number,
@@ -64,4 +68,4 @@ function xput(
     .xput(file, graph, x, y, angle, size, flags, region);
 }
 
-export { put_pixel, put_screen, rand, load_pal, load_fpg, put, xput };
+export { put_pixel, put_screen, rand, load_pal, load_fpg, load_map, put, xput };

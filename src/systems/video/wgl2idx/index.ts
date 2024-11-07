@@ -3,6 +3,7 @@ import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
+import DivMap from "./map";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -161,6 +162,9 @@ type Color = [number, number, number];
  * final color.
  */
 class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
+  //XXX: According to DIV2 `load_map()` documentation, in the "Importante" note.
+  readonly _mapIdOffset = 1000;
+
   readonly _transparentIndex: number = 0;
 
   _screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
@@ -175,9 +179,19 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   // TODO: Double check if it is possible to access the FPG data directly from
   // the DIV program. If so, we should imitate the DIV behavior and store the
-  // FPG the program memory. The system could keep indices to conveninet places
+  // FPG in the program memory. The system could keep indices to conveninet places
   // for quick access.
-  readonly _loadedFpgs: Fpg[];
+  readonly _loadedFpgs: Map<number, Fpg>;
+
+  // TODO: Double check if it is possible to access the MAP data directly from
+  // the DIV program. If so, we should imitate the DIV behavior and store the
+  // MAP in the program memory. The system could keep indices to conveninet places
+  // for quick access.
+
+  // XXX: DIV2 behaviour is a bit strange here. Anything loaded with
+  // `load_map()` belongs to the FPG 0, but the FPG 0 is also the first FPG
+  // loaded with `load_fpg()`.
+  readonly _loadedMaps: Map<number, DivMap>;
 
   // TODO: Regardless of the above, it would be a good idea to separate the
   // duty of managing FPGs, MAPs, PALs, and other resources from the video
@@ -194,7 +208,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     // the automatic clearing of the buffer. See:
     // https://stackoverflow.com/questions/44510299/webgl-2-when-to-clear-the-drawing-buffer
     this._gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true });
-    this._loadedFpgs = [];
+    this._loadedFpgs = new Map();
+    this._loadedMaps = new Map();
     this._framebuffer = new Uint8Array(screen.width * screen.height * 4);
   }
 
@@ -256,8 +271,14 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   loadFpg(fpg: Fpg) {
     const fpgId = this._nextFpgId();
-    this._loadedFpgs.push(fpg);
+    this._loadedFpgs.set(fpgId, fpg);
     return fpgId;
+  }
+
+  loadMap(map: DivMap): number {
+    const mapId = this._nextMapId();
+    this._loadedMaps.set(mapId, map);
+    return mapId;
   }
 
   putPixel(x: number, y: number, colorIndex: number): void {
@@ -266,7 +287,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   putScreen(fpgId: number, mapId: number) {
     // TODO: Validate fpgId and mapId.
-    const fpg = this._loadedFpgs[fpgId];
+    const fpg = this._loadedFpgs.get(fpgId);
     const map = fpg.map(mapId);
 
     const { data, width, height } = map;
@@ -307,7 +328,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   ): void {
     // TODO: Validate fpgId and mapId.
     // TODO: Region.
-    const fpg = this._loadedFpgs[fpgId];
+    const fpg = this._loadedFpgs.get(fpgId);
     const map = fpg.map(mapId);
 
     const { data, width, height } = map;
@@ -566,7 +587,11 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 
   _nextFpgId() {
-    return this._loadedFpgs.length;
+    return this._loadedFpgs.size;
+  }
+
+  _nextMapId() {
+    return this._mapIdOffset + this._loadedMaps.size;
   }
 }
 

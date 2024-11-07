@@ -9,7 +9,7 @@ class DivMap {
   // TODO: double-check with DIV manuals to implement integrity
   // tests and validation.
 
-  static fromBuffer(buffer: Uint8Array): DivMap {
+  static fromWithingFpg(buffer: Uint8Array): DivMap {
     const reader = new ByteReader(buffer);
     const code = reader.readDoubleWord(0);
     const length = reader.readDoubleWord(4);
@@ -48,11 +48,51 @@ class DivMap {
     return map;
   }
 
+  static fromBuffer(buffer: Uint8Array): DivMap {
+    const reader = new ByteReader(buffer);
+    const width = reader.readDoubleWord(0);
+    const height = reader.readDoubleWord(4);
+    const length = width * height;
+    const center = new ControlPoint(
+      Math.ceil(width / 2),
+      Math.ceil(height / 2),
+    );
+    const code = reader.readDoubleWord(8);
+    const description = reader.readAscii(12, 32);
+    //TODO: Maps can have an own palette and gamma, but I think that data is
+    // only for `load_pal()` to deal with.
+    const pointCount = reader.readWord(1384);
+    const controlPoints = Array.from({ length: pointCount }, (_, index) => {
+      const x = reader.readWord(1386 + index * 4);
+      const y = reader.readWord(1386 + index * 4 + 2);
+      // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+      // XXX: Also assuming rounding-up in case of odd size values.
+      return new ControlPoint(
+        x == 0xffff ? Math.ceil(width / 2) : x,
+        y == 0xffff ? Math.ceil(height / 2) : y,
+      );
+    });
+    const dataOffset = 1386 + pointCount * 4;
+    const data = buffer.subarray(dataOffset, length);
+    const map = new DivMap(
+      code,
+      length,
+      description,
+      null,
+      width,
+      height,
+      center,
+      controlPoints,
+      data,
+    );
+    return map;
+  }
+
   constructor(
     readonly code: number,
     readonly length: number,
     readonly description: string,
-    readonly name: string,
+    readonly name: string | null,
     readonly width: number,
     readonly height: number,
     readonly center: ControlPoint,
