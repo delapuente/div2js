@@ -12,7 +12,7 @@ class DivMap {
   static fromWithingFpg(buffer: Uint8Array): DivMap {
     const reader = new ByteReader(buffer);
     const code = reader.readDoubleWord(0);
-    const length = reader.readDoubleWord(4);
+    const mapRecordLength = reader.readDoubleWord(4);
     const description = reader.readAscii(8, 32);
     const name = reader.readAscii(40, 12);
     const width = reader.readDoubleWord(52);
@@ -33,10 +33,10 @@ class DivMap {
       );
     });
     const dataOffset = 64 + pointCount * 4;
-    const data = buffer.subarray(dataOffset, length);
+    const data = buffer.subarray(dataOffset, mapRecordLength);
     const map = new DivMap(
       code,
-      length,
+      mapRecordLength,
       description,
       name,
       width,
@@ -50,9 +50,8 @@ class DivMap {
 
   static fromBuffer(buffer: Uint8Array): DivMap {
     const reader = new ByteReader(buffer);
-    const width = reader.readDoubleWord(0);
-    const height = reader.readDoubleWord(4);
-    const length = width * height;
+    const width = reader.readWord(0);
+    const height = reader.readWord(2);
     const center = new ControlPoint(
       Math.ceil(width / 2),
       Math.ceil(height / 2),
@@ -73,10 +72,11 @@ class DivMap {
       );
     });
     const dataOffset = 1386 + pointCount * 4;
-    const data = buffer.subarray(dataOffset, length);
+    const mapRecordLength = dataOffset + width * height;
+    const data = buffer.subarray(dataOffset, mapRecordLength);
     const map = new DivMap(
       code,
-      length,
+      mapRecordLength,
       description,
       null,
       width,

@@ -1,5 +1,6 @@
 import Palette from "../systems/video/wgl2idx/palette";
 import Fpg from "../systems/video/wgl2idx/fpg";
+import Div2Map from "../systems/video/wgl2idx/map";
 import { Runtime } from "../runtime/runtime";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
@@ -39,7 +40,15 @@ function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
 }
 
 function load_map(mapPath: string, runtime: Runtime): Promise<number> {
-  return Promise.resolve(1);
+  return runtime
+    .getSystem("files")
+    .loadMap(mapPath)
+    .then((mapFile) => {
+      const mapId = runtime
+        .getSystem("video")
+        .loadMap(Div2Map.fromBuffer(mapFile.buffer));
+      return mapId;
+    });
 }
 
 function put(

@@ -163,7 +163,10 @@ type Color = [number, number, number];
  */
 class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   //XXX: According to DIV2 `load_map()` documentation, in the "Importante" note.
-  readonly _mapIdOffset = 1000;
+  // This is because the maps belonging to FPGs can only have a code from 1 to
+  // 999, and so the maps loaded with `load_map()` are assigned codes starting
+  // from 1000.
+  readonly _noFpgMapIdOffset = 1000;
 
   readonly _transparentIndex: number = 0;
 
@@ -287,9 +290,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   putScreen(fpgId: number, mapId: number) {
     // TODO: Validate fpgId and mapId.
-    const fpg = this._loadedFpgs.get(fpgId);
-    const map = fpg.map(mapId);
-
+    const map = this._getMap(fpgId, mapId);
     const { data, width, height } = map;
     const { width: screenWidth, height: screenHeight } = this.screen;
     const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
@@ -326,10 +327,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     flags: number,
     region: number,
   ): void {
-    // TODO: Validate fpgId and mapId.
     // TODO: Region.
-    const fpg = this._loadedFpgs.get(fpgId);
-    const map = fpg.map(mapId);
+    const map = this._getMap(fpgId, mapId);
 
     const { data, width, height } = map;
     const { x: xOrigin, y: yOrigin } =
@@ -452,6 +451,15 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         }
       }
     }
+  }
+
+  _getMap(fpgId: number, mapId: number): DivMap {
+    // TODO: Validate fpgId and mapId.
+    const map =
+      fpgId === 0 && mapId >= this._noFpgMapIdOffset
+        ? this._loadedMaps.get(mapId)
+        : this._loadedFpgs.get(fpgId).map(mapId);
+    return map;
   }
 
   _isTransparent(colorIndex: number): boolean {
@@ -591,7 +599,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 
   _nextMapId() {
-    return this._mapIdOffset + this._loadedMaps.size;
+    return this._noFpgMapIdOffset + this._loadedMaps.size;
   }
 }
 

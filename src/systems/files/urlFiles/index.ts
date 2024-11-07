@@ -73,9 +73,9 @@ export default class UrlFileSystem implements System, Div2FileSystem {
   }
 }
 
-async function _loadMap(url: string): Promise<PALFile> {
+async function _loadMap(url: string): Promise<MAPFile> {
   const buffer = await _loadAsset(url);
-  return PALFile.fromArrayBuffer(buffer);
+  return MAPFile.fromArrayBuffer(buffer);
 }
 
 async function _loadPal(url: string): Promise<PALFile> {
