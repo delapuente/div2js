@@ -38,6 +38,8 @@ class MemoryMap {
   // as the minimum number of bytes addressable. In the case of DIV2, this
   // number is 4 which matches the ALIGNMENT.
   static readonly ALIGNMENT = 4; // 4 bytes
+  // TODO: Consider to change GLOBAL_OFFSET name to something related to
+  // the padding that DIV2 uses before the data segment.
   static readonly GLOBAL_OFFSET = 1; /* TODO: Must take into account all
                                         DIV padding including program source.
                                         Leave 0 address free. */
@@ -46,6 +48,12 @@ class MemoryMap {
     word: 2 as const,
     int: 4 as const,
   });
+
+  get totalSize(): number {
+    return (
+      MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize + this.processPoolSize
+    );
+  }
 
   get globalSegmentSize(): number {
     return this._getSegmentSize(this.segments["globals"]) / MemoryMap.ALIGNMENT;

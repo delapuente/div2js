@@ -32,8 +32,7 @@ class MemoryManager {
 
   constructor(symbols: SymbolTable) {
     this._map = new MemoryMap(symbols);
-    const { globalSegmentSize, processPoolSize } = this._map;
-    this._mem = new Int32Array(globalSegmentSize + processPoolSize);
+    this._mem = new Int32Array(this._map.totalSize);
     this._browser = new MemoryBrowser(this._mem, this._map);
     this._createProcessTemplate();
   }
@@ -57,7 +56,8 @@ class MemoryManager {
 
   reset() {
     this._mem.fill(0);
-    // TODO: Add globals
+    const globals = this._map.segments.globals;
+    copyDefaults(this._mem, globals, 0);
     for (let index = 0, l = this._map.maxProcess; index < l; index++) {
       const process = this._browser.process({ index: index });
       process.local("reserved.process_id").value = process.offset;
@@ -69,24 +69,6 @@ class MemoryManager {
     this._processTemplate = new Int32Array(this._map.processSize);
     copyDefaults(this._processTemplate, locals, 0);
     // TODO: Add privates
-
-    function copyDefaults(
-      buffer: MemoryArray,
-      cells: MemoryCell[],
-      base: number,
-    ) {
-      cells.forEach((cell) => {
-        const itemSize = cell.size / cell.symbol.length;
-        for (let index = 0, l = cell.symbol.length; index < l; index++) {
-          const itemOffset = base + index * itemSize;
-          if (cell.symbol.type !== "struct") {
-            buffer[itemOffset + cell.offset] = cell.symbol.default;
-          } else {
-            copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
-          }
-        }
-      });
-    }
   }
 
   _initializeProcessMemory(processMemory: ProcessView) {
@@ -94,6 +76,20 @@ class MemoryManager {
     processMemory.setMemory(this._processTemplate);
     processMemory.local("reserved.process_id").value = id; // restore Id
   }
+}
+
+function copyDefaults(buffer: MemoryArray, cells: MemoryCell[], base: number) {
+  cells.forEach((cell) => {
+    const itemSize = cell.size / cell.symbol.length;
+    for (let index = 0, l = cell.symbol.length; index < l; index++) {
+      const itemOffset = base + index * itemSize;
+      if (cell.symbol.type !== "struct") {
+        buffer[itemOffset + cell.offset] = cell.symbol.default;
+      } else {
+        copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
+      }
+    }
+  });
 }
 
 export { MemoryManager, MemoryArray };

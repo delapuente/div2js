@@ -26,7 +26,6 @@ export default {
   },
 
   every: function (tests) {
-    const _this = this;
     return tests.reduce(function (chain, test) {
       return chain === null
         ? test
@@ -135,55 +134,65 @@ export default {
     return new ast.SwitchCase(ast.Literal.for(label));
   },
 
-  memoryGlobal: function (name) {
-    return this._memory(this._globalAddress(name));
+  memoryGlobal: function (...divNames: string[]) {
+    return this._memory(this._globalAddress(...divNames));
   },
 
-  memoryLocal: function (name) {
-    return this._memory(this._localAddress(name));
+  memoryLocal: function (...divNames: string[]) {
+    return this._memory(this._localAddress(...divNames));
   },
 
-  memoryPrivate: function (name) {
-    return this._memory(this._privateAddress(name));
+  memoryPrivate: function (...divNames: string[]) {
+    return this._memory(this._privateAddress(...divNames));
   },
 
   _memory: function (index) {
     return new ast.MemberExpression(new ast.Identifier("mem"), index, true);
   },
 
-  _globalAddress: function (name) {
-    return new ast.BinaryExpression(
+  // XXX: Returns ast for `__G_SEGMENT_BASE + G_<NAME>`
+  _globalAddress: function (...names: string[]) {
+    return this._resolveAddress(
       this.globalBaseIdentifier,
-      this.identifierForGlobal(name),
-      "+",
+      ...names.map((name) => this.identifierForGlobal(name)),
     );
   },
 
   // XXX: Returns ast for `exec.base + L_<NAME>`
-  _localAddress: function (name) {
-    return new ast.BinaryExpression(
+  _localAddress: function (...names: string[]) {
+    return this._resolveAddress(
       this._localBase,
-      this.identifierForLocal(name),
-      "+",
+      ...names.map((name) => this.identifierForLocal(name)),
     );
   },
 
-  // XXX: Returns ast for `exec.base + P_OFFSET + <name>`
-  _privateAddress: function (name) {
+  // XXX: Returns ast for `exec.base + __P_SEGMENT_OFFSET + <name>`
+  _privateAddress: function (...names) {
+    return this._resolveAddress(
+      this._localBase,
+      this.privateOffsetIdentifier,
+      ...names.map((name) => this.identifierForPrivate(name)),
+    );
+  },
+
+  // XXX: Returns an expression of the form OFFSET_0 + OFFSET_1 + ... + OFFSET_N
+  // aimed at resolving the address of a variable in memory.
+  // TODO: Maybe expand to handle arrays by accepting numbers?
+  _resolveAddress: function (...offsets: ast.Identifier[]) {
+    if (offsets.length === 1) {
+      return offsets[0];
+    }
+    const lastOffset = offsets.pop();
     return new ast.BinaryExpression(
-      new ast.BinaryExpression(
-        this._localBase,
-        this.privateOffsetIdentifier,
-        "+",
-      ),
-      new ast.Identifier(name),
+      this._resolveAddress(...offsets),
+      lastOffset,
       "+",
     );
   },
 
-  globalSizeIdentifier: new ast.Identifier("G_SEGMENT_SIZE"),
+  globalSizeIdentifier: new ast.Identifier("__G_SEGMENT_SIZE"),
 
-  globalBaseIdentifier: new ast.Identifier("G_BASE"),
+  globalBaseIdentifier: new ast.Identifier("__G_SEGMENT_OFFSET"),
 
   identifierForGlobal: function (names) {
     return new ast.Identifier(["G"].concat(names).join("_").toUpperCase());
@@ -194,7 +203,9 @@ export default {
   },
 
   identifierForPrivate: function (names) {
-    return new ast.Identifier(names.join("_").toLowerCase());
+    // XXX: Privates have no prefix. Still, we concatenate with the empty
+    // sequence to deal with names being a sring, or an array of strings.
+    return new ast.Identifier([].concat(names).join("_").toLowerCase());
   },
 
   _localBase: new ast.MemberExpression(
@@ -203,7 +214,7 @@ export default {
     false,
   ),
 
-  privateOffsetIdentifier: new ast.Identifier("P_OFFSET"),
+  privateOffsetIdentifier: new ast.Identifier("__P_SEGMENT_OFFSET"),
 
   newRange: function (min, max) {
     return this.callWith("__range", [min, max]);

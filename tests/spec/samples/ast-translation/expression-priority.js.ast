@@ -8,7 +8,7 @@
           "type": "VariableDeclarator",
           "id": {
             "type": "Identifier",
-            "name": "G_BASE"
+            "name": "__G_SEGMENT_OFFSET"
           },
           "init": {
             "type": "Literal",
@@ -68,7 +68,7 @@
           "type": "VariableDeclarator",
           "id": {
             "type": "Identifier",
-            "name": "P_OFFSET"
+            "name": "__P_SEGMENT_OFFSET"
           },
           "init": {
             "type": "Literal",
@@ -198,7 +198,7 @@
                                   },
                                   "right": {
                                     "type": "Identifier",
-                                    "name": "P_OFFSET"
+                                    "name": "__P_SEGMENT_OFFSET"
                                   }
                                 },
                                 "right": {
@@ -237,7 +237,7 @@
                                     },
                                     "right": {
                                       "type": "Identifier",
-                                      "name": "P_OFFSET"
+                                      "name": "__P_SEGMENT_OFFSET"
                                     }
                                   },
                                   "right": {

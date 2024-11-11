@@ -75,7 +75,7 @@
                           },
                           "right": {
                             "type": "Identifier",
-                            "name": "P_OFFSET"
+                            "name": "__P_SEGMENT_OFFSET"
                           }
                         },
                         "right": {
@@ -111,7 +111,7 @@
                           },
                           "right": {
                             "type": "Identifier",
-                            "name": "P_OFFSET"
+                            "name": "__P_SEGMENT_OFFSET"
                           }
                         },
                         "right": {
@@ -147,7 +147,7 @@
                           },
                           "right": {
                             "type": "Identifier",
-                            "name": "P_OFFSET"
+                            "name": "__P_SEGMENT_OFFSET"
                           }
                         },
                         "right": {

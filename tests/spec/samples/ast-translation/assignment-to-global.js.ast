@@ -48,7 +48,7 @@
                       "operator": "+",
                       "left": {
                         "type": "Identifier",
-                        "name": "G_BASE"
+                        "name": "__G_SEGMENT_OFFSET"
                       },
                       "right": {
                         "type": "Identifier",

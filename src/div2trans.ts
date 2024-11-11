@@ -130,7 +130,7 @@ function createPrivateOffset(context) {
   const mmap = context.getMemoryMap();
   return new ast.VariableDeclaration([
     new ast.VariableDeclarator(
-      new ast.Identifier("P_OFFSET"),
+      new ast.Identifier("__P_SEGMENT_OFFSET"),
       ast.Literal["for"](mmap.localSegmentSize),
     ),
   ]);
