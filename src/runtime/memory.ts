@@ -57,7 +57,7 @@ class MemoryManager {
   reset() {
     this._mem.fill(0);
     const globals = this._map.segments.globals;
-    copyDefaults(this._mem, globals, 0);
+    copyDefaults(this._mem, globals, MemoryMap.GLOBAL_OFFSET);
     for (let index = 0, l = this._map.maxProcess; index < l; index++) {
       const process = this._browser.process({ index: index });
       process.local("reserved.process_id").value = process.offset;
