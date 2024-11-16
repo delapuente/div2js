@@ -1,0 +1,28 @@
+{
+  "type": "MemberExpression",
+  "computed": true,
+  "object": {
+    "type": "Identifier",
+    "name": "mem"
+  },
+  "property": {
+    "type": "BinaryExpression",
+    "operator": "+",
+    "left": {
+      "type": "BinaryExpression",
+      "operator": "+",
+      "left": {
+        "type": "Identifier",
+        "name": "__G_SEGMENT_OFFSET"
+      },
+      "right": {
+        "type": "Identifier",
+        "name": "G_MOUSE"
+      }
+    },
+    "right": {
+      "type": "Identifier",
+      "name": "G_MOUSE_X"
+    }
+  }
+}

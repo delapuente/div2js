@@ -1,0 +1,53 @@
+{
+  "type": "Program",
+  "name": {
+    "type": "Identifier",
+    "name": "test"
+  },
+  "consts": null,
+  "globals": null,
+  "locals": null,
+  "privates": {
+    "type": "PrivateDeclarations",
+    "declarations": [
+      {
+        "type": "VariableDeclarator",
+        "varType": "int",
+        "varName": {
+          "type": "Identifier",
+          "name": "a"
+        },
+        "varInit": null
+      }
+    ]
+  },
+  "body": {
+    "type": "ProcessBody",
+    "sentences": [
+      {
+        "type": "ExpressionSentence",
+        "expression": {
+          "type": "AssignmentExpression",
+          "operator": "=",
+          "left": {
+            "type": "Identifier",
+            "name": "a"
+          },
+          "right": {
+            "$testNode$": true,
+            "type": "MemberExpression",
+            "computed": false,
+            "structure": {
+              "type": "Identifier",
+              "name": "mouse"
+            },
+            "property": {
+              "type": "Identifier",
+              "name": "x"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

@@ -27,6 +27,30 @@
             "value": 0,
             "raw": "0"
           }
+        },
+        {
+          "type": "VariableDeclarator",
+          "id": {
+              "type": "Identifier",
+              "name": "G_MOUSE"
+          },
+          "init": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+          }
+        },
+        {
+          "type": "VariableDeclarator",
+          "id": {
+              "type": "Identifier",
+              "name": "G_MOUSE_X"
+          },
+          "init": {
+              "type": "Literal",
+              "value": 0,
+              "raw": "0"
+          }
         }
       ],
       "kind": "var"

@@ -8,7 +8,14 @@ import {
 } from "../../src/memoryBrowser/definitions";
 
 const simpleDefinitions: WellKnownSymbols = {
-  wellKnownGlobals: [normalize("text_z")],
+  wellKnownGlobals: [
+    normalize("text_z"),
+    normalize({
+      type: "struct",
+      name: "mouse",
+      fields: ["x"],
+    }),
+  ],
   wellKnownLocals: [normalize("x"), normalize("y")],
   wellKnownConstants: [normalize({ name: "pi", default: 180000 })],
 };
@@ -71,6 +78,7 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "expression-priority.prg",
     "unary-expression.prg",
     "constant-expression.prg",
+    "member-expression.prg",
   ];
 
   programs.forEach(function (programTestCase) {

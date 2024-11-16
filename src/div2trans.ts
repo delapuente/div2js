@@ -246,12 +246,22 @@ translators.Identifier = function (divIdentifier, context) {
     const value = context.constantValue(name);
     return ast.Literal.for(value);
   }
-  const scopeTranslator = "memory" + scope[0].toUpperCase() + scope.substr(1);
-  if (!(scopeTranslator in t)) {
+  const scopeTranslator = getScopeTranslator(scope);
+  if (scopeTranslator === null) {
     throw new Error("Unknown scope " + scope);
   }
   return t[scopeTranslator](name);
 };
+
+function getScopeTranslator(scope: string): string | null {
+  return (
+    {
+      global: "memoryGlobal",
+      local: "memoryLocal",
+      private: "memoryPrivate",
+    }[scope] ?? null
+  );
+}
 
 translators.IfSentence = function (divIf, context) {
   const consequentLabel = context.newLabel();
@@ -413,6 +423,38 @@ translators.ForSentence = function (divFor, context) {
 
 translators.Range = function (divRange) {
   return t.newRange(divRange.min, divRange.max);
+};
+
+translators.MemberExpression = function (divMember, context) {
+  const members = [];
+  let current = divMember;
+  while (current) {
+    if (current.type === "MemberExpression" && current.computed) {
+      throw new Error(
+        "Computed member expressions (a.k.a. records in DIV2 terminology) are not supported yet.",
+      );
+    }
+    if (current.type === "MemberExpression") {
+      members.unshift(current.property.name);
+      current = current.structure;
+    } else {
+      members.unshift(current.name);
+      current = null;
+    }
+  }
+
+  const structName = members[0];
+  const structScope = context.getScope(structName);
+  const scopeTranslator = getScopeTranslator(structScope);
+  const nameSequences = members.map(function (name, index) {
+    return members.slice(0, index + 1);
+  });
+
+  if (scopeTranslator === null) {
+    throw new Error("Unknown scope " + structScope);
+  }
+
+  return t[scopeTranslator](...nameSequences);
 };
 
 /**
