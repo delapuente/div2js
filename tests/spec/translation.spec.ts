@@ -73,11 +73,16 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "constant-expression.prg",
   ];
 
-  programs.forEach(function (programName) {
+  programs.forEach(function (programTestCase) {
+    const [onlyFlag, programName] =
+      typeof programTestCase === "string"
+        ? [false, programTestCase]
+        : programTestCase;
+    const itFn = onlyFlag ? it.only.bind(it) : it;
     const sourceAst = samplePath(programName);
     const targetAst = sourceAst.replace(".prg", ".js");
 
-    it("Translates `" + sourceAst + "`", function () {
+    itFn("Translates `" + sourceAst + "`", function () {
       let ast, expectedAst;
       return Promise.all([get(sourceAst), get(targetAst)]).then(
         function (abstractSyntaxTrees) {
