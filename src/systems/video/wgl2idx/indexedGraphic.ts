@@ -8,6 +8,10 @@ class IndexedGraphic {
     this.buffer = new Uint8Array(width * height);
   }
 
+  clear() {
+    this.buffer.fill(0);
+  }
+
   putPixel(x: number, y: number, color: number) {
     this.buffer[y * this.width + x] = color;
   }

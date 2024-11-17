@@ -23,6 +23,10 @@ class Scheduler<P extends Process> {
     return this._processList[this._current];
   }
 
+  get aliveProcesses(): Array<P> {
+    return this._processList.filter(isAlive);
+  }
+
   private _processList: Array<P>;
   private _isRunning: boolean;
   private _nextAnimationFrame: number | null;
@@ -73,10 +77,6 @@ class Scheduler<P extends Process> {
 
   private _removeDeadProcess() {
     this._processList = this._processList.filter(isAlive);
-
-    function isAlive(execution) {
-      return !execution.dead;
-    }
   }
 
   private _scheduleStep() {
@@ -133,6 +133,10 @@ class Baton implements Record<any, any> {
       }.bind(this),
     );
   }
+}
+
+function isAlive<P extends Process>(execution: P): boolean {
+  return !execution.dead;
 }
 
 export { Scheduler, Baton, Process };

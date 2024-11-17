@@ -4,6 +4,7 @@ import { load_pal } from "../builtins";
 import { DivError } from "../errors";
 import { VideoSystem } from "../systems/video/wgl2idx";
 import { Div2FileSystem } from "../systems/files/div2FileSystem";
+import { MemoryBrowser } from "../memoryBrowser/mapper";
 
 type SystemKind = "video" | "files";
 
@@ -47,16 +48,20 @@ class ReturnValuesQueue {
   }
 }
 
-function Environment() {
-  this.video = {
-    width: 320,
-    height: 200,
-  };
+class Environment {
+  public video: { width: number; height: number };
+
+  constructor() {
+    this.video = {
+      width: 320,
+      height: 200,
+    };
+  }
 }
 
 interface System {
   initialize(): void;
-  run?(memoryBrowser: any, environment: any): void;
+  run?(runtime: Runtime): void;
 }
 
 type GetSystemReturnType<K> = K extends "video"
@@ -75,7 +80,7 @@ class Runtime {
   _systemMap: { video?: VideoSystem; files?: Div2FileSystem };
   _functions: { [key: string]: CallableFunction };
   _memoryManager: MemoryManager;
-  _environment: any;
+  public environment: Environment;
   _pmap: any;
   _mem: any;
   _scheduler: Scheduler<Process>;
@@ -92,7 +97,7 @@ class Runtime {
     this._systemMap = {};
     this._functions = {};
     this._memoryManager = memoryManager;
-    this._environment = new Environment();
+    this.environment = new Environment();
     this._pmap = processMap;
     this._mem = this._memoryManager.rawMemory;
     this._scheduler = scheduler;
@@ -136,8 +141,12 @@ class Runtime {
     return this._systemMap[name] as GetSystemReturnType<T>;
   }
 
-  getMemoryBrowser() {
+  getMemoryBrowser(): MemoryBrowser {
     return this._memoryManager.browser;
+  }
+
+  get aliveProcesses() {
+    return this._scheduler.aliveProcesses;
   }
 
   set onfinished(callback) {
@@ -220,11 +229,9 @@ class Runtime {
   }
 
   _runSystems() {
-    const memoryBrowser = this.getMemoryBrowser();
-    const environment = this._environment;
-    this._systems.forEach(function (system) {
+    this._systems.forEach((system) => {
       if (typeof system.run === "function") {
-        system.run(memoryBrowser, environment);
+        system.run(this);
       }
     });
   }

@@ -1,9 +1,11 @@
-import { System } from "../../../runtime/runtime";
+import { Runtime, System } from "../../../runtime/runtime";
 import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap from "./map";
+import { MemoryBrowser, ProcessView } from "../../../memoryBrowser/mapper";
+import { Process } from "../../../runtime/scheduler";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -257,9 +259,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     return this._bgLayer.height;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  run(memory: never, environment: never) {
-    this._drawProcesses();
+  run(runtime: Runtime) {
+    this._drawProcesses(runtime);
 
     this._sendPalette();
     this._sendFrameBuffer();
@@ -621,7 +622,56 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     return this._noFpgMapIdOffset + this._loadedMaps.size;
   }
 
-  _drawProcesses() {}
+  _drawProcesses(runtime: Runtime) {
+    this._fgLayer.clear();
+    const browser = runtime.getMemoryBrowser();
+    const aliveProcesses = runtime.aliveProcesses;
+    // TODO: Ensure more positive z comes first in the array.
+    const zSortedProcesses = aliveProcesses.sort(
+      (a, b) =>
+        browser.process({ id: b.id }).local("z").value -
+        browser.process({ id: a.id }).local("z").value,
+    );
+    zSortedProcesses.forEach((process) => {
+      this._drawProcess(browser.process({ id: process.id }));
+    });
+  }
+
+  _drawProcess(process: ProcessView) {
+    const mapId = process.local("graph").value;
+    if (mapId === 0) {
+      return;
+    }
+
+    const fpgId = process.local("file").value;
+    const map = this._getMap(fpgId, mapId);
+    const { data, width, height } = map;
+    const { x: xOrigin, y: yOrigin } =
+      map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
+
+    const x = process.local("x").value;
+    const y = process.local("y").value;
+    const angle = process.local("angle").value;
+    const size = process.local("size").value;
+    const flags = process.local("flags").value;
+    const region = process.local("region").value;
+
+    this._setActiveLayer("fg");
+    this._xput(
+      data,
+      width,
+      height,
+      x,
+      y,
+      xOrigin,
+      yOrigin,
+      angle,
+      size,
+      flags,
+      region,
+      false,
+    );
+  }
 
   _setActiveLayer(layer: "bg" | "fg") {
     this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
