@@ -28,9 +28,12 @@ function registerRenderSystem(program) {
       const canvas = document.createElement("CANVAS");
       canvas.id = "div-screen";
       canvas.style.imageRendering = "pixelated";
+      canvas.style.cursor = "none";
       document.body.appendChild(canvas);
     }
-    const canvas = document.querySelector("#div-screen");
+    // TODO: Move this to its own system registering and rethink the interdependencies.
+    const canvas = document.querySelector("#div-screen") as HTMLCanvasElement;
+    program.registerSystem(new systems.DefaultInput(320, 200, canvas), "input");
     program.registerSystem(new systems.DefaultRender(canvas), "video");
   }
 }

@@ -229,6 +229,7 @@ class Runtime {
   }
 
   _runSystems() {
+    // TODO: The runtime should read the input state first, then run the processes, then render.
     this._systems.forEach((system) => {
       if (typeof system.run === "function") {
         system.run(this);
