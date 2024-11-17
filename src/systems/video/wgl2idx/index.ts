@@ -196,14 +196,16 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   // loaded with `load_fpg()`.
   readonly _loadedMaps: Map<number, DivMap>;
 
+  private _activeLayer: IndexedGraphic;
+
   // TODO: Regardless of the above, it would be a good idea to separate the
   // duty of managing FPGs, MAPs, PALs, and other resources from the video
   // system, into a Resource Manager.
 
   constructor(
     canvas,
-    public readonly bgLayer: IndexedGraphic = getDefaultScreen(),
-    public readonly fgLayer: IndexedGraphic = getDefaultScreen(),
+    private readonly _bgLayer: IndexedGraphic = getDefaultScreen(),
+    private readonly _fgLayer: IndexedGraphic = getDefaultScreen(),
     public palette: Palette = getDefaultPalette(),
   ) {
     // XXX: The preserveDrawingBuffer option is necessary for the tests to work.
@@ -214,7 +216,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true });
     this._loadedFpgs = new Map();
     this._loadedMaps = new Map();
-    this._framebuffer = new Uint8Array(bgLayer.width * bgLayer.height * 4);
+    this._framebuffer = new Uint8Array(_bgLayer.width * _bgLayer.height * 4);
+    this._activeLayer = _bgLayer;
   }
 
   initialize() {
@@ -223,7 +226,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._configureScreenVao();
     this._configureScreenTexture();
     this._configurePaletteTexture();
-    const { width, height } = this.bgLayer;
+    const { width, height } = this._bgLayer;
     this.setViewportResolution(width, height);
   }
 
@@ -233,29 +236,31 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._gl.readPixels(
       0,
       0,
-      this.bgLayer.width,
-      this.bgLayer.height,
+      this._bgLayer.width,
+      this._bgLayer.height,
       this._gl.RGBA,
       this._gl.UNSIGNED_BYTE,
       this._framebuffer,
     );
     return flipBufferY(
       this._framebuffer,
-      this.bgLayer.width,
-      this.bgLayer.height,
+      this._bgLayer.width,
+      this._bgLayer.height,
     );
   }
 
   get screenWidth(): number {
-    return this.bgLayer.width;
+    return this._bgLayer.width;
   }
 
   get screenHeight(): number {
-    return this.bgLayer.height;
+    return this._bgLayer.height;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   run(memory: never, environment: never) {
+    this._drawProcesses();
+
     this._sendPalette();
     this._sendFrameBuffer();
     this._drawScreen();
@@ -286,14 +291,16 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 
   putPixel(x: number, y: number, colorIndex: number): void {
-    this.bgLayer.putPixel(x, y, colorIndex);
+    this._setActiveLayer("bg");
+    this._activeLayer.putPixel(x, y, colorIndex);
   }
 
   putScreen(fpgId: number, mapId: number) {
+    this._setActiveLayer("bg");
     // TODO: Validate fpgId and mapId.
     const map = this._getMap(fpgId, mapId);
     const { data, width, height } = map;
-    const { width: screenWidth, height: screenHeight } = this.bgLayer;
+    const { width: screenWidth, height: screenHeight } = this._bgLayer;
     const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
     const [xSpriteOrigin, ySpriteOrigin] = [
       Math.round(width / 2),
@@ -329,6 +336,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     region: number,
   ): void {
     // TODO: Region.
+    this._setActiveLayer("bg");
     const map = this._getMap(fpgId, mapId);
 
     const { data, width, height } = map;
@@ -413,11 +421,11 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
       [x, y],
     );
 
-    const { width: screenWidth, height: screenHeight } = this.bgLayer;
+    const { width: layerWidth, height: layerHeight } = this._activeLayer;
     const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
     const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
-    const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
-    const yEnd = Math.min(screenHeight, Math.max(yTL, yTR, yBL, yBR));
+    const xEnd = Math.min(layerWidth, Math.max(xTL, xTR, xBL, xBR));
+    const yEnd = Math.min(layerHeight, Math.max(yTL, yTR, yBL, yBR));
 
     // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
@@ -440,7 +448,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         const colorIsTransparent = this._isTransparent(color);
 
         if (withTransparency) {
-          const currentColor = this.bgLayer.getPixel(xScreen, yScreen);
+          const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
           color =
             !ignoreTransparency && colorIsTransparent
               ? currentColor
@@ -448,7 +456,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         }
 
         if (ignoreTransparency || !colorIsTransparent) {
-          this.bgLayer.putPixel(xScreen, yScreen, color);
+          this._activeLayer.putPixel(xScreen, yScreen, color);
         }
       }
     }
@@ -553,7 +561,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   _sendFrameBuffer() {
     const gl = this._gl;
-    const { width, height } = this.bgLayer;
+    const { width, height } = this._bgLayer;
     const buffer = this._combineLayers();
     gl.activeTexture(gl.TEXTURE0);
     gl.texImage2D(
@@ -570,8 +578,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 
   _combineLayers(): Uint8Array {
-    const { buffer: bgBuffer } = this.bgLayer;
-    const { buffer: fgBuffer } = this.fgLayer;
+    const { buffer: bgBuffer } = this._bgLayer;
+    const { buffer: fgBuffer } = this._fgLayer;
     const combined = fgBuffer.map((fgPixel, idx) =>
       this._isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel,
     );
@@ -611,6 +619,12 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   _nextMapId() {
     return this._noFpgMapIdOffset + this._loadedMaps.size;
+  }
+
+  _drawProcesses() {}
+
+  _setActiveLayer(layer: "bg" | "fg") {
+    this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
   }
 }
 
