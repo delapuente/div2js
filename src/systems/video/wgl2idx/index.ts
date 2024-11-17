@@ -202,7 +202,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   constructor(
     canvas,
-    public readonly screen: IndexedGraphic = getDefaultScreen(),
+    public readonly bgLayer: IndexedGraphic = getDefaultScreen(),
+    public readonly fgLayer: IndexedGraphic = getDefaultScreen(),
     public palette: Palette = getDefaultPalette(),
   ) {
     // XXX: The preserveDrawingBuffer option is necessary for the tests to work.
@@ -213,7 +214,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true });
     this._loadedFpgs = new Map();
     this._loadedMaps = new Map();
-    this._framebuffer = new Uint8Array(screen.width * screen.height * 4);
+    this._framebuffer = new Uint8Array(bgLayer.width * bgLayer.height * 4);
   }
 
   initialize() {
@@ -222,7 +223,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._configureScreenVao();
     this._configureScreenTexture();
     this._configurePaletteTexture();
-    const { width, height } = this.screen;
+    const { width, height } = this.bgLayer;
     this.setViewportResolution(width, height);
   }
 
@@ -232,25 +233,25 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._gl.readPixels(
       0,
       0,
-      this.screen.width,
-      this.screen.height,
+      this.bgLayer.width,
+      this.bgLayer.height,
       this._gl.RGBA,
       this._gl.UNSIGNED_BYTE,
       this._framebuffer,
     );
     return flipBufferY(
       this._framebuffer,
-      this.screen.width,
-      this.screen.height,
+      this.bgLayer.width,
+      this.bgLayer.height,
     );
   }
 
   get screenWidth(): number {
-    return this.screen.width;
+    return this.bgLayer.width;
   }
 
   get screenHeight(): number {
-    return this.screen.height;
+    return this.bgLayer.height;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -285,14 +286,14 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   }
 
   putPixel(x: number, y: number, colorIndex: number): void {
-    this.screen.putPixel(x, y, colorIndex);
+    this.bgLayer.putPixel(x, y, colorIndex);
   }
 
   putScreen(fpgId: number, mapId: number) {
     // TODO: Validate fpgId and mapId.
     const map = this._getMap(fpgId, mapId);
     const { data, width, height } = map;
-    const { width: screenWidth, height: screenHeight } = this.screen;
+    const { width: screenWidth, height: screenHeight } = this.bgLayer;
     const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
     const [xSpriteOrigin, ySpriteOrigin] = [
       Math.round(width / 2),
@@ -412,7 +413,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
       [x, y],
     );
 
-    const { width: screenWidth, height: screenHeight } = this.screen;
+    const { width: screenWidth, height: screenHeight } = this.bgLayer;
     const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
     const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
     const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
@@ -439,7 +440,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         const colorIsTransparent = this._isTransparent(color);
 
         if (withTransparency) {
-          const currentColor = this.screen.getPixel(xScreen, yScreen);
+          const currentColor = this.bgLayer.getPixel(xScreen, yScreen);
           color =
             !ignoreTransparency && colorIsTransparent
               ? currentColor
@@ -447,7 +448,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         }
 
         if (ignoreTransparency || !colorIsTransparent) {
-          this.screen.putPixel(xScreen, yScreen, color);
+          this.bgLayer.putPixel(xScreen, yScreen, color);
         }
       }
     }
@@ -552,7 +553,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   _sendFrameBuffer() {
     const gl = this._gl;
-    const { width, height, buffer } = this.screen;
+    const { width, height } = this.bgLayer;
+    const buffer = this._combineLayers();
     gl.activeTexture(gl.TEXTURE0);
     gl.texImage2D(
       gl.TEXTURE_2D,
@@ -565,6 +567,15 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
       gl.UNSIGNED_BYTE,
       buffer,
     );
+  }
+
+  _combineLayers(): Uint8Array {
+    const { buffer: bgBuffer } = this.bgLayer;
+    const { buffer: fgBuffer } = this.fgLayer;
+    const combined = fgBuffer.map((fgPixel, idx) =>
+      this._isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel,
+    );
+    return combined;
   }
 
   _sendPalette() {
