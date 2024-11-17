@@ -20242,85 +20242,93 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   fromJson: () => (/* binding */ fromJson)
 /* harmony export */ });
 class Node {
+    constructor(type) {
+        this.type = type;
+    }
     pojo() {
         return JSON.parse(JSON.stringify(this));
     }
 }
-function AssignmentExpression(left, right, operator = "=") {
-    this.type = "AssignmentExpression";
-    this.operator = operator;
-    this.left = left;
-    this.right = right;
-}
-inherits(AssignmentExpression, Node);
-function ArrayExpression(elements) {
-    this.type = "ArrayExpression";
-    this.elements = elements || [];
-}
-inherits(AssignmentExpression, Node);
-function BinaryExpression(left, right, operator) {
-    this.type = "BinaryExpression";
-    this.operator = operator;
-    this.left = left;
-    this.right = right;
-}
-inherits(BinaryExpression, Node);
-function BlockStatement(statements) {
-    if (!Array.isArray(statements)) {
-        statements = [statements];
+class AssignmentExpression extends Node {
+    constructor(left, right, operator = "=") {
+        super("AssignmentExpression");
+        this.operator = operator;
+        this.left = left;
+        this.right = right;
     }
-    this.type = "BlockStatement";
-    this.body = statements;
 }
-inherits(BlockStatement, Node);
-function BreakStatement(label = null) {
-    this.type = "BreakStatement";
-    this.label = label;
+class ArrayExpression extends Node {
+    constructor(elements) {
+        super("ArrayExpression");
+        this.elements = elements;
+    }
 }
-inherits(BreakStatement, Node);
-function CallExpression(callee, args = []) {
-    this.type = "CallExpression";
-    this.callee = callee;
-    this.arguments = args;
+class BinaryExpression extends Node {
+    constructor(left, right, operator) {
+        super("BinaryExpression");
+        this.operator = operator;
+        this.left = left;
+        this.right = right;
+    }
 }
-inherits(CallExpression, Node);
-function ConditionalExpression(test, consequent, alternate) {
-    this.type = "ConditionalExpression";
-    this.test = test;
-    this.consequent = consequent;
-    this.alternate = alternate;
+class BlockStatement extends Node {
+    constructor(statements) {
+        super("BlockStatement");
+        this.body = Array.isArray(statements) ? statements : [statements];
+    }
 }
-inherits(ConditionalExpression, Node);
-function ExpressionStatement(expression) {
-    this.type = "ExpressionStatement";
-    this.expression = expression;
+class BreakStatement extends Node {
+    constructor(label = null) {
+        super("BreakStatement");
+        this.label = label;
+    }
 }
-inherits(ExpressionStatement, Node);
-/* jshint maxparams: 6 */
-function FunctionDeclaration(id = null, params = [], defaults = [], body, generator = false, expression = false) {
-    this.type = "FunctionDeclaration";
-    this.id = id;
-    this.params = params;
-    this.defaults = defaults;
-    this.body = new BlockStatement(body);
-    this.generator = generator;
-    this.expression = expression;
+class CallExpression extends Node {
+    constructor(callee, args = []) {
+        super("CallExpression");
+        this.callee = callee;
+        this.arguments = args;
+    }
 }
-inherits(FunctionDeclaration, Node);
-function Identifier(name) {
-    this.type = "Identifier";
-    this.name = name;
+class ConditionalExpression extends Node {
+    constructor(test, consequent, alternate) {
+        super("ConditionalExpression");
+        this.test = test;
+        this.consequent = consequent;
+        this.alternate = alternate;
+    }
 }
-inherits(Identifier, Node);
+class ExpressionStatement extends Node {
+    constructor(expression) {
+        super("ExpressionStatement");
+        this.expression = expression;
+    }
+}
+class FunctionDeclaration extends Node {
+    constructor(id, params, defaults = [], body, generator = false, expression = false) {
+        super("FunctionDeclaration");
+        this.id = id;
+        this.params = params;
+        this.defaults = defaults;
+        this.body = new BlockStatement(body);
+        this.generator = generator;
+        this.expression = expression;
+    }
+}
+class Identifier extends Node {
+    constructor(name) {
+        super("Identifier");
+        this.name = name;
+    }
+}
 class Literal extends Node {
     constructor(value) {
-        super();
         if (typeof value === "number" && value < 0) {
             throw new Error("Can not construct negative literals. Negative literals are " +
                 "formed by negating a positive literal. Use `Literal.for()` which " +
                 "return either a literal or an expression for a negative literal.");
         }
-        this.type = "Literal";
+        super("Literal");
         this.value = value;
         this.raw = JSON.stringify(value);
     }
@@ -20331,78 +20339,84 @@ class Literal extends Node {
         return new Literal(value);
     }
 }
-function LogicalExpression(left, right, operator) {
-    this.type = "LogicalExpression";
-    this.operator = operator;
-    this.left = left;
-    this.right = right;
-}
-inherits(LogicalExpression, Node);
-function MemberExpression(object, property, computed = false) {
-    this.type = "MemberExpression";
-    this.computed = computed;
-    this.object = object;
-    this.property = property;
-}
-inherits(MemberExpression, Node);
-function ObjectExpression(properties) {
-    this.type = "ObjectExpression";
-    this.properties = properties;
-}
-inherits(ObjectExpression, Node);
-function Program(body) {
-    this.type = "Program";
-    this.body = body;
-}
-inherits(Program, Node);
-function ReturnStatement(expression) {
-    this.type = "ReturnStatement";
-    this.argument = expression || null;
-}
-inherits(ReturnStatement, Node);
-function SwitchCase(test, sentences = []) {
-    this.type = "SwitchCase";
-    this.test = test;
-    this.consequent = sentences;
-}
-inherits(SwitchCase, Node);
-function SwitchStatement(discriminant, cases) {
-    this.type = "SwitchStatement";
-    this.discriminant = discriminant;
-    this.cases = cases || [];
-}
-inherits(SwitchStatement, Node);
-function UnaryExpression(argument, operator, prefix = true) {
-    this.type = "UnaryExpression";
-    this.operator = operator;
-    this.argument = argument;
-    this.prefix = prefix;
-}
-inherits(UnaryExpression, Node);
-function VariableDeclaration(declarations, kind = "var") {
-    if (!Array.isArray(declarations)) {
-        declarations = [declarations];
+class LogicalExpression extends Node {
+    constructor(left, right, operator) {
+        super("LogicalExpression");
+        this.operator = operator;
+        this.left = left;
+        this.right = right;
     }
-    this.type = "VariableDeclaration";
-    this.declarations = declarations;
-    this.kind = kind;
 }
-inherits(VariableDeclaration, Node);
-function VariableDeclarator(id, init) {
-    this.type = "VariableDeclarator";
-    this.id = id;
-    this.init = init;
+class MemberExpression extends Node {
+    constructor(object, property, computed = false) {
+        super("MemberExpression");
+        this.object = object;
+        this.property = property;
+        this.computed = computed;
+    }
 }
-inherits(VariableDeclarator, Node);
-function WhileStatement(condition, statements) {
-    this.type = "WhileStatement";
-    this.test = condition;
-    this.body = new BlockStatement(statements);
+class ObjectExpression extends Node {
+    constructor(properties) {
+        super("ObjectExpression");
+        this.properties = properties;
+    }
 }
-inherits(WhileStatement, Node);
-function inherits(klass, base) {
-    klass.prototype = Object.create(base.prototype);
-    klass.prototype.constructor = klass;
+class Program extends Node {
+    constructor(body) {
+        super("Program");
+        this.body = body;
+    }
+}
+class ReturnStatement extends Node {
+    constructor(expression) {
+        super("ReturnStatement");
+        this.argument = expression;
+    }
+}
+class SwitchCase extends Node {
+    constructor(test, consequent = []) {
+        super("SwitchCase");
+        this.test = test;
+        this.consequent = consequent;
+    }
+}
+class SwitchStatement extends Node {
+    constructor(discriminant, cases) {
+        super("SwitchStatement");
+        this.discriminant = discriminant;
+        this.cases = cases;
+    }
+}
+class UnaryExpression extends Node {
+    constructor(argument, operator, prefix = true) {
+        super("UnaryExpression");
+        this.operator = operator;
+        this.argument = argument;
+        this.prefix = prefix;
+    }
+}
+class VariableDeclaration extends Node {
+    constructor(declarations, kind = "var") {
+        super("VariableDeclaration");
+        this.declarations = Array.isArray(declarations)
+            ? declarations
+            : [declarations];
+        this.kind = kind;
+    }
+}
+class VariableDeclarator extends Node {
+    constructor(id, init) {
+        super("VariableDeclarator");
+        this.id = id;
+        this.init = init;
+    }
+}
+class WhileStatement extends Node {
+    constructor(condition, statements) {
+        super("WhileStatement");
+        this.test = condition;
+        this.body = new BlockStatement(statements);
+    }
 }
 function fromJson(json) {
     const type = typeof json;
@@ -20461,6 +20475,7 @@ function fromJson(json) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   load_fpg: () => (/* binding */ load_fpg),
+/* harmony export */   load_map: () => (/* binding */ load_map),
 /* harmony export */   load_pal: () => (/* binding */ load_pal),
 /* harmony export */   put: () => (/* binding */ put),
 /* harmony export */   put_pixel: () => (/* binding */ put_pixel),
@@ -20470,6 +20485,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../systems/video/wgl2idx/palette */ "./src/systems/video/wgl2idx/palette.ts");
 /* harmony import */ var _systems_video_wgl2idx_fpg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../systems/video/wgl2idx/fpg */ "./src/systems/video/wgl2idx/fpg.ts");
+/* harmony import */ var _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../systems/video/wgl2idx/map */ "./src/systems/video/wgl2idx/map.ts");
+
 
 
 function put_pixel(x, y, colorIndex, runtime) {
@@ -20503,10 +20520,19 @@ function load_fpg(fpgPath, runtime) {
         return fpgId;
     });
 }
-function put(file, graph, x, y, runtime) {
+function load_map(mapPath, runtime) {
     return runtime
-        .getSystem("video")
-        .xput(file, graph, x, y, 0, 100, 0, 0);
+        .getSystem("files")
+        .loadMap(mapPath)
+        .then((mapFile) => {
+        const mapId = runtime
+            .getSystem("video")
+            .loadMap(_systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__["default"].fromBuffer(mapFile.buffer));
+        return mapId;
+    });
+}
+function put(file, graph, x, y, runtime) {
+    return runtime.getSystem("video").xput(file, graph, x, y, 0, 100, 0, 0);
 }
 function xput(file, graph, x, y, angle, size, flags, region, runtime) {
     return runtime
@@ -20792,7 +20818,7 @@ class Linearization {
                 cases.push(currentCase);
             }
             consequent = currentCase.consequent;
-            consequent.push.apply(consequent, wrapper.sentences);
+            consequent.push(...wrapper.sentences);
             caseIsFinished = isReturn || (caseIsFinished && !isLabel);
         }
         return cases;
@@ -20994,8 +21020,8 @@ function extractContext(div2ast, symbolTable) {
     }
     // Augment symbol table with custom symbols.
     // TODO: Should process names be added to the symbol table?
-    // TODO: Find and add custom globals to symbols
     // TODO: Find and add custom locals to symbols
+    declareGlobals(symbolTable, div2ast.program);
     declarePrivates(symbolTable, [div2ast.program]);
     declarePrivates(symbolTable, div2ast.processes);
     const mmap = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__.MemoryMap(symbolTable);
@@ -21007,6 +21033,19 @@ function declareProcesses(context, processes) {
     (processes || []).forEach(function (processAst) {
         context.declareProcess(processAst.name.name);
     });
+}
+function declareGlobals(symbolTable, program) {
+    if (program && program.globals) {
+        program.globals.declarations.forEach(function (declarationAst) {
+            const varName = declarationAst.varName.name;
+            if (!symbolTable.isGlobal(varName)) {
+                symbolTable.addGlobal(definitionFromAst(declarationAst));
+            }
+            else {
+                throw new Error("The global " + varName + " has been already declared.");
+            }
+        });
+    }
 }
 function declarePrivates(symbolTable, processes) {
     (processes || []).forEach(function (processAst) {
@@ -21184,7 +21223,7 @@ function translateLocals(context) {
 function createPrivateOffset(context) {
     const mmap = context.getMemoryMap();
     return new _ast__WEBPACK_IMPORTED_MODULE_0__.VariableDeclaration([
-        new _ast__WEBPACK_IMPORTED_MODULE_0__.VariableDeclarator(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("P_OFFSET"), _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](mmap.localSegmentSize)),
+        new _ast__WEBPACK_IMPORTED_MODULE_0__.VariableDeclarator(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("__P_SEGMENT_OFFSET"), _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](mmap.localSegmentSize)),
     ]);
 }
 function getGlobalBaseDeclaration(context) {
@@ -21272,12 +21311,20 @@ translators.Identifier = function (divIdentifier, context) {
         const value = context.constantValue(name);
         return _ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(value);
     }
-    const scopeTranslator = "memory" + scope[0].toUpperCase() + scope.substr(1);
-    if (!(scopeTranslator in _templates__WEBPACK_IMPORTED_MODULE_1__["default"])) {
+    const scopeTranslator = getScopeTranslator(scope);
+    if (scopeTranslator === null) {
         throw new Error("Unknown scope " + scope);
     }
     return _templates__WEBPACK_IMPORTED_MODULE_1__["default"][scopeTranslator](name);
 };
+function getScopeTranslator(scope) {
+    var _a;
+    return ((_a = {
+        global: "memoryGlobal",
+        local: "memoryLocal",
+        private: "memoryPrivate",
+    }[scope]) !== null && _a !== void 0 ? _a : null);
+}
 translators.IfSentence = function (divIf, context) {
     const consequentLabel = context.newLabel();
     const alternateLabel = context.newLabel();
@@ -21401,6 +21448,33 @@ translators.ForSentence = function (divFor, context) {
 translators.Range = function (divRange) {
     return _templates__WEBPACK_IMPORTED_MODULE_1__["default"].newRange(divRange.min, divRange.max);
 };
+translators.MemberExpression = function (divMember, context) {
+    const members = [];
+    let current = divMember;
+    while (current) {
+        if (current.type === "MemberExpression" && current.computed) {
+            throw new Error("Computed member expressions (a.k.a. records in DIV2 terminology) are not supported yet.");
+        }
+        if (current.type === "MemberExpression") {
+            members.unshift(current.property.name);
+            current = current.structure;
+        }
+        else {
+            members.unshift(current.name);
+            current = null;
+        }
+    }
+    const structName = members[0];
+    const structScope = context.getScope(structName);
+    const scopeTranslator = getScopeTranslator(structScope);
+    const nameSequences = members.map(function (name, index) {
+        return members.slice(0, index + 1);
+    });
+    if (scopeTranslator === null) {
+        throw new Error("Unknown scope " + structScope);
+    }
+    return _templates__WEBPACK_IMPORTED_MODULE_1__["default"][scopeTranslator](...nameSequences);
+};
 /**
  * All parameters here must be DIV2 AST.
  */
@@ -21500,7 +21574,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function load(objText, options = { rootUrl: "" }) {
+function load(objText, options) {
     // tslint:disable-next-line:no-eval
     const unit = eval(objText)(_runtime_runtime__WEBPACK_IMPORTED_MODULE_0__, _systems_systems__WEBPACK_IMPORTED_MODULE_1__);
     const processMap = unit.pmap;
@@ -21523,13 +21597,16 @@ function registerRenderSystem(program) {
             const canvas = document.createElement("CANVAS");
             canvas.id = "div-screen";
             canvas.style.imageRendering = "pixelated";
+            canvas.style.cursor = "none";
             document.body.appendChild(canvas);
         }
+        // TODO: Move this to its own system registering and rethink the interdependencies.
         const canvas = document.querySelector("#div-screen");
+        program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultInput(320, 200, canvas), "input");
         program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultRender(canvas), "video");
     }
 }
-function registerFileSystem(program, rootUrl = "") {
+function registerFileSystem(program, rootUrl) {
     program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultFileSystem({
         rootUrl,
     }), "files");
@@ -21858,6 +21935,9 @@ __webpack_require__.r(__webpack_exports__);
  * since it does not have any reference to the program's actual memory.
  */
 class MemoryMap {
+    get totalSize() {
+        return (MemoryMap.GLOBAL_OFFSET + this.globalSegmentSize + this.processPoolSize);
+    }
     get globalSegmentSize() {
         return this._getSegmentSize(this.segments["globals"]) / MemoryMap.ALIGNMENT;
     }
@@ -21939,6 +22019,8 @@ class MemoryMap {
 // as the minimum number of bytes addressable. In the case of DIV2, this
 // number is 4 which matches the ALIGNMENT.
 MemoryMap.ALIGNMENT = 4; // 4 bytes
+// TODO: Consider to change GLOBAL_OFFSET name to something related to
+// the padding that DIV2 uses before the data segment.
 MemoryMap.GLOBAL_OFFSET = 1; /* TODO: Must take into account all
                                       DIV padding including program source.
                                       Leave 0 address free. */
@@ -22155,8 +22237,7 @@ class MemoryManager {
     }
     constructor(symbols) {
         this._map = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__.MemoryMap(symbols);
-        const { globalSegmentSize, processPoolSize } = this._map;
-        this._mem = new Int32Array(globalSegmentSize + processPoolSize);
+        this._mem = new Int32Array(this._map.totalSize);
         this._browser = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__.MemoryBrowser(this._mem, this._map);
         this._createProcessTemplate();
     }
@@ -22177,7 +22258,8 @@ class MemoryManager {
     }
     reset() {
         this._mem.fill(0);
-        // TODO: Add globals
+        const globals = this._map.segments.globals;
+        copyDefaults(this._mem, globals, _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_0__.MemoryMap.GLOBAL_OFFSET);
         for (let index = 0, l = this._map.maxProcess; index < l; index++) {
             const process = this._browser.process({ index: index });
             process.local("reserved.process_id").value = process.offset;
@@ -22188,26 +22270,26 @@ class MemoryManager {
         this._processTemplate = new Int32Array(this._map.processSize);
         copyDefaults(this._processTemplate, locals, 0);
         // TODO: Add privates
-        function copyDefaults(buffer, cells, base) {
-            cells.forEach((cell) => {
-                const itemSize = cell.size / cell.symbol.length;
-                for (let index = 0, l = cell.symbol.length; index < l; index++) {
-                    const itemOffset = base + index * itemSize;
-                    if (cell.symbol.type !== "struct") {
-                        buffer[itemOffset + cell.offset] = cell.symbol.default;
-                    }
-                    else {
-                        copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
-                    }
-                }
-            });
-        }
     }
     _initializeProcessMemory(processMemory) {
         const id = processMemory.id;
         processMemory.setMemory(this._processTemplate);
         processMemory.local("reserved.process_id").value = id; // restore Id
     }
+}
+function copyDefaults(buffer, cells, base) {
+    cells.forEach((cell) => {
+        const itemSize = cell.size / cell.symbol.length;
+        for (let index = 0, l = cell.symbol.length; index < l; index++) {
+            const itemOffset = base + index * itemSize;
+            if (cell.symbol.type !== "struct") {
+                buffer[itemOffset + cell.offset] = cell.symbol.default;
+            }
+            else {
+                copyDefaults(buffer, cell.fields, itemOffset + cell.offset);
+            }
+        }
+    });
 }
 
 
@@ -22257,11 +22339,13 @@ class ReturnValuesQueue {
         return this._data.shift();
     }
 }
-function Environment() {
-    this.video = {
-        width: 320,
-        height: 200,
-    };
+class Environment {
+    constructor() {
+        this.video = {
+            width: 320,
+            height: 200,
+        };
+    }
 }
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
@@ -22274,7 +22358,7 @@ class Runtime {
         this._systemMap = {};
         this._functions = {};
         this._memoryManager = memoryManager;
-        this._environment = new Environment();
+        this.environment = new Environment();
         this._pmap = processMap;
         this._mem = this._memoryManager.rawMemory;
         this._scheduler = scheduler;
@@ -22314,6 +22398,9 @@ class Runtime {
     }
     getMemoryBrowser() {
         return this._memoryManager.browser;
+    }
+    get aliveProcesses() {
+        return this._scheduler.aliveProcesses;
     }
     set onfinished(callback) {
         this._onfinished = callback;
@@ -22362,7 +22449,12 @@ class Runtime {
             if (result instanceof Promise) {
                 this._scheduler.stop();
                 result
-                    .catch((error) => setTimeout(this.onerror.bind(this, error)))
+                    .catch((error) => {
+                    if (!this.onerror) {
+                        throw error;
+                    }
+                    setTimeout(this.onerror.bind(this, error));
+                })
                     .then((returnValue) => {
                     process.retv.enqueue(returnValue);
                     this._scheduler.run();
@@ -22385,11 +22477,10 @@ class Runtime {
         this._scheduler.deleteCurrent();
     }
     _runSystems() {
-        const memoryBrowser = this.getMemoryBrowser();
-        const environment = this._environment;
-        this._systems.forEach(function (system) {
+        // TODO: The runtime should read the input state first, then run the processes, then render.
+        this._systems.forEach((system) => {
             if (typeof system.run === "function") {
-                system.run(memoryBrowser, environment);
+                system.run(this);
             }
         });
     }
@@ -22453,6 +22544,9 @@ class Scheduler {
     get currentProcess() {
         return this._processList[this._current];
     }
+    get aliveProcesses() {
+        return this._processList.filter(isAlive);
+    }
     add(process) {
         // XXX: Will be replaced by sorted insertion
         this._processList.push(process);
@@ -22491,9 +22585,6 @@ class Scheduler {
     }
     _removeDeadProcess() {
         this._processList = this._processList.filter(isAlive);
-        function isAlive(execution) {
-            return !execution.dead;
-        }
     }
     _scheduleStep() {
         this._nextAnimationFrame = window.requestAnimationFrame(this._step.bind(this));
@@ -22535,6 +22626,9 @@ class Baton {
             this[key] = data[key];
         }.bind(this));
     }
+}
+function isAlive(execution) {
+    return !execution.dead;
 }
 
 
@@ -22594,6 +22688,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _pal__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./pal */ "./src/systems/files/urlFiles/pal.ts");
 /* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../errors */ "./src/errors.ts");
 /* harmony import */ var _fpg__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./fpg */ "./src/systems/files/urlFiles/fpg.ts");
+/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./map */ "./src/systems/files/urlFiles/map.ts");
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -22606,6 +22701,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 class UrlFileSystem {
     constructor(options) {
         this.options = options;
@@ -22614,6 +22710,10 @@ class UrlFileSystem {
     initialize() { }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     run() { }
+    loadMap(path) {
+        const normalizedPath = this.normalizePath(path);
+        return _loadMap(this._convertToUrl(normalizedPath));
+    }
     loadPal(path) {
         const normalizedPath = this.normalizePath(path);
         return _loadPal(this._convertToUrl(normalizedPath));
@@ -22631,6 +22731,9 @@ class UrlFileSystem {
     }
     _getDefaultDir(path) {
         const extension = this._getExtension(path);
+        if (extension.toLowerCase() === "map") {
+            return "MAP";
+        }
         if (extension.toLowerCase() === "pal") {
             return "PAL";
         }
@@ -22654,25 +22757,71 @@ class UrlFileSystem {
         });
     }
 }
+function _loadMap(url) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const buffer = yield _loadAsset(url);
+        return _map__WEBPACK_IMPORTED_MODULE_3__.MAPFile.fromArrayBuffer(buffer);
+    });
+}
 function _loadPal(url) {
     return __awaiter(this, void 0, void 0, function* () {
-        const response = yield fetch(url);
-        if (response.status === 404) {
-            throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(102);
-        }
-        const buffer = yield response.arrayBuffer();
+        const buffer = yield _loadAsset(url);
         return _pal__WEBPACK_IMPORTED_MODULE_0__.PALFile.fromArrayBuffer(buffer);
     });
 }
 function _loadFpg(url) {
     return __awaiter(this, void 0, void 0, function* () {
+        const buffer = yield _loadAsset(url);
+        return _fpg__WEBPACK_IMPORTED_MODULE_2__.FPGFile.fromArrayBuffer(buffer);
+    });
+}
+function _loadAsset(url) {
+    return __awaiter(this, void 0, void 0, function* () {
         const response = yield fetch(url);
         if (response.status === 404) {
             throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(102);
         }
-        const buffer = yield response.arrayBuffer();
-        return _fpg__WEBPACK_IMPORTED_MODULE_2__.FPGFile.fromArrayBuffer(buffer);
+        return response.arrayBuffer();
     });
+}
+
+
+/***/ }),
+
+/***/ "./src/systems/files/urlFiles/map.ts":
+/*!*******************************************!*\
+  !*** ./src/systems/files/urlFiles/map.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   MAPFile: () => (/* binding */ MAPFile)
+/* harmony export */ });
+const VERSION_OFFSET = 7;
+const CONTENT_OFFSET = 8;
+class MAPFile {
+    static fromArrayBuffer(buffer) {
+        const fpgBytes = _assertMap(buffer);
+        const version = fpgBytes[VERSION_OFFSET];
+        const contentBytes = fpgBytes.slice(CONTENT_OFFSET);
+        return new MAPFile(version, contentBytes);
+    }
+    constructor(version, contentBytes) {
+        this.version = version;
+        this.buffer = contentBytes;
+    }
+}
+function _assertMap(buffer) {
+    const bytes = new Uint8Array(buffer);
+    ["m", "a", "p", 0x1a, 0x0d, 0x0a, 0x00].forEach((code, index) => {
+        const char = typeof code === "string" ? code.charCodeAt(0) : code;
+        if (bytes[index] !== char) {
+            throw new Error("The file is not a MAP file");
+        }
+    });
+    return bytes;
 }
 
 
@@ -22719,6 +22868,44 @@ function _assertPal(buffer) {
 
 /***/ }),
 
+/***/ "./src/systems/input/webInput/index.ts":
+/*!*********************************************!*\
+  !*** ./src/systems/input/webInput/index.ts ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ WebInputSystem)
+/* harmony export */ });
+class WebInputSystem {
+    constructor(_width, _height, _canvas) {
+        this._width = _width;
+        this._height = _height;
+        this._canvas = _canvas;
+        this._mouseX = 0;
+        this._mouseY = 0;
+    }
+    initialize() {
+        // Liste to mouse move events.
+        this._canvas.addEventListener("mousemove", (event) => {
+            this._onMouseMove(event.offsetX, event.offsetY);
+        });
+    }
+    _onMouseMove(x, y) {
+        this._mouseX = Math.floor((x / this._canvas.width) * this._width);
+        this._mouseY = Math.floor((y / this._canvas.height) * this._height);
+    }
+    run(runtime) {
+        runtime.getMemoryBrowser().global("mouse.x").value = this._mouseX;
+        runtime.getMemoryBrowser().global("mouse.y").value = this._mouseY;
+    }
+}
+
+
+/***/ }),
+
 /***/ "./src/systems/systems.ts":
 /*!********************************!*\
   !*** ./src/systems/systems.ts ***!
@@ -22729,12 +22916,16 @@ function _assertPal(buffer) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   DefaultFileSystem: () => (/* reexport safe */ _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__["default"]),
+/* harmony export */   DefaultInput: () => (/* reexport safe */ _input_webInput__WEBPACK_IMPORTED_MODULE_2__["default"]),
 /* harmony export */   DefaultRender: () => (/* reexport safe */ _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__["default"]),
 /* harmony export */   urlFileSystem: () => (/* reexport safe */ _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__["default"]),
+/* harmony export */   webInput: () => (/* reexport safe */ _input_webInput__WEBPACK_IMPORTED_MODULE_2__["default"]),
 /* harmony export */   wgl2idx: () => (/* reexport safe */ _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__["default"])
 /* harmony export */ });
 /* harmony import */ var _video_wgl2idx__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./video/wgl2idx */ "./src/systems/video/wgl2idx/index.ts");
 /* harmony import */ var _files_urlFiles__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./files/urlFiles */ "./src/systems/files/urlFiles/index.ts");
+/* harmony import */ var _input_webInput__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./input/webInput */ "./src/systems/input/webInput/index.ts");
+
 
 
 
@@ -22783,7 +22974,7 @@ class Fpg {
         const mapBuffer = this.buffer.subarray(mapsOffset);
         let offset = 0;
         while (offset < mapBuffer.length) {
-            const map = _map__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(mapBuffer.subarray(offset));
+            const map = _map__WEBPACK_IMPORTED_MODULE_1__["default"].fromWithingFpg(mapBuffer.subarray(offset));
             divMaps.set(map.code, map);
             offset += map.length;
         }
@@ -22952,13 +23143,28 @@ class WebGL2IndexedScreenVideoSystem {
     // TODO: Regardless of the above, it would be a good idea to separate the
     // duty of managing FPGs, MAPs, PALs, and other resources from the video
     // system, into a Resource Manager.
-    constructor(canvas, screen = getDefaultScreen(), palette = getDefaultPalette()) {
-        this.screen = screen;
+    constructor(canvas, _bgLayer = getDefaultScreen(), _fgLayer = getDefaultScreen(), palette = getDefaultPalette()) {
+        this._bgLayer = _bgLayer;
+        this._fgLayer = _fgLayer;
         this.palette = palette;
+        //XXX: According to DIV2 `load_map()` documentation, in the "Importante" note.
+        // This is because the maps belonging to FPGs can only have a code from 1 to
+        // 999, and so the maps loaded with `load_map()` are assigned codes starting
+        // from 1000.
+        this._noFpgMapIdOffset = 1000;
+        this._transparentIndex = 0;
         this._screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
         this._screenGeometryVertexCount = this._screenCorners.length / 2;
-        this._gl = canvas.getContext("webgl2");
-        this._loadedFpgs = [];
+        // XXX: The preserveDrawingBuffer option is necessary for the tests to work.
+        // It should be possible to make it dependant on the type of build (dev, or prod).
+        // Or, we could invoke the debug handler in the same event loop cycle to avoid
+        // the automatic clearing of the buffer. See:
+        // https://stackoverflow.com/questions/44510299/webgl-2-when-to-clear-the-drawing-buffer
+        this._gl = canvas.getContext("webgl2", { preserveDrawingBuffer: true });
+        this._loadedFpgs = new Map();
+        this._loadedMaps = new Map();
+        this._framebuffer = new Uint8Array(_bgLayer.width * _bgLayer.height * 4);
+        this._activeLayer = _bgLayer;
     }
     initialize() {
         this._initShaders();
@@ -22966,10 +23172,23 @@ class WebGL2IndexedScreenVideoSystem {
         this._configureScreenVao();
         this._configureScreenTexture();
         this._configurePaletteTexture();
-        const { width, height } = this.screen;
+        const { width, height } = this._bgLayer;
         this.setViewportResolution(width, height);
     }
-    run(memory, environment) {
+    get framebuffer() {
+        // XXX: The framebuffer is flipped in the Y axis. The DIV engine uses the
+        // top-left corner as the origin, while WebGL uses the bottom-left corner.
+        this._gl.readPixels(0, 0, this._bgLayer.width, this._bgLayer.height, this._gl.RGBA, this._gl.UNSIGNED_BYTE, this._framebuffer);
+        return flipBufferY(this._framebuffer, this._bgLayer.width, this._bgLayer.height);
+    }
+    get screenWidth() {
+        return this._bgLayer.width;
+    }
+    get screenHeight() {
+        return this._bgLayer.height;
+    }
+    run(runtime) {
+        this._drawProcesses(runtime);
         this._sendPalette();
         this._sendFrameBuffer();
         this._drawScreen();
@@ -22986,24 +23205,116 @@ class WebGL2IndexedScreenVideoSystem {
     }
     loadFpg(fpg) {
         const fpgId = this._nextFpgId();
-        this._loadedFpgs.push(fpg);
+        this._loadedFpgs.set(fpgId, fpg);
         return fpgId;
     }
+    loadMap(map) {
+        const mapId = this._nextMapId();
+        this._loadedMaps.set(mapId, map);
+        return mapId;
+    }
     putPixel(x, y, colorIndex) {
-        this.screen.putPixel(x, y, colorIndex);
+        this._setActiveLayer("bg");
+        this._activeLayer.putPixel(x, y, colorIndex);
     }
     putScreen(fpgId, mapId) {
+        this._setActiveLayer("bg");
         // TODO: Validate fpgId and mapId.
-        const fpg = this._loadedFpgs[fpgId];
-        const map = fpg.map(mapId);
-        this.screen.putScreen(map.data, map.width, map.height);
+        const map = this._getMap(fpgId, mapId);
+        const { data, width, height } = map;
+        const { width: screenWidth, height: screenHeight } = this._bgLayer;
+        const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
+        const [xSpriteOrigin, ySpriteOrigin] = [
+            Math.round(width / 2),
+            Math.round(height / 2),
+        ];
+        this._xput(data, width, height, x, y, xSpriteOrigin, ySpriteOrigin, 0, 100, 0, 0, true);
         return 0;
     }
     xput(fpgId, mapId, x, y, angle, size, flags, region) {
-        const fpg = this._loadedFpgs[fpgId];
-        const map = fpg.map(mapId);
-        const center = map.controlPoint(0);
-        this.screen.xput(map.data, map.width, map.height, center.x, center.y, x, y, angle, size, flags, region);
+        // TODO: Region.
+        this._setActiveLayer("bg");
+        const map = this._getMap(fpgId, mapId);
+        const { data, width, height } = map;
+        const { x: xOrigin, y: yOrigin } = map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
+        this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region);
+    }
+    _xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region, ignoreTransparency = false) {
+        var _a;
+        // TODO: Regions.
+        if (region !== 0) {
+            console.warn("Regions are not supported yet.");
+        }
+        // Calculate transformation parameters.
+        const rotation = (angle * Math.PI) / 180000;
+        const scaleFactor = size / 100;
+        const withHorizontalFlip = (flags & 1) !== 0;
+        const withVerticalFlip = (flags & 2) !== 0;
+        const withTransparency = (flags & 4) !== 0;
+        // Calculate the screen region to update.
+        // T stands for top, L for left, B for bottom, and R for right.
+        const [xTL, yTL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xTR, yTR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xBL, yBL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const [xBR, yBR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
+        const { width: layerWidth, height: layerHeight } = this._activeLayer;
+        const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
+        const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
+        const xEnd = Math.min(layerWidth, Math.max(xTL, xTR, xBL, xBR));
+        const yEnd = Math.min(layerHeight, Math.max(yTL, yTR, yBL, yBR));
+        // Update the region.
+        for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
+            for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
+                const [xSprite, ySprite] = flipSpriteCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint([xScreen, yScreen], [-x, -y]), -rotation), 1 / scaleFactor), [xOrigin, yOrigin]), width, height, withHorizontalFlip, withVerticalFlip);
+                let color = (_a = sample(data, width, xSprite, ySprite)) !== null && _a !== void 0 ? _a : 0;
+                const colorIsTransparent = this._isTransparent(color);
+                if (withTransparency) {
+                    const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
+                    color =
+                        !ignoreTransparency && colorIsTransparent
+                            ? currentColor
+                            : this._mixColors(currentColor, color);
+                }
+                if (ignoreTransparency || !colorIsTransparent) {
+                    this._activeLayer.putPixel(xScreen, yScreen, color);
+                }
+            }
+        }
+    }
+    _getMap(fpgId, mapId) {
+        // TODO: Validate fpgId and mapId.
+        const map = fpgId === 0 && mapId >= this._noFpgMapIdOffset
+            ? this._loadedMaps.get(mapId)
+            : this._loadedFpgs.get(fpgId).map(mapId);
+        return map;
+    }
+    _isTransparent(colorIndex) {
+        return colorIndex === this._transparentIndex;
+    }
+    _mixColors(colorAIndex, colorBIndex) {
+        const [rA, gA, bA] = this.palette.color(colorAIndex);
+        const [rB, gB, bB] = this.palette.color(colorBIndex);
+        const mixedComponents = [
+            Math.floor((rA + rB) / 2),
+            Math.floor((gA + gB) / 2),
+            Math.floor((bA + bB) / 2),
+        ];
+        return this._findClosest(mixedComponents);
+    }
+    _findClosest([r, g, b]) {
+        let closestColorIndex = 0;
+        let closestColorDistance = Number.MAX_SAFE_INTEGER;
+        for (let i = 0; i < this.palette.size; i += 1) {
+            const [rPalette, gPalette, bPalette] = this.palette.color(i);
+            const distance = Math.sqrt(Math.pow(r - rPalette, 2) +
+                Math.pow(g - gPalette, 2) +
+                Math.pow(b - bPalette, 2));
+            if (distance < closestColorDistance) {
+                closestColorIndex = i;
+                closestColorDistance = distance;
+            }
+        }
+        return closestColorIndex;
     }
     _initShaders() {
         const gl = this._gl;
@@ -23056,9 +23367,16 @@ class WebGL2IndexedScreenVideoSystem {
     }
     _sendFrameBuffer() {
         const gl = this._gl;
-        const { width, height, buffer } = this.screen;
+        const { width, height } = this._bgLayer;
+        const buffer = this._combineLayers();
         gl.activeTexture(gl.TEXTURE0);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.ALPHA, width, height, 0, gl.ALPHA, gl.UNSIGNED_BYTE, buffer);
+    }
+    _combineLayers() {
+        const { buffer: bgBuffer } = this._bgLayer;
+        const { buffer: fgBuffer } = this._fgLayer;
+        const combined = fgBuffer.map((fgPixel, idx) => this._isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel);
+        return combined;
     }
     _sendPalette() {
         const gl = this._gl;
@@ -23075,8 +23393,90 @@ class WebGL2IndexedScreenVideoSystem {
         this._gl.flush();
     }
     _nextFpgId() {
-        return this._loadedFpgs.length;
+        return this._loadedFpgs.size;
     }
+    _nextMapId() {
+        return this._noFpgMapIdOffset + this._loadedMaps.size;
+    }
+    _drawProcesses(runtime) {
+        this._fgLayer.clear();
+        const browser = runtime.getMemoryBrowser();
+        const aliveProcesses = runtime.aliveProcesses;
+        // TODO: Ensure more positive z comes first in the array.
+        const zSortedProcesses = aliveProcesses.sort((a, b) => browser.process({ id: b.id }).local("z").value -
+            browser.process({ id: a.id }).local("z").value);
+        zSortedProcesses.forEach((process) => {
+            this._drawProcess(browser.process({ id: process.id }));
+        });
+    }
+    _drawProcess(process) {
+        const mapId = process.local("graph").value;
+        if (mapId === 0) {
+            return;
+        }
+        const fpgId = process.local("file").value;
+        const map = this._getMap(fpgId, mapId);
+        const { data, width, height } = map;
+        const { x: xOrigin, y: yOrigin } = map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
+        const x = process.local("x").value;
+        const y = process.local("y").value;
+        const angle = process.local("angle").value;
+        const size = process.local("size").value;
+        const flags = process.local("flags").value;
+        const region = process.local("region").value;
+        this._setActiveLayer("fg");
+        this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region, false);
+    }
+    _setActiveLayer(layer) {
+        this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
+    }
+}
+function rotatedPoint([x, y], angle) {
+    return [
+        Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
+        Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
+    ];
+}
+function scaledPoint([x, y], scaleFactor) {
+    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
+}
+function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
+    return [xOrigin + xDistance, yOrigin + yDistance];
+}
+function flipSpriteCoordinates([x, y], width, height, isHorizontalFlip, isVerticalFlip) {
+    return [
+        isHorizontalFlip ? width - x - 1 : x,
+        isVerticalFlip ? height - y - 1 : y,
+    ];
+}
+function sample(data, width, x, y) {
+    // Invalid cases are signaled with null.
+    let idx;
+    if (x < 0 ||
+        y < 0 ||
+        width <= 0 ||
+        x >= width ||
+        (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+        idx >= data.length) {
+        return null;
+    }
+    return data[idx];
+}
+function flipBufferY(pixels, width, height) {
+    const rowSize = width * 4; // 4 bytes per pixel (RGBA)
+    const halfHeight = Math.floor(height / 2);
+    const tempRow = new Uint8Array(rowSize); // Temporary buffer for one row
+    for (let y = 0; y < halfHeight; y++) {
+        const topRowStart = y * rowSize;
+        const bottomRowStart = (height - y - 1) * rowSize;
+        // Copy the top row into the temporary buffer
+        tempRow.set(pixels.subarray(topRowStart, topRowStart + rowSize));
+        // Copy the bottom row into the top row
+        pixels.set(pixels.subarray(bottomRowStart, bottomRowStart + rowSize), topRowStart);
+        // Copy the temporary buffer (original top row) into the bottom row
+        pixels.set(tempRow, bottomRowStart);
+    }
+    return pixels;
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (WebGL2IndexedScreenVideoSystem);
 
@@ -23100,84 +23500,15 @@ class IndexedGraphic {
         this.height = height;
         this.buffer = new Uint8Array(width * height);
     }
-    // XXX: Captures the semantics of putting a pixel with some transformation regarding the color behind.
-    blendPixel(x, y, color, transparentColor) {
-        if (color !== transparentColor) {
-            this.putPixel(x, y, color);
-        }
+    clear() {
+        this.buffer.fill(0);
     }
     putPixel(x, y, color) {
         this.buffer[y * this.width + x] = color;
     }
-    putScreen(data, width, height) {
-        const { width: screenWidth, height: screenHeight } = this;
-        const xOffset = Math.floor((screenWidth - width) / 2);
-        const yOffset = Math.floor((screenHeight - height) / 2);
-        const xStart = Math.max(0, xOffset);
-        const yStart = Math.max(0, yOffset);
-        const xEnd = Math.min(screenWidth, xOffset + width);
-        const yEnd = Math.min(screenHeight, yOffset + height);
-        for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
-            for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-                const xBackground = xScreen - xOffset;
-                const yBackground = yScreen - yOffset;
-                const color = sample(data, width, xBackground, yBackground);
-                this.putPixel(xScreen, yScreen, color);
-            }
-        }
+    getPixel(x, y) {
+        return this.buffer[y * this.width + x];
     }
-    xput(data, width, height, xOrigin, yOrigin, x, y, angle, size, flags, region) {
-        // TODO: Flags: transparent.
-        // TODO: Region.
-        // Calculate transformation parameters.
-        const rotation = angle * Math.PI / 180000;
-        const scaleFactor = size / 100;
-        const isHorizontalFlip = (flags & 1) !== 0;
-        const isVerticalFlip = (flags & 2) !== 0;
-        // Calculate the screen region to update.
-        const [xTL, yTL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
-        const [xTR, yTR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, 0], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
-        const [xBL, yBL] = movedPoint(rotatedPoint(scaledPoint(movedPoint([0, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
-        const [xBR, yBR] = movedPoint(rotatedPoint(scaledPoint(movedPoint([width, height], [-xOrigin, -yOrigin]), scaleFactor), rotation), [x, y]);
-        const { width: screenWidth, height: screenHeight } = this;
-        const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
-        const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
-        const xEnd = Math.min(screenWidth, Math.max(xTL, xTR, xBL, xBR));
-        const yEnd = Math.min(screenHeight, Math.max(yTL, yTR, yBL, yBR));
-        // Update the region.
-        for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
-            for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-                const [xSprite, ySprite] = flipSpriteCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint([xScreen, yScreen], [-x, -y]), -rotation), 1 / scaleFactor), [xOrigin, yOrigin]), width, height, isHorizontalFlip, isVerticalFlip);
-                const maybeColor = sample(data, width, xSprite, ySprite);
-                this.blendPixel(xScreen, yScreen, maybeColor !== null && maybeColor !== void 0 ? maybeColor : 0, 0);
-            }
-        }
-    }
-}
-function rotatedPoint([x, y], angle) {
-    return [Math.round(Math.cos(angle) * x + Math.sin(angle) * y), Math.round(-Math.sin(angle) * x + Math.cos(angle) * y)];
-}
-function scaledPoint([x, y], scaleFactor) {
-    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
-}
-function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
-    return [xOrigin + xDistance, yOrigin + yDistance];
-}
-function flipSpriteCoordinates([x, y], width, height, isHorizontalFlip, isVerticalFlip) {
-    return [isHorizontalFlip ? width - x - 1 : x, isVerticalFlip ? height - y - 1 : y];
-}
-function sample(data, width, x, y) {
-    // Invalid cases are signaled with null.
-    let idx;
-    if (x < 0 ||
-        y < 0 ||
-        width <= 0 ||
-        x >= width ||
-        (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
-        idx >= data.length) {
-        return null;
-    }
-    return data[idx];
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (IndexedGraphic);
 
@@ -23203,39 +23534,85 @@ class ControlPoint {
     }
 }
 class DivMap {
-    static fromBuffer(buffer) {
-        const map = new DivMap(buffer);
+    // TODO: double-check with DIV manuals to implement integrity
+    // tests and validation.
+    static fromWithingFpg(buffer) {
+        const reader = new ByteReader(buffer);
+        const code = reader.readDoubleWord(0);
+        const mapRecordLength = reader.readDoubleWord(4);
+        const description = reader.readAscii(8, 32);
+        const name = reader.readAscii(40, 12);
+        const width = reader.readDoubleWord(52);
+        const height = reader.readDoubleWord(56);
+        const center = new ControlPoint(Math.ceil(width / 2), Math.ceil(height / 2));
+        const pointCount = reader.readDoubleWord(60);
+        const controlPoints = Array.from({ length: pointCount }, (_, index) => {
+            const x = reader.readWord(64 + index * 4);
+            const y = reader.readWord(64 + index * 4 + 2);
+            // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+            // XXX: Also assuming rounding-up in case of odd size values.
+            return new ControlPoint(x == 0xffff ? Math.ceil(width / 2) : x, y == 0xffff ? Math.ceil(height / 2) : y);
+        });
+        const dataOffset = 64 + pointCount * 4;
+        const data = buffer.subarray(dataOffset, mapRecordLength);
+        const map = new DivMap(code, mapRecordLength, description, name, width, height, center, controlPoints, data);
         return map;
     }
-    constructor(buffer) {
-        this.buffer = buffer;
-        this.code = this._readDoubleWord(0);
-        this.length = this._readDoubleWord(4);
-        this.description = this._readAscii(8, 32);
-        this.name = this._readAscii(40, 12);
-        this.width = this._readDoubleWord(52);
-        this.height = this._readDoubleWord(56);
-        this.pointCount = this._readDoubleWord(60);
-        this.dataOffset = 64 + this.pointCount * 4;
-        this.data = this.buffer.subarray(this.dataOffset, this.length);
+    static fromBuffer(buffer) {
+        const reader = new ByteReader(buffer);
+        const width = reader.readWord(0);
+        const height = reader.readWord(2);
+        const center = new ControlPoint(Math.ceil(width / 2), Math.ceil(height / 2));
+        const code = reader.readDoubleWord(8);
+        const description = reader.readAscii(12, 32);
+        //TODO: Maps can have an own palette and gamma, but I think that data is
+        // only for `load_pal()` to deal with.
+        const pointCount = reader.readWord(1384);
+        const controlPoints = Array.from({ length: pointCount }, (_, index) => {
+            const x = reader.readWord(1386 + index * 4);
+            const y = reader.readWord(1386 + index * 4 + 2);
+            // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
+            // XXX: Also assuming rounding-up in case of odd size values.
+            return new ControlPoint(x == 0xffff ? Math.ceil(width / 2) : x, y == 0xffff ? Math.ceil(height / 2) : y);
+        });
+        const dataOffset = 1386 + pointCount * 4;
+        const mapRecordLength = dataOffset + width * height;
+        const data = buffer.subarray(dataOffset, mapRecordLength);
+        const map = new DivMap(code, mapRecordLength, description, null, width, height, center, controlPoints, data);
+        return map;
+    }
+    constructor(code, length, description, name, width, height, center, controlPoints, data) {
+        this.code = code;
+        this.length = length;
+        this.description = description;
+        this.name = name;
+        this.width = width;
+        this.height = height;
+        this.center = center;
+        this.controlPoints = controlPoints;
+        this.data = data;
+    }
+    get controlPointCount() {
+        return this.controlPoints.length;
     }
     controlPoint(index) {
-        const x = this._readWord(64 + index * 4);
-        const y = this._readWord(64 + index * 4 + 2);
-        // XXX: Assuming that 0xFFFF is the default value for the center. This is not documented.
-        // XXX: Also assuming rounding-up in case of odd size values.
-        return new ControlPoint(this.pointCount === 0 || x == 0xFFFF ? Math.ceil(this.width / 2) : x, this.pointCount === 0 || y == 0xFFFF ? Math.ceil(this.height / 2) : y);
+        return this.controlPoints[index];
     }
-    _readWord(offset) {
+}
+class ByteReader {
+    constructor(buffer) {
+        this.buffer = buffer;
+    }
+    readWord(offset) {
         return this.buffer[offset] | (this.buffer[offset + 1] << 8);
     }
-    _readDoubleWord(offset) {
+    readDoubleWord(offset) {
         return (this.buffer[offset] |
             (this.buffer[offset + 1] << 8) |
             (this.buffer[offset + 2] << 16) |
             (this.buffer[offset + 3] << 24));
     }
-    _readAscii(offset, length) {
+    readAscii(offset, length) {
         return String.fromCharCode(...this.buffer.subarray(offset, offset + length));
     }
 }
@@ -23269,6 +23646,14 @@ class Palette {
         this.buffer = buffer;
         // TODO: validate buffer size
         this.size = buffer.length / 3;
+    }
+    color(index) {
+        const offset = index * 3;
+        return [
+            this.buffer[offset],
+            this.buffer[offset + 1],
+            this.buffer[offset + 2],
+        ];
     }
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Palette);
@@ -23311,7 +23696,6 @@ __webpack_require__.r(__webpack_exports__);
         };
     },
     every: function (tests) {
-        const _this = this;
         return tests.reduce(function (chain, test) {
             return chain === null
                 ? test
@@ -23412,31 +23796,42 @@ __webpack_require__.r(__webpack_exports__);
     labeledBlock: function (label) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.SwitchCase(_ast__WEBPACK_IMPORTED_MODULE_0__.Literal.for(label));
     },
-    memoryGlobal: function (name) {
-        return this._memory(this._globalAddress(name));
+    memoryGlobal: function (...divNames) {
+        return this._memory(this._globalAddress(...divNames));
     },
-    memoryLocal: function (name) {
-        return this._memory(this._localAddress(name));
+    memoryLocal: function (...divNames) {
+        return this._memory(this._localAddress(...divNames));
     },
-    memoryPrivate: function (name) {
-        return this._memory(this._privateAddress(name));
+    memoryPrivate: function (...divNames) {
+        return this._memory(this._privateAddress(...divNames));
     },
     _memory: function (index) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("mem"), index, true);
     },
-    _globalAddress: function (name) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(this.globalBaseIdentifier, this.identifierForGlobal(name), "+");
+    // XXX: Returns ast for `__G_SEGMENT_BASE + G_<NAME>`
+    _globalAddress: function (...names) {
+        return this._resolveAddress(this.globalBaseIdentifier, ...names.map((name) => this.identifierForGlobal(name)));
     },
     // XXX: Returns ast for `exec.base + L_<NAME>`
-    _localAddress: function (name) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(this._localBase, this.identifierForLocal(name), "+");
+    _localAddress: function (...names) {
+        return this._resolveAddress(this._localBase, ...names.map((name) => this.identifierForLocal(name)));
     },
-    // XXX: Returns ast for `exec.base + P_OFFSET + <name>`
-    _privateAddress: function (name) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(this._localBase, this.privateOffsetIdentifier, "+"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier(name), "+");
+    // XXX: Returns ast for `exec.base + __P_SEGMENT_OFFSET + <name>`
+    _privateAddress: function (...names) {
+        return this._resolveAddress(this._localBase, this.privateOffsetIdentifier, ...names.map((name) => this.identifierForPrivate(name)));
     },
-    globalSizeIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("G_SEGMENT_SIZE"),
-    globalBaseIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("G_BASE"),
+    // XXX: Returns an expression of the form OFFSET_0 + OFFSET_1 + ... + OFFSET_N
+    // aimed at resolving the address of a variable in memory.
+    // TODO: Maybe expand to handle arrays by accepting numbers?
+    _resolveAddress: function (...offsets) {
+        if (offsets.length === 1) {
+            return offsets[0];
+        }
+        const lastOffset = offsets.pop();
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(this._resolveAddress(...offsets), lastOffset, "+");
+    },
+    globalSizeIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("__G_SEGMENT_SIZE"),
+    globalBaseIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("__G_SEGMENT_OFFSET"),
     identifierForGlobal: function (names) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier(["G"].concat(names).join("_").toUpperCase());
     },
@@ -23444,10 +23839,12 @@ __webpack_require__.r(__webpack_exports__);
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier(["L"].concat(names).join("_").toUpperCase());
     },
     identifierForPrivate: function (names) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier(names.join("_").toLowerCase());
+        // XXX: Privates have no prefix. Still, we concatenate with the empty
+        // sequence to deal with names being a sring, or an array of strings.
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier([].concat(names).join("_").toLowerCase());
     },
     _localBase: new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("base"), false),
-    privateOffsetIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("P_OFFSET"),
+    privateOffsetIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("__P_SEGMENT_OFFSET"),
     newRange: function (min, max) {
         return this.callWith("__range", [min, max]);
     },
