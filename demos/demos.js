@@ -24,7 +24,10 @@ function load() {
 
   fetch(programUrl)
     .then(function (response) {
-      return response.text();
+      return response.arrayBuffer();
+    })
+    .then(function (buffer) {
+      return div2.decodePrg(buffer);
     })
     .then(function (source) {
       demoSource.value = source;

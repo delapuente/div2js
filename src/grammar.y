@@ -323,6 +323,16 @@ process
         body: $8
       };
     }
+  | PROCESS id '(' param_list ')' private_block body
+    {
+      $$ = {
+        type: "Process",
+        name: $2,
+        params: $4,
+        privates: $6,
+        body: $7
+      };
+    }
   ;
 
 param_list
