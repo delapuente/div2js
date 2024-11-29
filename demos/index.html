@@ -11,19 +11,25 @@
   <h1>Div2js demos</h1>
   <p><label>Demo list:
       <select id="demo-list">
-        <option value="">Select a demo...</option>
-        <option value="./prg/load_map_example.prg">load_map()</option>
-        <option value="./prg/put_screen.prg">put_screen()</option>
-        <option value="./prg/put_pixel_example.prg">put_pixel()</option>
-        <option value="./prg/put_example.prg">put()</option>
-        <option value="./prg/xput_example.prg">xput()</option>
-        <option value="./prg/graph_example.prg">graph</option>
+        <optgroup label="Functions">
+          <option value="./PRG/HELP/load_map_example.prg">load_map()</option>
+          <option value="./PRG/HELP/put_screen.prg">put_screen()</option>
+          <option value="./PRG/HELP/put_pixel_example.prg">put_pixel()</option>
+          <option value="./PRG/HELP/put_example.prg">put()</option>
+          <option value="./PRG/HELP/xput_example.prg">xput()</option>
+        </optgroup>
+        <optgroup label="Local variables">
+          <option value="./PRG/HELP/graph_example.prg">graph</option>
+        </optgroup>
+        <optgroup label="Tutorials">
+          <option value="./PRG/TUTOR/TUTOR0A.PRG">TUTOR0A</option>
+        </optgroup>
       </select>
-      <button type="button" disabled>Reload</button>
+      <button type="button">Reload</button>
     </label></p>
   <!-- Add the source code of the demo -->
   <form style="float: left; margin-right: 2ex;">
-    <textarea id="demo-source" style="width: 50vh; min-width: 60ex; min-height: 40ex;"></textarea>
+    <textarea id="demo-source" style="width: 50vh; min-width: 100ex; min-height: 40ex;"></textarea>
     <p id="shortcuts" style="border: 1px solid black; padding: 1ex;" hidden>Ctrl + Enter: Run</p>
     <button id="run" type="button">Run</button>
   </form>
