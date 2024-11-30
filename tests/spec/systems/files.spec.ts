@@ -29,21 +29,17 @@ describe("The URLFileSystem class", () => {
     });
   });
 
-  describe("normalizePath()", () => {
-    it("returns the same path when it contains a directory", () => {
-      expect(fileSystem.normalizePath("PAL/DIV.PAL")).to.equal("PAL/DIV.PAL");
-    });
-
-    it("returns a path inside a default directory when there is no directory", () => {
-      ["pal", "fpg"].forEach((extension) => {
-        expect(fileSystem.normalizePath(`FILE.${extension}`)).to.equal(
-          `${extension.toUpperCase()}/FILE.${extension}`
+  describe("defaultDirPath()", () => {
+    it("returns a path inside a default directory", () => {
+      ["pal", "fpg", "map"].forEach((extension) => {
+        expect(fileSystem.defaultDirPath(`DIR/FILE.${extension}`)).to.equal(
+          `${extension.toUpperCase()}/DIR/FILE.${extension}`,
         );
       });
     });
 
     it("returns the same path when the extension is not recognized", () => {
-      expect(fileSystem.normalizePath("DIV.UNKNOWN")).to.equal("DIV.UNKNOWN");
+      expect(fileSystem.defaultDirPath("DIV.UNKNOWN")).to.equal("DIV.UNKNOWN");
     });
   });
 });

@@ -506,7 +506,7 @@ case 100:
 
       this.$ = {
         type: "Literal",
-        value: JSON.parse($$[$0]),
+        value: $$[$0].substr(1,$$[$0].length - 2),
         raw: $$[$0]
       };
     

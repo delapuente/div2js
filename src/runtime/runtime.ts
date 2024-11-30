@@ -271,7 +271,7 @@ class Runtime {
   }
 
   _loadDefaults() {
-    return load_pal("PAL/DIV.PAL", this);
+    return load_pal("DIV.PAL", this);
   }
 }
 

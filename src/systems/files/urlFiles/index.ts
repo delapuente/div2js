@@ -19,24 +19,27 @@ export default class UrlFileSystem implements System, Div2FileSystem {
   run() {}
 
   loadMap(path: string): Promise<MAPFile> {
-    const normalizedPath = this.normalizePath(path);
-    return _loadMap(this._convertToUrl(normalizedPath));
+    const pathWithinDefaultDir = this.defaultDirPath(path);
+    return _loadMap(this._convertToUrl(pathWithinDefaultDir)).catch(() =>
+      _loadMap(this._convertToUrl(path)),
+    );
   }
 
   loadPal(path: string): Promise<PALFile> {
-    const normalizedPath = this.normalizePath(path);
-    return _loadPal(this._convertToUrl(normalizedPath));
+    const pathWithinDefaultDir = this.defaultDirPath(path);
+    return _loadPal(this._convertToUrl(pathWithinDefaultDir)).catch(() =>
+      _loadPal(this._convertToUrl(path)),
+    );
   }
 
   loadFpg(path: string): Promise<FPGFile> {
-    const normalizedPath = this.normalizePath(path);
-    return _loadFpg(this._convertToUrl(normalizedPath));
+    const pathWithinDefaultDir = this.defaultDirPath(path);
+    return _loadFpg(this._convertToUrl(pathWithinDefaultDir)).catch(() =>
+      _loadFpg(this._convertToUrl(path)),
+    );
   }
 
-  normalizePath(path: string): string {
-    if (path.includes("/")) {
-      return path;
-    }
+  defaultDirPath(path: string): string {
     const defaultDir = this._getDefaultDir(path);
     return defaultDir ? this._join(defaultDir, path) : path;
   }
