@@ -53,11 +53,18 @@ describe("DIV2 parser", function () {
     "loop-with-body.prg",
     "unary-expression.prg",
     "constant-expression.prg",
+    "string-literal.prg",
   ];
 
-  programs.forEach(function (programName) {
+  programs.forEach(function (programTestCase) {
+    const [onlyFlag, programName] =
+      typeof programTestCase === "string"
+        ? [false, programTestCase]
+        : programTestCase;
+    const itFn = onlyFlag ? it.only.bind(it) : it;
     const path = samplePath(programName);
-    it("parses `" + path + "`", function () {
+
+    itFn("parses `" + path + "`", function () {
       let ast, expectedAst;
       return Promise.all([fetch(path), fetch(samplePath(programName + ".ast"))])
         .then(function (responses) {

@@ -708,7 +708,7 @@ primary_expression
     {
       $$ = {
         type: "Literal",
-        value: JSON.parse($1),
+        value: $1.substr(1,$1.length - 2),
         raw: $1
       };
     }
