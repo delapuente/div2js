@@ -9,7 +9,7 @@ class DivMap {
   // TODO: double-check with DIV manuals to implement integrity
   // tests and validation.
 
-  static fromWithingFpg(buffer: Uint8Array): DivMap {
+  static fromWithinFpg(buffer: Uint8Array): DivMap {
     const reader = new ByteReader(buffer);
     const code = reader.readDoubleWord(0);
     const mapRecordLength = reader.readDoubleWord(4);

@@ -32,7 +32,7 @@ class Fpg {
     const mapBuffer = this.buffer.subarray(mapsOffset);
     let offset = 0;
     while (offset < mapBuffer.length) {
-      const map = DivMap.fromWithingFpg(mapBuffer.subarray(offset));
+      const map = DivMap.fromWithinFpg(mapBuffer.subarray(offset));
       divMaps.set(map.code, map);
       offset += map.length;
     }
