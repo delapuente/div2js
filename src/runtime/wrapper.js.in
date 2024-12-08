@@ -27,6 +27,10 @@
     })
   }
 
+  function __bool(value) {
+    return !!(value & 0x1);
+  }
+
   var __yieldEnd = new rt.Baton('end');
 
   return { /* Here come the process and memory maps */ };
