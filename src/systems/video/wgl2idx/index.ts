@@ -4,8 +4,7 @@ import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap from "./map";
-import { MemoryBrowser, ProcessView } from "../../../memoryBrowser/mapper";
-import { Process } from "../../../runtime/scheduler";
+import { ProcessView } from "../../../memoryBrowser/mapper";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -244,6 +243,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     ]),
   );
 
+  _isPaletteLoaded: boolean = false;
+
   constructor(
     canvas,
     private readonly _bgLayer: IndexedGraphic = getDefaultScreen(),
@@ -259,6 +260,10 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._loadedMaps = new Map();
     this._framebuffer = new Uint8Array(_bgLayer.width * _bgLayer.height * 4);
     this._activeLayer = _bgLayer;
+  }
+
+  isPaletteLoaded(): boolean {
+    return this._isPaletteLoaded;
   }
 
   initialize() {
@@ -316,6 +321,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   setPalette(palette: Palette) {
     this.palette = palette;
+    this._isPaletteLoaded = true;
   }
 
   loadFpg(fpg: Fpg) {

@@ -6,6 +6,7 @@ interface Div2VideoSystem {
   putPixel(x: number, y: number, colorIndex: number): void;
   putScreen(fpgId: number, mapId: number): number;
   setPalette(palette: Palette): void;
+  isPaletteLoaded(): boolean;
   loadFpg(fpg: Fpg): number;
   loadMap(map: Map): number;
   xput(

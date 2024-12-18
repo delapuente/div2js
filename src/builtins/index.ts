@@ -32,9 +32,12 @@ function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
     .getSystem("files")
     .loadFpg(fpgPath)
     .then((fpgFile) => {
-      const fpgId = runtime
-        .getSystem("video")
-        .loadFpg(Fpg.fromBuffer(fpgFile.buffer));
+      const videoSystem = runtime.getSystem("video");
+      const fpg = Fpg.fromBuffer(fpgFile.buffer);
+      const fpgId = videoSystem.loadFpg(fpg);
+      if (!videoSystem.isPaletteLoaded()) {
+        videoSystem.setPalette(fpg.palette);
+      }
       return fpgId;
     });
 }
@@ -44,9 +47,12 @@ function load_map(mapPath: string, runtime: Runtime): Promise<number> {
     .getSystem("files")
     .loadMap(mapPath)
     .then((mapFile) => {
-      const mapId = runtime
-        .getSystem("video")
-        .loadMap(Div2Map.fromBuffer(mapFile.buffer));
+      const videoSystem = runtime.getSystem("video");
+      const map = Div2Map.fromBuffer(mapFile.buffer);
+      const mapId = videoSystem.loadMap(map);
+      if (!videoSystem.isPaletteLoaded()) {
+        videoSystem.setPalette(map.palette);
+      }
       return mapId;
     });
 }
