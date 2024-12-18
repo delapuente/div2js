@@ -170,9 +170,7 @@ class Runtime {
     this._memoryManager.reset();
     const id = this._memoryManager.allocateProcess();
     this.addProgram(id);
-    this._loadDefaults().then(() => {
-      this._scheduler.run();
-    });
+    this._scheduler.run();
   }
 
   debug() {
@@ -268,10 +266,6 @@ class Runtime {
   // TODO: Consider passing the id through the baton
   _end() {
     return this.end();
-  }
-
-  _loadDefaults() {
-    return load_pal("DIV.PAL", this);
   }
 }
 
