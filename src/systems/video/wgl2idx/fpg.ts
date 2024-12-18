@@ -32,7 +32,10 @@ class Fpg {
     const mapBuffer = this.buffer.subarray(mapsOffset);
     let offset = 0;
     while (offset < mapBuffer.length) {
-      const map = DivMap.fromWithinFpg(mapBuffer.subarray(offset));
+      const map = DivMap.fromWithinFpg(
+        mapBuffer.subarray(offset),
+        this.palette,
+      );
       divMaps.set(map.code, map);
       offset += map.length;
     }
@@ -41,7 +44,7 @@ class Fpg {
 
   _extractPalette(): Palette {
     // TODO: extract the palette position accurately.
-    const paletteBuffer = this.buffer.subarray(0, mapsOffset);
+    const paletteBuffer = this.buffer.subarray(0, 768);
     const palette = Palette.fromBuffer(paletteBuffer);
     return palette;
   }

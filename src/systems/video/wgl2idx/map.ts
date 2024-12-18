@@ -1,3 +1,5 @@
+import Palette from "./palette";
+
 class ControlPoint {
   constructor(
     public readonly x: number,
@@ -9,7 +11,7 @@ class DivMap {
   // TODO: double-check with DIV manuals to implement integrity
   // tests and validation.
 
-  static fromWithinFpg(buffer: Uint8Array): DivMap {
+  static fromWithinFpg(buffer: Uint8Array, palette: Palette): DivMap {
     const reader = new ByteReader(buffer);
     const code = reader.readDoubleWord(0);
     const mapRecordLength = reader.readDoubleWord(4);
@@ -44,6 +46,7 @@ class DivMap {
       center,
       controlPoints,
       data,
+      palette,
     );
     return map;
   }
@@ -56,8 +59,9 @@ class DivMap {
       Math.ceil(width / 2),
       Math.ceil(height / 2),
     );
-    const code = reader.readDoubleWord(8);
-    const description = reader.readAscii(12, 32);
+    const code = reader.readDoubleWord(4);
+    const description = reader.readAscii(8, 32);
+    const palette = Palette.fromBuffer(buffer.subarray(40, 808));
     //TODO: Maps can have an own palette and gamma, but I think that data is
     // only for `load_pal()` to deal with.
     const pointCount = reader.readWord(1384);
@@ -84,6 +88,7 @@ class DivMap {
       center,
       controlPoints,
       data,
+      palette,
     );
     return map;
   }
@@ -98,6 +103,7 @@ class DivMap {
     readonly center: ControlPoint,
     private readonly controlPoints: ControlPoint[],
     readonly data: Uint8Array,
+    readonly palette: Palette,
   ) {}
 
   get controlPointCount(): number {
