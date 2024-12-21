@@ -16,8 +16,11 @@ class ProcessImpl implements Process {
   retv: ReturnValuesQueue;
   dead: boolean;
   memory: any;
+  initialized: boolean;
+  // XXX: Should this be just a queue, like ReturnValuesQueue, so I can dellocate the space consumed by the parameters once the process is initialized?
+  args: number[];
 
-  constructor(runnable, base, memory) {
+  constructor(runnable, base, memory, args = []) {
     this.pc = 1;
     this.runnable = runnable;
     this.id = base;
@@ -25,10 +28,12 @@ class ProcessImpl implements Process {
     this.retv = new ReturnValuesQueue();
     this.dead = false;
     this.memory = memory;
+    this.initialized = false;
+    this.args = args;
   }
 
   run() {
-    return this.runnable(this.memory, this);
+    return this.runnable(this.memory, this, this.args);
   }
 }
 
@@ -103,9 +108,9 @@ class Runtime {
     this._scheduler = scheduler;
   }
 
-  addProcess(name: string, base: number) {
+  addProcess(name: string, base: number, args: number[] = []) {
     const runnable = this._pmap["process_" + name];
-    const processEnvironment = new ProcessImpl(runnable, base, this._mem);
+    const processEnvironment = new ProcessImpl(runnable, base, this._mem, args);
     this._scheduler.add(processEnvironment);
   }
 
@@ -178,9 +183,9 @@ class Runtime {
     this.ondebug();
   }
 
-  newProcess(processName: string) {
+  newProcess(processName: string, args: number[]) {
     const id = this._memoryManager.allocateProcess();
-    this.addProcess(processName, id);
+    this.addProcess(processName, id, args);
   }
 
   call(functionName: string, args: unknown[], process) {
@@ -249,7 +254,8 @@ class Runtime {
 
   _newProcess(baton) {
     const name = baton.processName;
-    return this.newProcess(name);
+    const args = (baton.args ?? []) as number[];
+    return this.newProcess(name, args);
   }
 
   _call(baton, process) {
