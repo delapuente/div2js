@@ -77,24 +77,51 @@ export default class UrlFileSystem implements System, Div2FileSystem {
 }
 
 async function _loadMap(url: string): Promise<MAPFile> {
-  const buffer = await _loadAsset(url);
-  return MAPFile.fromArrayBuffer(buffer);
+  try {
+    const buffer = await _loadAsset(url);
+    return MAPFile.fromArrayBuffer(buffer);
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      throw new DivError(143);
+    }
+    throw e;
+  }
 }
 
 async function _loadPal(url: string): Promise<PALFile> {
-  const buffer = await _loadAsset(url);
-  return PALFile.fromArrayBuffer(buffer);
+  try {
+    const buffer = await _loadAsset(url);
+    return PALFile.fromArrayBuffer(buffer);
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      throw new DivError(102);
+    }
+    throw e;
+  }
 }
 
 async function _loadFpg(url: string): Promise<FPGFile> {
-  const buffer = await _loadAsset(url);
-  return FPGFile.fromArrayBuffer(buffer);
+  try {
+    const buffer = await _loadAsset(url);
+    return FPGFile.fromArrayBuffer(buffer);
+  } catch (e) {
+    if (e instanceof NotFoundError) {
+      throw new DivError(102);
+    }
+    throw e;
+  }
 }
 
 async function _loadAsset(url: string): Promise<ArrayBuffer> {
   const response = await fetch(url);
   if (response.status === 404) {
-    throw new DivError(102);
+    throw new NotFoundError();
   }
   return response.arrayBuffer();
+}
+
+class NotFoundError extends Error {
+  constructor() {
+    super("File not found.");
+  }
 }
