@@ -244,4 +244,37 @@ describe("Graphic functions", function () {
       });
     });
   });
+
+  describe("load_map()", function () {
+    it("loads a file", function () {
+      return loadPrg("load_map.prg").then(function (program) {
+        return new Promise(function (fulfill) {
+          program.onfinished = withDebugSession(function (session) {
+            const program = session.process({
+              index: 0,
+              type: "_load_map",
+            });
+            expect(program.private("map_1").value).to.equal(1000);
+            expect(program.private("map_2").value).to.equal(1001);
+            fulfill(void 0);
+          });
+          program.start();
+        });
+      });
+    });
+
+    it("errors when trying to load a non existent file", function () {
+      return loadPrg("load_map_error.prg").then(function (program) {
+        return new Promise(function (fulfill, reject) {
+          program.onfinished = () =>
+            reject(new Error("Should not have finished but errored, instead."));
+          program.onerror = (error) => {
+            expect(error.errorCode).to.equal(143);
+            fulfill(void 0);
+          };
+          program.start();
+        });
+      });
+    });
+  });
 });
