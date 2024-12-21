@@ -283,6 +283,19 @@ class WhileStatement extends Node {
   }
 }
 
+class IfStatement extends Node {
+  test: Node;
+  consequent: BlockStatement;
+  alternate: BlockStatement | null;
+
+  constructor(test: Node, consequent: Node[], alternate: Node[] | null = null) {
+    super("IfStatement");
+    this.test = test;
+    this.consequent = new BlockStatement(consequent);
+    this.alternate = alternate ? new BlockStatement(alternate) : null;
+  }
+}
+
 function fromJson(json) {
   const type = typeof json;
   const isJsonSerializable = ["function", "undefined"].indexOf(type) === -1;
@@ -347,5 +360,6 @@ export {
   VariableDeclaration,
   VariableDeclarator,
   WhileStatement,
+  IfStatement,
   fromJson,
 };

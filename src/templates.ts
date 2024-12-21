@@ -313,6 +313,37 @@ export default {
     );
   },
 
+  withProcessInitWrapper: function (sentences: any[]): ast.IfStatement {
+    return new ast.IfStatement(
+      new ast.UnaryExpression(
+        new ast.MemberExpression(
+          new ast.Identifier("exec"),
+          new ast.Identifier("initialized"),
+        ),
+        "!",
+      ),
+      sentences.concat(
+        new ast.ExpressionStatement(
+          new ast.AssignmentExpression(
+            new ast.MemberExpression(
+              new ast.Identifier("exec"),
+              new ast.Identifier("initialized"),
+            ),
+            new ast.Literal(true),
+          ),
+        ),
+      ),
+    );
+  },
+
+  processArgument: function (index) {
+    return new ast.MemberExpression(
+      new ast.Identifier("args"),
+      new ast.Literal(index),
+      true,
+    );
+  },
+
   some: function (evaluation, tests) {
     return this.callWith("__some", [evaluation].concat(tests));
   },

@@ -204,12 +204,25 @@ translators.Program = function (divProgram, context) {
 
 translators.Process = function (divProgram, context) {
   const name = divProgram.name.name;
+  const params = divProgram.params ?? [];
   context.enterProcess(name);
   const privates = translatePrivates(name, context);
+  // Initialize if not initialized yet.
+  const initialization = t.withProcessInitWrapper(
+    params.map(
+      (param, index) =>
+        new ast.ExpressionStatement(
+          new ast.AssignmentExpression(
+            translate(param, context),
+            t.processArgument(index),
+          ),
+        ),
+    ),
+  );
   const body = translate(divProgram.body, context);
   const translation = t.processFunction(
     name,
-    (privates ? [privates] : []).concat(body),
+    (privates ? [privates] : []).concat([initialization] as any[]).concat(body),
   );
   context.exitProcess();
   return translation;

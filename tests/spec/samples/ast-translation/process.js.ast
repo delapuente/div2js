@@ -23,6 +23,56 @@
     "type": "BlockStatement",
     "body": [
       {
+        "type": "IfStatement",
+        "test": {
+          "type": "UnaryExpression",
+          "operator": "!",
+          "argument": {
+            "type": "MemberExpression",
+            "computed": false,
+            "object": {
+              "type": "Identifier",
+              "name": "exec"
+            },
+            "property": {
+              "type": "Identifier",
+              "name": "initialized"
+            }
+          },
+          "prefix": true
+        },
+        "consequent": {
+          "type": "BlockStatement",
+          "body": [
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "AssignmentExpression",
+                "operator": "=",
+                "left": {
+                  "type": "MemberExpression",
+                  "computed": false,
+                  "object": {
+                    "type": "Identifier",
+                    "name": "exec"
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "initialized"
+                  }
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": true,
+                  "raw": "true"
+                }
+              }
+            }
+          ]
+        },
+        "alternate": null
+      },
+      {
         "type": "WhileStatement",
         "test": {
           "type": "Literal",
