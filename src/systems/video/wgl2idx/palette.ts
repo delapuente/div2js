@@ -9,11 +9,6 @@ class Palette {
     return palette;
   }
 
-  static withSize(size: number): Palette {
-    const buffer = new Uint8Array(size * 3);
-    return new Palette(buffer);
-  }
-
   constructor(public readonly buffer: Uint8Array) {
     // TODO: validate buffer size
     this.size = buffer.length / 3;
