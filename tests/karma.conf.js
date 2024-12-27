@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const webpack = require("../webpack.test.js");
+import webpack from "../webpack.test.js";
 
-module.exports = function (config) {
+export default function (config) {
   config.set({
     basePath: "../",
     frameworks: ["webpack", "mocha", "sinon-chai"],
@@ -41,4 +40,4 @@ module.exports = function (config) {
     reporters: ["mocha", "coverage-istanbul"],
     mime: { "text/x-typescript": ["ts"] },
   });
-};
+}
