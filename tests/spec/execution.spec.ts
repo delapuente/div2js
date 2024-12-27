@@ -11,6 +11,29 @@ function samplePath(name) {
   return "/base/tests/spec/samples/execution/" + name;
 }
 
+describe("Declaration of variables", function () {
+  it("Allows for the declaration of global, local and private variables", function () {
+    return loadPrg("declare_variables.prg").then(function (program) {
+      return new Promise(function (fulfill) {
+        program.onfinished = withDebugSession(function (session) {
+          const globalVariable = session.global("global_variable").value;
+          const localVariable = session
+            .process({ index: 0, type: "_declare_variables" })
+            .local("local_variable").value;
+          const privateVariable = session
+            .process({ index: 0, type: "_declare_variables" })
+            .private("private_variable").value;
+          expect(globalVariable).to.equal(1);
+          expect(localVariable).to.equal(2);
+          expect(privateVariable).to.equal(3);
+          fulfill(void 0);
+        });
+        program.start();
+      });
+    });
+  });
+});
+
 describe("Workflow of transpiled programs", function () {
   it("The empty program just finishes", function () {
     return loadPrg("empty-program.prg").then(function (program) {
