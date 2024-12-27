@@ -29,6 +29,16 @@ describe("The URLFileSystem class", () => {
     });
   });
 
+  describe("loadMap()", () => {
+    it("loads MAP files", (done) => {
+      fileSystem.loadMap("TAPICES/ARTE1.MAP").then(() => done());
+    });
+
+    it("errors when loading something different than a MAP file", (done) => {
+      fileSystem.loadMap("TEST.FPG").catch(() => done());
+    });
+  });
+
   describe("defaultDirPath()", () => {
     it("returns a path inside a default directory", () => {
       ["pal", "fpg", "map"].forEach((extension) => {

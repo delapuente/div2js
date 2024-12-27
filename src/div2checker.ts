@@ -8,8 +8,8 @@ function extractContext(div2ast, symbolTable) {
 
   // Augment symbol table with custom symbols.
   // TODO: Should process names be added to the symbol table?
-  // TODO: Find and add custom locals to symbols
   declareGlobals(symbolTable, div2ast.program);
+  declareLocals(symbolTable, div2ast.program);
   declarePrivates(symbolTable, [div2ast.program]);
   declarePrivates(symbolTable, div2ast.processes);
 
@@ -34,7 +34,22 @@ function declareGlobals(symbolTable, program) {
         symbolTable.addGlobal(definitionFromAst(declarationAst));
       } else {
         throw new Error(
-          "The global " + varName + " has been already declared.",
+          "The global variable `" + varName + "` has been already declared.",
+        );
+      }
+    });
+  }
+}
+
+function declareLocals(symbolTable, program) {
+  if (program && program.locals) {
+    program.locals.declarations.forEach(function (declarationAst) {
+      const varName = declarationAst.varName.name;
+      if (!symbolTable.isLocal(varName)) {
+        symbolTable.addLocal(definitionFromAst(declarationAst));
+      } else {
+        throw new Error(
+          "The local variable `" + varName + "` has been already declared.",
         );
       }
     });
@@ -54,7 +69,7 @@ function declarePrivates(symbolTable, processes) {
           );
         } else {
           throw new Error(
-            "The private " + varName + " has been already declared.",
+            "The private variable `" + varName + "` has been already declared.",
           );
         }
       });
