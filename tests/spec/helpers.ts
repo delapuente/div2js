@@ -41,4 +41,31 @@ function autoResume(callback) {
   };
 }
 
-export { load, withDebugSession, autoResume };
+class MemoryBrowserMock {
+  private readonly _globalStore: Record<string, { value: number }>;
+
+  constructor() {
+    this._globalStore = {};
+  }
+
+  global(path: string) {
+    if (!(path in this._globalStore)) {
+      this._globalStore[path] = { value: 0 };
+    }
+    return this._globalStore[path];
+  }
+}
+
+class RuntimeMock {
+  private readonly _memoryBrowser: MemoryBrowserMock;
+
+  constructor() {
+    this._memoryBrowser = new MemoryBrowserMock();
+  }
+
+  getMemoryBrowser() {
+    return this._memoryBrowser;
+  }
+}
+
+export { load, withDebugSession, autoResume, RuntimeMock };
