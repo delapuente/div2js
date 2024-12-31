@@ -124,6 +124,7 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "!"                                        { return '!'; }
 "OFFSET"                                   { return '&'; }
 "POINTER"                                  { return '*'; }
+"TYPE"                                     { return 'TYPE'; }
 
 ".."                                       { return '..'; }
 ":"                                        { return ':'; }
@@ -807,6 +808,7 @@ unary_operator
 	| '+'
 	| '-'
 	| '!'
+  | 'TYPE'
 	;
 
 multiplicative_expression
