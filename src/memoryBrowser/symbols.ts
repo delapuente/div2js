@@ -18,9 +18,9 @@ class SymbolTable {
   readonly privates: Record<string, Array<DivSymbol>>;
 
   constructor(definitions: WellKnownSymbols) {
-    this.globals = definitions.wellKnownGlobals;
-    this.locals = definitions.wellKnownLocals;
-    this.constants = definitions.wellKnownConstants;
+    this.globals = Array.from(definitions.wellKnownGlobals);
+    this.locals = Array.from(definitions.wellKnownLocals);
+    this.constants = Array.from(definitions.wellKnownConstants);
     this.privates = {};
   }
 
