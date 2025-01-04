@@ -196,3 +196,41 @@ describe("Math functions", function () {
     });
   });
 });
+
+describe("Process parameter passing", function () {
+  it("Allows for passing values to global, local, and private variables", function () {
+    return loadPrg("passing-parameters.prg").then(function (program) {
+      return new Promise(function (fulfill) {
+        program.ondebug = autoResume(
+          withDebugSession(function (session) {
+            expect(session.global("global_variable").value).to.equal(1);
+            const process = session.process({ index: 1, type: "test" });
+            expect(process.local("local_variable").value).to.equal(2);
+            expect(process.private("private_variable").value).to.equal(3);
+            expect(process.private("parameter").value).to.equal(4);
+          }),
+        );
+        program.onfinished = fulfill;
+        program.start();
+      });
+    });
+  });
+
+  it("Allows for repeated names in parameters", function () {
+    return loadPrg("passing-repeated-parameters.prg").then(function (program) {
+      return new Promise(function (fulfill) {
+        program.ondebug = autoResume(
+          withDebugSession(function (session) {
+            expect(session.global("g").value).to.equal(2);
+            const process = session.process({ index: 1, type: "test" });
+            expect(process.local("l").value).to.equal(4);
+            expect(process.private("p").value).to.equal(6);
+            expect(process.private("param").value).to.equal(8);
+          }),
+        );
+        program.onfinished = fulfill;
+        program.start();
+      });
+    });
+  });
+});

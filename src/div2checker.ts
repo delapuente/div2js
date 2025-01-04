@@ -10,7 +10,9 @@ function extractContext(div2ast, symbolTable) {
   // TODO: Should process names be added to the symbol table?
   declareGlobals(symbolTable, div2ast.program);
   declareLocals(symbolTable, div2ast.program);
-  declarePrivates(symbolTable, [div2ast.program]);
+  if (div2ast.program) {
+    declarePrivates(symbolTable, [div2ast.program]);
+  }
   declarePrivates(symbolTable, div2ast.processes);
 
   const mmap = new mapper.MemoryMap(symbolTable);
@@ -58,16 +60,38 @@ function declareLocals(symbolTable, program) {
 
 function declarePrivates(symbolTable, processes) {
   (processes || []).forEach(function (processAst) {
+    const processName = processAst.name.name;
+
+    // Extract privates from parameters.
+    const parameters = (processAst.params ?? []).map(
+      (identifier) => identifier.name,
+    );
+    const parameterPrivates = parameters.filter((paramName) => {
+      return (
+        !symbolTable.isGlobal(paramName) && !symbolTable.isLocal(paramName)
+      );
+    });
+    parameterPrivates.forEach(function (privateName) {
+      if (!symbolTable.isPrivate(processName, privateName)) {
+        symbolTable.addPrivate(processName, privateName);
+      }
+      // XXX: Declaring in parameters allows for the repetition of a private
+      // name without throwing an error.
+    });
+
+    // Extract privates from explicit declarations.
     if (processAst && processAst.privates) {
       processAst.privates.declarations.forEach(function (declarationAst) {
-        const processName = processAst.name.name;
         const varName = declarationAst.varName.name;
         if (!symbolTable.isPrivate(processName, varName)) {
           symbolTable.addPrivate(
             processName,
             definitionFromAst(declarationAst),
           );
-        } else {
+        }
+        // XXX: Declaring in parameters allows for the repetition of a private
+        // name without throwing an error.
+        else if (!parameterPrivates.includes(varName)) {
           throw new Error(
             "The private variable `" + varName + "` has been already declared.",
           );
