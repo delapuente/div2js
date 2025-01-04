@@ -54,10 +54,13 @@ translators.RelationalExpression = translators.BinaryExpression;
 translators.LogicalExpression = function (divLogical, context) {
   let logicalFunction;
   switch (divLogical.operator) {
+    case "AND":
     case "&":
     case "&&":
       logicalFunction = "__and";
       break;
+    case "OR":
+    case "|":
     case "||":
       logicalFunction = "__or";
       break;

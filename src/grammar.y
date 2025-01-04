@@ -97,7 +97,7 @@ NAME   [a-zñçæâäàåáêëèéîïìíôöòóûüùúÿ#ªº$þƒ£¥¢_][
 "&"                                        { return '&'; }
 "OR"                                       { return '||'; }
 "||"                                       { return '||'; }
-"|"                                        { return '||'; }
+"|"                                        { return '|'; }
 "XOR"                                      { return '^^'; }
 "^^"                                       { return '^^'; }
 "^"                                        { return '^'; }
@@ -750,7 +750,7 @@ postfix_expression
     {
       $$ = {
         type: "UpdateExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         argument: $1,
         prefix: false
       };
@@ -782,7 +782,7 @@ unary_expression
     {
       $$ = {
         type: "UpdateExpression",
-        operator: $1,
+        operator: $1.toUpperCase(),
         argument: $2,
         prefix: true
       };
@@ -791,7 +791,7 @@ unary_expression
     {
       $$ = {
         type: "UnaryExpression",
-        operator: $1,
+        operator: $1.toUpperCase(),
         argument: $2
       };
     }
@@ -817,7 +817,7 @@ multiplicative_expression
     {
       $$ = {
         type: "BinaryExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
@@ -836,7 +836,7 @@ additive_expression
     {
       $$ = {
         type: "BinaryExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
@@ -854,7 +854,7 @@ shift_expression
     {
       $$ = {
         type: "BinaryExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
@@ -872,7 +872,7 @@ logical_expression
     {
       $$ = {
         type: "LogicalExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
@@ -891,7 +891,7 @@ relational_expression
     {
       $$ = {
         type: "RelationalExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
@@ -913,7 +913,7 @@ assignment_expression
     {
       $$ = {
         type: "AssignmentExpression",
-        operator: $2,
+        operator: $2.toUpperCase(),
         left: $1,
         right: $3
       };
