@@ -7,205 +7,161 @@
   },
   "body": {
     "type": "BlockStatement",
-    "body": [{
-      "type": "SwitchStatement",
-      "discriminant": {
-        "type": "MemberExpression",
-        "computed": false,
-        "object": {
-          "type": "Identifier",
-          "name": "exec"
-        },
-        "property": {
-          "type": "Identifier",
-          "name": "pc"
-        }
-      },
-      "cases": [{
-          "type": "SwitchCase",
-          "test": {
-            "type": "Literal",
-            "value": 1,
-            "raw": "1"
+    "body": [
+      {
+        "type": "SwitchStatement",
+        "discriminant": {
+          "type": "MemberExpression",
+          "object": {
+            "type": "Identifier",
+            "name": "exec"
           },
-          "consequent": [{
-            "type": "ReturnStatement",
-            "argument": {
-              "type": "CallExpression",
-              "callee": {
-                "type": "Identifier",
-                "name": "__yieldNewProcess"
-              },
-              "arguments": [{
-                  "type": "Literal",
-                  "value": 2,
-                  "raw": "2"
-                },
-                {
-                  "type": "Literal",
-                  "value": "p1",
-                  "raw": "\"p1\""
-                },
-                {
-                  "type": "ArrayExpression",
-                  "elements": [{
-                      "type": "MemberExpression",
-                      "computed": true,
-                      "object": {
-                        "type": "Identifier",
-                        "name": "mem"
-                      },
-                      "property": {
-                        "type": "BinaryExpression",
-                        "operator": "+",
-                        "left": {
-                          "type": "BinaryExpression",
-                          "operator": "+",
-                          "left": {
-                            "type": "MemberExpression",
-                            "computed": false,
-                            "object": {
-                              "type": "Identifier",
-                              "name": "exec"
-                            },
-                            "property": {
-                              "type": "Identifier",
-                              "name": "base"
-                            }
-                          },
-                          "right": {
-                            "type": "Identifier",
-                            "name": "__P_SEGMENT_OFFSET"
-                          }
-                        },
-                        "right": {
-                          "type": "Identifier",
-                          "name": "a"
-                        }
-                      }
+          "property": {
+            "type": "Identifier",
+            "name": "pc"
+          },
+          "computed": false
+        },
+        "cases": [
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 1,
+              "raw": "1"
+            },
+            "consequent": [
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "CallExpression",
+                  "callee": {
+                    "type": "Identifier",
+                    "name": "__yieldCallFunction"
+                  },
+                  "arguments": [
+                    {
+                      "type": "Literal",
+                      "value": 2,
+                      "raw": "2"
                     },
                     {
-                      "type": "MemberExpression",
-                      "computed": true,
-                      "object": {
-                        "type": "Identifier",
-                        "name": "mem"
-                      },
-                      "property": {
-                        "type": "BinaryExpression",
-                        "operator": "+",
-                        "left": {
-                          "type": "BinaryExpression",
-                          "operator": "+",
-                          "left": {
-                            "type": "MemberExpression",
-                            "computed": false,
-                            "object": {
-                              "type": "Identifier",
-                              "name": "exec"
-                            },
-                            "property": {
-                              "type": "Identifier",
-                              "name": "base"
-                            }
-                          },
-                          "right": {
-                            "type": "Identifier",
-                            "name": "__P_SEGMENT_OFFSET"
-                          }
-                        },
-                        "right": {
-                          "type": "Identifier",
-                          "name": "b"
-                        }
-                      }
+                      "type": "Literal",
+                      "value": "p1",
+                      "raw": "\"p1\""
                     },
                     {
-                      "type": "MemberExpression",
-                      "computed": true,
-                      "object": {
-                        "type": "Identifier",
-                        "name": "mem"
-                      },
-                      "property": {
-                        "type": "BinaryExpression",
-                        "operator": "+",
-                        "left": {
-                          "type": "BinaryExpression",
-                          "operator": "+",
-                          "left": {
-                            "type": "MemberExpression",
-                            "computed": false,
-                            "object": {
-                              "type": "Identifier",
-                              "name": "exec"
+                      "type": "ArrayExpression",
+                      "elements": [
+                        {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "mem"
+                          },
+                          "property": {
+                            "type": "BinaryExpression",
+                            "operator": "+",
+                            "left": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "exec"
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "base"
+                              },
+                              "computed": false
                             },
-                            "property": {
+                            "right": {
                               "type": "Identifier",
-                              "name": "base"
+                              "name": "L_X"
                             }
                           },
-                          "right": {
-                            "type": "Identifier",
-                            "name": "__P_SEGMENT_OFFSET"
-                          }
+                          "computed": true
                         },
-                        "right": {
-                          "type": "Identifier",
-                          "name": "c"
+                        {
+                          "type": "MemberExpression",
+                          "object": {
+                            "type": "Identifier",
+                            "name": "mem"
+                          },
+                          "property": {
+                            "type": "BinaryExpression",
+                            "operator": "+",
+                            "left": {
+                              "type": "MemberExpression",
+                              "object": {
+                                "type": "Identifier",
+                                "name": "exec"
+                              },
+                              "property": {
+                                "type": "Identifier",
+                                "name": "base"
+                              },
+                              "computed": false
+                            },
+                            "right": {
+                              "type": "Identifier",
+                              "name": "L_Y"
+                            }
+                          },
+                          "computed": true
                         }
-                      }
+                      ]
                     }
                   ]
                 }
-              ]
-            }
-          }]
-        },
-        {
-          "type": "SwitchCase",
-          "test": {
-            "type": "Literal",
-            "value": 2,
-            "raw": "2"
+              }
+            ]
           },
-          "consequent": [{
-              "type": "ExpressionStatement",
-              "expression": {
-                "type": "CallExpression",
-                "callee": {
-                  "type": "MemberExpression",
-                  "computed": false,
-                  "object": {
+          {
+            "type": "SwitchCase",
+            "test": {
+              "type": "Literal",
+              "value": 2,
+              "raw": "2"
+            },
+            "consequent": [
+              {
+                "type": "ExpressionStatement",
+                "expression": {
+                  "type": "CallExpression",
+                  "callee": {
                     "type": "MemberExpression",
-                    "computed": false,
                     "object": {
-                      "type": "Identifier",
-                      "name": "exec"
+                      "type": "MemberExpression",
+                      "object": {
+                        "type": "Identifier",
+                        "name": "exec"
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "retv"
+                      },
+                      "computed": false
                     },
                     "property": {
                       "type": "Identifier",
-                      "name": "retv"
-                    }
+                      "name": "dequeue"
+                    },
+                    "computed": false
                   },
-                  "property": {
-                    "type": "Identifier",
-                    "name": "dequeue"
-                  }
-                },
-                "arguments": []
+                  "arguments": []
+                }
+              },
+              {
+                "type": "ReturnStatement",
+                "argument": {
+                  "type": "Identifier",
+                  "name": "__yieldEnd"
+                }
               }
-            },
-            {
-              "type": "ReturnStatement",
-              "argument": {
-                "type": "Identifier",
-                "name": "__yieldEnd"
-              }
-            }
-          ]
-        }
-      ]
-    }]
+            ]
+          }
+        ]
+      }
+    ]
   }
 }

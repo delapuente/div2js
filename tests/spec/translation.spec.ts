@@ -71,7 +71,7 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "return-expression.prg",
     "return-conditional.prg",
     "new-process-empty.prg",
-    //      'new-process-arguments.prg',
+    "new-process-arguments.prg",
     "call-function.prg",
     "debug.prg",
     "process.prg",

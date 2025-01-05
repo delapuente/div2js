@@ -12,15 +12,11 @@
         "arguments": [
           {
             "type": "Identifier",
-            "name": "a"
+            "name": "x"
           },
           {
             "type": "Identifier",
-            "name": "b"
-          },
-          {
-            "type": "Identifier",
-            "name": "c"
+            "name": "y"
           }
         ]
       }
