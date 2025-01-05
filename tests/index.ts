@@ -1,4 +1,5 @@
 import "./spec/grammar.spec";
+import "./spec/semantics.spec";
 import "./spec/translation.spec";
 import "./spec/execution.spec";
 import "./spec/rendering.spec";

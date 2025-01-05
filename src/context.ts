@@ -1,23 +1,33 @@
 import * as ast from "./ast";
+import { MemoryMap } from "./memoryBrowser/mapper";
+import { SymbolTable } from "./memoryBrowser/symbols";
 import t from "./templates";
+
+type Scope = "global" | "local" | "private" | "constant";
 
 class Context {
   private _processes: {};
   private _auxNames: {};
   private _currentProcess: any;
-  private _symbolTable: any;
-  private _mmap: any;
   private _currentLinearization: any;
+  private _mmap?: MemoryMap;
 
-  constructor(symbolTable, memoryMap) {
+  constructor(private readonly _symbolTable: SymbolTable) {
     this._processes = {};
     this._auxNames = {};
     this._currentProcess = undefined;
-    this._symbolTable = symbolTable;
-    this._mmap = memoryMap;
   }
 
-  getMemoryMap() {
+  calculateMemoryMap(): MemoryMap {
+    return (this._mmap = new MemoryMap(this._symbolTable));
+  }
+
+  getMemoryMap(): MemoryMap {
+    if (!this._mmap) {
+      throw new Error(
+        "Memory map is undefined. Call `calculateMemoryMap()` first.",
+      );
+    }
     return this._mmap;
   }
 
@@ -58,8 +68,37 @@ class Context {
     this._processes[name] = true;
   }
 
+  declareGlobal(name) {
+    this._symbolTable.addGlobal(name);
+  }
+
+  declareLocal(name) {
+    this._symbolTable.addLocal(name);
+  }
+
+  declarePrivate(processName, name) {
+    this._symbolTable.addPrivate(processName, name);
+  }
+
   isProcess(name) {
     return name in this._processes;
+  }
+
+  isSomeGlobalName(name) {
+    return (
+      this.isProcess(name) ||
+      this._symbolTable.isConstant(name) ||
+      this._symbolTable.isGlobal(name) ||
+      this._symbolTable.isLocal(name)
+    );
+  }
+
+  isPrivate(processName, name) {
+    return this._symbolTable.isPrivate(processName, name);
+  }
+
+  isSomePrivate(name) {
+    return this._symbolTable.isSomePrivate(name);
   }
 
   enterProcess(name) {
@@ -139,9 +178,11 @@ class Context {
   }
 
   constantValue(identifier) {
-    return this._symbolTable.constants.find(
-      (constant) => constant.name === identifier,
-    ).default;
+    return (
+      this._symbolTable.constants.find(
+        (constant) => constant.name === identifier,
+      ) as any
+    ).default; // TODO: Fix type. Non trivial due to the polymorphism in the symbol type.
   }
 }
 
@@ -407,4 +448,4 @@ class Label {
   }
 }
 
-export { Context, Linearization };
+export { Context, Linearization, Scope };

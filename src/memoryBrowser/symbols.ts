@@ -66,6 +66,12 @@ class SymbolTable {
     );
   }
 
+  isSomePrivate(name: string): boolean {
+    return Object.keys(this.privates).some((processName) =>
+      this.isPrivate(processName, name),
+    );
+  }
+
   _add(
     kind: "globals" | "locals" | "constants",
     definition: SymbolDefinition | DivSymbol,
