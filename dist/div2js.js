@@ -20599,9 +20599,12 @@ __webpack_require__.r(__webpack_exports__);
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) || {};
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy).parseError = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
 function compile(srcText, sourceURL = "/div-program.js") {
-    const symbolTable = new _memoryBrowser_symbols__WEBPACK_IMPORTED_MODULE_4__.SymbolTable(_memoryBrowser_definitions__WEBPACK_IMPORTED_MODULE_5__.DIV_SYMBOLS);
+    // Parsing
     const div2Ast = _div2lang__WEBPACK_IMPORTED_MODULE_0___default().parse(srcText);
+    // Semantic analysis
+    const symbolTable = new _memoryBrowser_symbols__WEBPACK_IMPORTED_MODULE_4__.SymbolTable(_memoryBrowser_definitions__WEBPACK_IMPORTED_MODULE_5__.DIV_SYMBOLS);
     const context = _div2checker__WEBPACK_IMPORTED_MODULE_1__.extractContext(div2Ast, symbolTable);
+    // Contextual-dependent translation
     const jsAst = _div2trans__WEBPACK_IMPORTED_MODULE_2__.translate(div2Ast, context);
     // TODO: When implementing non debug mode, the memory map can be omitted
     // although segment sizes and other relevant runtime variables are still
@@ -20707,18 +20710,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   Linearization: () => (/* binding */ Linearization)
 /* harmony export */ });
 /* harmony import */ var _ast__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ast */ "./src/ast.ts");
-/* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./templates */ "./src/templates.ts");
+/* harmony import */ var _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./memoryBrowser/mapper */ "./src/memoryBrowser/mapper.ts");
+/* harmony import */ var _templates__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./templates */ "./src/templates.ts");
+
 
 
 class Context {
-    constructor(symbolTable, memoryMap) {
+    constructor(_symbolTable) {
+        this._symbolTable = _symbolTable;
         this._processes = {};
         this._auxNames = {};
         this._currentProcess = undefined;
-        this._symbolTable = symbolTable;
-        this._mmap = memoryMap;
+    }
+    calculateMemoryMap() {
+        return (this._mmap = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__.MemoryMap(this._symbolTable));
     }
     getMemoryMap() {
+        if (!this._mmap) {
+            throw new Error("Memory map is undefined. Call `calculateMemoryMap()` first.");
+        }
         return this._mmap;
     }
     startLinearization() {
@@ -20749,8 +20759,29 @@ class Context {
     declareProcess(name) {
         this._processes[name] = true;
     }
+    declareGlobal(name) {
+        this._symbolTable.addGlobal(name);
+    }
+    declareLocal(name) {
+        this._symbolTable.addLocal(name);
+    }
+    declarePrivate(processName, name) {
+        this._symbolTable.addPrivate(processName, name);
+    }
     isProcess(name) {
         return name in this._processes;
+    }
+    isSomeGlobalName(name) {
+        return (this.isProcess(name) ||
+            this._symbolTable.isConstant(name) ||
+            this._symbolTable.isGlobal(name) ||
+            this._symbolTable.isLocal(name));
+    }
+    isPrivate(processName, name) {
+        return this._symbolTable.isPrivate(processName, name);
+    }
+    isSomePrivate(name) {
+        return this._symbolTable.isSomePrivate(name);
     }
     enterProcess(name) {
         this._currentProcess = name;
@@ -20814,7 +20845,7 @@ class Context {
         return scope;
     }
     constantValue(identifier) {
-        return this._symbolTable.constants.find((constant) => constant.name === identifier).default;
+        return this._symbolTable.constants.find((constant) => constant.name === identifier).default; // TODO: Fix type. Non trivial due to the polymorphism in the symbol type.
     }
 }
 class Linearization {
@@ -20838,7 +20869,7 @@ class Linearization {
                 continue;
             }
             if (isLabel) {
-                currentCase = _templates__WEBPACK_IMPORTED_MODULE_1__["default"].concurrentLabel(wrapper.label + 1);
+                currentCase = _templates__WEBPACK_IMPORTED_MODULE_2__["default"].concurrentLabel(wrapper.label + 1);
                 cases.push(currentCase);
             }
             consequent = currentCase.consequent;
@@ -20931,7 +20962,7 @@ class Linearization {
                 const defaultExpression = _this._programCounterSet(defaultLabel.label);
                 const cases = options.map(function (option) {
                     const tests = option.tests;
-                    return _this._programCounterBranch(_templates__WEBPACK_IMPORTED_MODULE_1__["default"].some(evaluation, tests), option.label.label);
+                    return _this._programCounterBranch(_templates__WEBPACK_IMPORTED_MODULE_2__["default"].some(evaluation, tests), option.label.label);
                 });
                 return [defaultExpression]
                     .concat(cases)
@@ -20943,7 +20974,7 @@ class Linearization {
         return {
             type: "End",
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processEnd];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].processEnd];
             },
         };
     }
@@ -20952,7 +20983,7 @@ class Linearization {
         return {
             type: type,
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].call(kind, resumeLabel.label + 1, name, argList)];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].call(kind, resumeLabel.label + 1, name, argList)];
             },
         };
     }
@@ -20960,7 +20991,7 @@ class Linearization {
         return {
             type: "Clone",
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processClone(childLabel.label + 1, parentLabel.label + 1)];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].processClone(childLabel.label + 1, parentLabel.label + 1)];
             },
         };
     }
@@ -20968,7 +20999,7 @@ class Linearization {
         return {
             type: "Frame",
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processFrame(resumeLabel.label + 1, expression)];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].processFrame(resumeLabel.label + 1, expression)];
             },
         };
     }
@@ -20976,7 +21007,7 @@ class Linearization {
         return {
             type: "Debug",
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processDebug(resumeLabel.label + 1)];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].processDebug(resumeLabel.label + 1)];
             },
         };
     }
@@ -20984,15 +21015,15 @@ class Linearization {
         return {
             type: "Return",
             get sentences() {
-                return [_templates__WEBPACK_IMPORTED_MODULE_1__["default"].processReturn(expression)];
+                return [_templates__WEBPACK_IMPORTED_MODULE_2__["default"].processReturn(expression)];
             },
         };
     }
     _programCounterBranch(testAst, consequent, alternate) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.ConditionalExpression(testAst, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(consequent + 1), alternate ? new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(alternate + 1) : _templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter)));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_2__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.ConditionalExpression(testAst, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(consequent + 1), alternate ? new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(alternate + 1) : _templates__WEBPACK_IMPORTED_MODULE_2__["default"].programCounter)));
     }
     _programCounterSet(label) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_1__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(label + 1)));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(_templates__WEBPACK_IMPORTED_MODULE_2__["default"].programCounter, new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(label + 1)));
     }
     _addSentence(ast) {
         if (!this._sentences.length) {
@@ -21032,60 +21063,108 @@ class Label {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   NameIsNotNewError: () => (/* binding */ NameIsNotNewError),
 /* harmony export */   extractContext: () => (/* binding */ extractContext)
 /* harmony export */ });
 /* harmony import */ var _context__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./context */ "./src/context.ts");
-/* harmony import */ var _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./memoryBrowser/mapper */ "./src/memoryBrowser/mapper.ts");
 
-
+class NameIsNotNewError extends Error {
+    constructor(name, scope, process) {
+        super(`The name \`${name}\` is not new.`);
+        this.name = name;
+        this.scope = scope;
+        this.process = process;
+    }
+}
 function extractContext(div2ast, symbolTable) {
     if (div2ast.type !== "Unit") {
         console.warn("Extracting context from a partial AST.");
     }
-    // Augment symbol table with custom symbols.
-    // TODO: Should process names be added to the symbol table?
-    // TODO: Find and add custom locals to symbols
-    declareGlobals(symbolTable, div2ast.program);
-    declarePrivates(symbolTable, [div2ast.program]);
-    declarePrivates(symbolTable, div2ast.processes);
-    const mmap = new _memoryBrowser_mapper__WEBPACK_IMPORTED_MODULE_1__.MemoryMap(symbolTable);
-    const context = new _context__WEBPACK_IMPORTED_MODULE_0__.Context(symbolTable, mmap);
-    declareProcesses(context, div2ast.processes);
+    const context = new _context__WEBPACK_IMPORTED_MODULE_0__.Context(symbolTable);
+    declareNames(context, div2ast);
+    context.calculateMemoryMap();
     return context;
 }
-function declareProcesses(context, processes) {
-    (processes || []).forEach(function (processAst) {
-        context.declareProcess(processAst.name.name);
+function declareNames(context, div2ast) {
+    var _a;
+    if (div2ast.program) {
+        declareProcess(context, div2ast.program);
+        declareGlobals(context, div2ast.program);
+        declareLocals(context, div2ast.program);
+        declarePrivates(context, div2ast.program);
+    }
+    ((_a = div2ast.processes) !== null && _a !== void 0 ? _a : []).forEach((processAst) => {
+        declareProcess(context, processAst);
+        declarePrivates(context, processAst);
     });
+    return context;
 }
-function declareGlobals(symbolTable, program) {
+function declareProcess(context, processAst) {
+    const processName = processAst.name.name;
+    if (!context.isSomeGlobalName(processName) &&
+        !context.isSomePrivate(processName)) {
+        context.declareProcess(processName);
+    }
+    else {
+        throw new NameIsNotNewError(processName, "global", processName);
+    }
+}
+function declareGlobals(context, program) {
     if (program && program.globals) {
         program.globals.declarations.forEach(function (declarationAst) {
             const varName = declarationAst.varName.name;
-            if (!symbolTable.isGlobal(varName)) {
-                symbolTable.addGlobal(definitionFromAst(declarationAst));
+            if (!context.isSomeGlobalName(varName)) {
+                context.declareGlobal(definitionFromAst(declarationAst));
             }
             else {
-                throw new Error("The global " + varName + " has been already declared.");
+                throw new NameIsNotNewError(varName, "global");
             }
         });
     }
 }
-function declarePrivates(symbolTable, processes) {
-    (processes || []).forEach(function (processAst) {
-        if (processAst && processAst.privates) {
-            processAst.privates.declarations.forEach(function (declarationAst) {
-                const processName = processAst.name.name;
-                const varName = declarationAst.varName.name;
-                if (!symbolTable.isPrivate(processName, varName)) {
-                    symbolTable.addPrivate(processName, definitionFromAst(declarationAst));
-                }
-                else {
-                    throw new Error("The private " + varName + " has been already declared.");
-                }
-            });
-        }
+function declareLocals(context, program) {
+    if (program && program.locals) {
+        program.locals.declarations.forEach(function (declarationAst) {
+            const varName = declarationAst.varName.name;
+            if (!context.isSomeGlobalName(varName)) {
+                context.declareLocal(definitionFromAst(declarationAst));
+            }
+            else {
+                throw new NameIsNotNewError(varName, "local");
+            }
+        });
+    }
+}
+function declarePrivates(context, processAst) {
+    var _a;
+    const processName = processAst.name.name;
+    // Extract privates from parameters.
+    const parameters = ((_a = processAst.params) !== null && _a !== void 0 ? _a : []).map((identifier) => identifier.name);
+    const parameterPrivates = parameters.filter((paramName) => {
+        return !context.isSomeGlobalName(paramName);
     });
+    parameterPrivates.forEach(function (privateName) {
+        if (!context.isPrivate(processName, privateName)) {
+            context.declarePrivate(processName, privateName);
+        }
+        // XXX: Declaring in parameters allows for the repetition of a private
+        // name without throwing an error.
+    });
+    // Extract privates from explicit declarations.
+    if (processAst && processAst.privates) {
+        processAst.privates.declarations.forEach(function (declarationAst) {
+            const varName = declarationAst.varName.name;
+            if (!context.isSomeGlobalName(varName) &&
+                !context.isPrivate(processName, varName)) {
+                context.declarePrivate(processName, definitionFromAst(declarationAst));
+            }
+            // XXX: Declaring in parameters allows for the repetition of a private
+            // name without throwing an error.
+            else if (!parameterPrivates.includes(varName)) {
+                throw new NameIsNotNewError(varName, "private", processName);
+            }
+        });
+    }
 }
 function definitionFromAst(declarationAst) {
     // TODO: add support for structs and arrays.
@@ -21188,10 +21267,13 @@ translators.RelationalExpression = translators.BinaryExpression;
 translators.LogicalExpression = function (divLogical, context) {
     let logicalFunction;
     switch (divLogical.operator) {
+        case "AND":
         case "&":
         case "&&":
             logicalFunction = "__and";
             break;
+        case "OR":
+        case "|":
         case "||":
             logicalFunction = "__or";
             break;
@@ -22193,9 +22275,9 @@ __webpack_require__.r(__webpack_exports__);
 // TODO: This should not be part of the memory browser. Notice constants are symbols but not memory cells.
 class SymbolTable {
     constructor(definitions) {
-        this.globals = definitions.wellKnownGlobals;
-        this.locals = definitions.wellKnownLocals;
-        this.constants = definitions.wellKnownConstants;
+        this.globals = Array.from(definitions.wellKnownGlobals);
+        this.locals = Array.from(definitions.wellKnownLocals);
+        this.constants = Array.from(definitions.wellKnownConstants);
         this.privates = {};
     }
     addGlobal(definition) {
@@ -22227,6 +22309,9 @@ class SymbolTable {
             processPrivates.some(function (symbol) {
                 return symbol.name === name;
             }));
+    }
+    isSomePrivate(name) {
+        return Object.keys(this.privates).some((processName) => this.isPrivate(processName, name));
     }
     _add(kind, definition) {
         const normalized = (0,_definitions__WEBPACK_IMPORTED_MODULE_0__.normalize)(definition);
@@ -23075,30 +23160,59 @@ class UrlFileSystem {
 }
 function _loadMap(url) {
     return __awaiter(this, void 0, void 0, function* () {
-        const buffer = yield _loadAsset(url);
-        return _map__WEBPACK_IMPORTED_MODULE_3__.MAPFile.fromArrayBuffer(buffer);
+        try {
+            const buffer = yield _loadAsset(url);
+            return _map__WEBPACK_IMPORTED_MODULE_3__.MAPFile.fromArrayBuffer(buffer);
+        }
+        catch (e) {
+            if (e instanceof NotFoundError) {
+                throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(143);
+            }
+            throw e;
+        }
     });
 }
 function _loadPal(url) {
     return __awaiter(this, void 0, void 0, function* () {
-        const buffer = yield _loadAsset(url);
-        return _pal__WEBPACK_IMPORTED_MODULE_0__.PALFile.fromArrayBuffer(buffer);
+        try {
+            const buffer = yield _loadAsset(url);
+            return _pal__WEBPACK_IMPORTED_MODULE_0__.PALFile.fromArrayBuffer(buffer);
+        }
+        catch (e) {
+            if (e instanceof NotFoundError) {
+                throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(102);
+            }
+            throw e;
+        }
     });
 }
 function _loadFpg(url) {
     return __awaiter(this, void 0, void 0, function* () {
-        const buffer = yield _loadAsset(url);
-        return _fpg__WEBPACK_IMPORTED_MODULE_2__.FPGFile.fromArrayBuffer(buffer);
+        try {
+            const buffer = yield _loadAsset(url);
+            return _fpg__WEBPACK_IMPORTED_MODULE_2__.FPGFile.fromArrayBuffer(buffer);
+        }
+        catch (e) {
+            if (e instanceof NotFoundError) {
+                throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(102);
+            }
+            throw e;
+        }
     });
 }
 function _loadAsset(url) {
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield fetch(url);
         if (response.status === 404) {
-            throw new _errors__WEBPACK_IMPORTED_MODULE_1__.DivError(102);
+            throw new NotFoundError();
         }
         return response.arrayBuffer();
     });
+}
+class NotFoundError extends Error {
+    constructor() {
+        super("File not found.");
+    }
 }
 
 
@@ -24043,10 +24157,6 @@ class Palette {
     static fromBuffer(buffer) {
         const palette = new Palette(buffer);
         return palette;
-    }
-    static withSize(size) {
-        const buffer = new Uint8Array(size * 3);
-        return new Palette(buffer);
     }
     constructor(buffer) {
         this.buffer = buffer;
