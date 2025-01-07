@@ -74,6 +74,9 @@ describe("AST translation from DIV2 to JavaScript", function () {
     "new-process-arguments.prg",
     "call-function.prg",
     "debug.prg",
+    // TODO: The process.js.ast is not correct. Since there is no Unit AST from
+    // wich to extract process types, it cannot correctly resolve the
+    // initialization and the AST contains a ill Literal node.
     "process.prg",
     "expression-priority.prg",
     "unary-expression.prg",

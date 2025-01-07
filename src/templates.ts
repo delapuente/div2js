@@ -134,15 +134,15 @@ export default {
     return new ast.SwitchCase(ast.Literal.for(label));
   },
 
-  memoryGlobal: function (...divNames: string[]) {
+  memoryGlobal: function (...divNames: string[][]) {
     return this._memory(this._globalAddress(...divNames));
   },
 
-  memoryLocal: function (...divNames: string[]) {
+  memoryLocal: function (...divNames: string[][]) {
     return this._memory(this._localAddress(...divNames));
   },
 
-  memoryPrivate: function (...divNames: string[]) {
+  memoryPrivate: function (...divNames: string[][]) {
     return this._memory(this._privateAddress(...divNames));
   },
 
@@ -332,6 +332,15 @@ export default {
             new ast.Literal(true),
           ),
         ),
+      ),
+    );
+  },
+
+  initializeProcessType: function (processType: number) {
+    return new ast.ExpressionStatement(
+      new ast.AssignmentExpression(
+        this.memoryLocal(["reserved"], ["reserved", "process_type"]),
+        ast.Literal["for"](processType),
       ),
     );
   },

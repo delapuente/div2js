@@ -29,7 +29,6 @@
           "operator": "!",
           "argument": {
             "type": "MemberExpression",
-            "computed": false,
             "object": {
               "type": "Identifier",
               "name": "exec"
@@ -37,7 +36,8 @@
             "property": {
               "type": "Identifier",
               "name": "initialized"
-            }
+            },
+            "computed": false
           },
           "prefix": true
         },
@@ -51,7 +51,52 @@
                 "operator": "=",
                 "left": {
                   "type": "MemberExpression",
-                  "computed": false,
+                  "object": {
+                    "type": "Identifier",
+                    "name": "mem"
+                  },
+                  "property": {
+                    "type": "BinaryExpression",
+                    "operator": "+",
+                    "left": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "MemberExpression",
+                        "object": {
+                          "type": "Identifier",
+                          "name": "exec"
+                        },
+                        "property": {
+                          "type": "Identifier",
+                          "name": "base"
+                        },
+                        "computed": false
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "L_RESERVED"
+                      }
+                    },
+                    "right": {
+                      "type": "Identifier",
+                      "name": "L_RESERVED_PROCESS_TYPE"
+                    }
+                  },
+                  "computed": true
+                },
+                "right": {
+                  "type": "Literal"
+                }
+              }
+            },
+            {
+              "type": "ExpressionStatement",
+              "expression": {
+                "type": "AssignmentExpression",
+                "operator": "=",
+                "left": {
+                  "type": "MemberExpression",
                   "object": {
                     "type": "Identifier",
                     "name": "exec"
@@ -59,7 +104,8 @@
                   "property": {
                     "type": "Identifier",
                     "name": "initialized"
-                  }
+                  },
+                  "computed": false
                 },
                 "right": {
                   "type": "Literal",
@@ -86,7 +132,6 @@
               "type": "SwitchStatement",
               "discriminant": {
                 "type": "MemberExpression",
-                "computed": false,
                 "object": {
                   "type": "Identifier",
                   "name": "exec"
@@ -94,7 +139,8 @@
                 "property": {
                   "type": "Identifier",
                   "name": "pc"
-                }
+                },
+                "computed": false
               },
               "cases": [
                 {

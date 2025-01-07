@@ -146,6 +146,104 @@
             "kind": "var"
           },
           {
+            "type": "IfStatement",
+            "test": {
+              "type": "UnaryExpression",
+              "operator": "!",
+              "argument": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": {
+                  "type": "Identifier",
+                  "name": "exec"
+                },
+                "property": {
+                  "type": "Identifier",
+                  "name": "initialized"
+                }
+              },
+              "prefix": true
+            },
+            "consequent": {
+              "type": "BlockStatement",
+              "body": [
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "MemberExpression",
+                      "computed": true,
+                      "object": {
+                        "type": "Identifier",
+                        "name": "mem"
+                      },
+                      "property": {
+                        "type": "BinaryExpression",
+                        "operator": "+",
+                        "left": {
+                          "type": "BinaryExpression",
+                          "operator": "+",
+                          "left": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
+                              "type": "Identifier",
+                              "name": "exec"
+                            },
+                            "property": {
+                              "type": "Identifier",
+                              "name": "base"
+                            }
+                          },
+                          "right": {
+                            "type": "Identifier",
+                            "name": "L_RESERVED"
+                          }
+                        },
+                        "right": {
+                          "type": "Identifier",
+                          "name": "L_RESERVED_PROCESS_TYPE"
+                        }
+                      }
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": 100,
+                      "raw": "100"
+                    }
+                  }
+                },
+                {
+                  "type": "ExpressionStatement",
+                  "expression": {
+                    "type": "AssignmentExpression",
+                    "operator": "=",
+                    "left": {
+                      "type": "MemberExpression",
+                      "computed": false,
+                      "object": {
+                        "type": "Identifier",
+                        "name": "exec"
+                      },
+                      "property": {
+                        "type": "Identifier",
+                        "name": "initialized"
+                      }
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": true,
+                      "raw": "true"
+                    }
+                  }
+                }
+              ]
+            },
+            "alternate": null
+          },
+          {
             "type": "WhileStatement",
             "test": {
               "type": "Literal",

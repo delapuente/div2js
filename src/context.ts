@@ -3,7 +3,7 @@ import { MemoryMap } from "./memoryBrowser/mapper";
 import { SymbolTable } from "./memoryBrowser/symbols";
 import t from "./templates";
 
-type Scope = "global" | "local" | "private" | "constant";
+type Scope = "global" | "local" | "private";
 
 class Context {
   private _processes: {};
@@ -11,11 +11,16 @@ class Context {
   private _currentProcess: any;
   private _currentLinearization: any;
   private _mmap?: MemoryMap;
+  private _nextProcessTypeValue: number;
 
   constructor(private readonly _symbolTable: SymbolTable) {
     this._processes = {};
     this._auxNames = {};
     this._currentProcess = undefined;
+    // TODO: DIV processes types do not start at 100. I need more experimentation
+    // (or a look at the source code) to understand where the number comes from
+    // and replicate the behaviour here.
+    this._nextProcessTypeValue = 100;
   }
 
   calculateMemoryMap(): MemoryMap {
@@ -64,8 +69,12 @@ class Context {
     return this._currentLinearization.debug(resumeLabel);
   }
 
+  getProcessTypeValue(name) {
+    return this._processes[name];
+  }
+
   declareProcess(name) {
-    this._processes[name] = true;
+    this._processes[name] = this._nextProcessType();
   }
 
   declareGlobal(name) {
@@ -183,6 +192,12 @@ class Context {
         (constant) => constant.name === identifier,
       ) as any
     ).default; // TODO: Fix type. Non trivial due to the polymorphism in the symbol type.
+  }
+
+  _nextProcessType() {
+    const currentValue = this._nextProcessTypeValue;
+    this._nextProcessTypeValue += 100;
+    return currentValue;
   }
 }
 

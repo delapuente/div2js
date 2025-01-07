@@ -24,6 +24,12 @@ translators.UnaryExpression = function (divUnary, context) {
     );
   }
 
+  if (divUnary.operator === "TYPE") {
+    const processName = divUnary.argument.name;
+    // TODO: Make sure this is a process and raise if not.
+    return ast.Literal["for"](context.getProcessTypeValue(processName));
+  }
+
   let unaryFunction;
   switch (divUnary.operator) {
     case "&":
@@ -196,10 +202,14 @@ translators.Program = function (divProgram, context) {
   const name = divProgram.name.name;
   context.enterProcess(name);
   const privates = translatePrivates(name, context);
+  // Initialize if not initialized yet.
+  const initialization = t.withProcessInitWrapper([
+    t.initializeProcessType(context.getProcessTypeValue(name)),
+  ]);
   const body = translate(divProgram.body, context);
   const translation = t.programFunction(
     name,
-    (privates ? [privates] : []).concat(body),
+    (privates ? [privates] : []).concat([initialization] as any[]).concat(body),
   );
   context.exitProcess();
   return translation;
@@ -211,8 +221,9 @@ translators.Process = function (divProgram, context) {
   context.enterProcess(name);
   const privates = translatePrivates(name, context);
   // Initialize if not initialized yet.
-  const initialization = t.withProcessInitWrapper(
-    params.map(
+  const initialization = t.withProcessInitWrapper([
+    t.initializeProcessType(context.getProcessTypeValue(name)),
+    ...params.map(
       (param, index) =>
         new ast.ExpressionStatement(
           new ast.AssignmentExpression(
@@ -221,7 +232,7 @@ translators.Process = function (divProgram, context) {
           ),
         ),
     ),
-  );
+  ]);
   const body = translate(divProgram.body, context);
   const translation = t.processFunction(
     name,
