@@ -28,7 +28,7 @@
   }
 
   function __bool(value) {
-    return !!(value & 0x1);
+    return typeof value === 'boolean' ? value : !!(value & 0x1);
   }
 
   var __yieldEnd = new rt.Baton('end');
