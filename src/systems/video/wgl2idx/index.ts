@@ -417,7 +417,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     flags: number,
     region: number,
     ignoreTransparency: boolean = false,
-  ): void {
+  ): [number, number, number, number] {
     // TODO: Regions.
     if (region !== 0) {
       console.warn("Regions are not supported yet.");
@@ -506,6 +506,8 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         }
       }
     }
+
+    return [xStart, yStart, xEnd, yEnd];
   }
 
   _getMap(fpgId: number, mapId: number): DivMap {
@@ -678,14 +680,19 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
         browser.process({ id: a.id }).local("z").value,
     );
     zSortedProcesses.forEach((process) => {
-      this._drawProcess(browser.process({ id: process.id }));
+      const processView = browser.process({ id: process.id });
+      const processBox = this._drawProcess(processView);
+      processView.local("reserved.box_x0").value = processBox[0];
+      processView.local("reserved.box_y0").value = processBox[1];
+      processView.local("reserved.box_x1").value = processBox[2];
+      processView.local("reserved.box_y1").value = processBox[3];
     });
   }
 
-  _drawProcess(process: ProcessView) {
+  _drawProcess(process: ProcessView): [number, number, number, number] {
     const mapId = process.local("graph").value;
     if (mapId === 0) {
-      return;
+      return [0, 0, 0, 0];
     }
 
     const fpgId = process.local("file").value;
@@ -702,7 +709,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     const region = process.local("region").value;
 
     this._setActiveLayer("fg");
-    this._xput(
+    return this._xput(
       data,
       width,
       height,
