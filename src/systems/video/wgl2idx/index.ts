@@ -5,6 +5,7 @@ import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap from "./map";
 import { ProcessView } from "../../../memoryBrowser/mapper";
+import { screenCoordinates, localCoordinates } from "./transformations";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -432,39 +433,44 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
     // Calculate the screen region to update.
     // T stands for top, L for left, B for bottom, and R for right.
-    const [xTL, yTL] = movedPoint(
-      rotatedPoint(
-        scaledPoint(movedPoint([0, 0], [-xOrigin, -yOrigin]), scaleFactor),
-        rotation,
-      ),
+    const [xTL, yTL] = screenCoordinates(
+      [0, 0],
+      [width, height],
+      [false, false],
+      [xOrigin, yOrigin],
       [x, y],
+      rotation,
+      scaleFactor,
     );
 
-    const [xTR, yTR] = movedPoint(
-      rotatedPoint(
-        scaledPoint(movedPoint([width, 0], [-xOrigin, -yOrigin]), scaleFactor),
-        rotation,
-      ),
+    const [xTR, yTR] = screenCoordinates(
+      [width, 0],
+      [width, height],
+      [false, false],
+      [xOrigin, yOrigin],
       [x, y],
+      rotation,
+      scaleFactor,
     );
 
-    const [xBL, yBL] = movedPoint(
-      rotatedPoint(
-        scaledPoint(movedPoint([0, height], [-xOrigin, -yOrigin]), scaleFactor),
-        rotation,
-      ),
+    const [xBL, yBL] = screenCoordinates(
+      [0, height],
+      [width, height],
+      [false, false],
+      [xOrigin, yOrigin],
       [x, y],
+      rotation,
+      scaleFactor,
     );
 
-    const [xBR, yBR] = movedPoint(
-      rotatedPoint(
-        scaledPoint(
-          movedPoint([width, height], [-xOrigin, -yOrigin]),
-          scaleFactor,
-        ),
-        rotation,
-      ),
+    const [xBR, yBR] = screenCoordinates(
+      [width, height],
+      [width, height],
+      [false, false],
+      [xOrigin, yOrigin],
       [x, y],
+      rotation,
+      scaleFactor,
     );
 
     const { width: layerWidth, height: layerHeight } = this._activeLayer;
@@ -476,18 +482,14 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const [xSprite, ySprite] = flipSpriteCoordinates(
-          movedPoint(
-            scaledPoint(
-              rotatedPoint(movedPoint([xScreen, yScreen], [-x, -y]), -rotation),
-              1 / scaleFactor,
-            ),
-            [xOrigin, yOrigin],
-          ),
-          width,
-          height,
-          withHorizontalFlip,
-          withVerticalFlip,
+        const [xSprite, ySprite] = localCoordinates(
+          [xScreen, yScreen],
+          [width, height],
+          [withHorizontalFlip, withVerticalFlip],
+          [xOrigin, yOrigin],
+          [x, y],
+          rotation,
+          scaleFactor,
         );
 
         let color = sample(data, width, xSprite, ySprite) ?? 0;
@@ -728,43 +730,6 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   _setActiveLayer(layer: "bg" | "fg") {
     this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
   }
-}
-
-function rotatedPoint(
-  [x, y]: [number, number],
-  angle: number,
-): [number, number] {
-  return [
-    Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
-    Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
-  ];
-}
-
-function scaledPoint(
-  [x, y]: [number, number],
-  scaleFactor: number,
-): [number, number] {
-  return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
-}
-
-function movedPoint(
-  [xOrigin, yOrigin]: [number, number],
-  [xDistance, yDistance]: [number, number],
-): [number, number] {
-  return [xOrigin + xDistance, yOrigin + yDistance];
-}
-
-function flipSpriteCoordinates(
-  [x, y]: [number, number],
-  width: number,
-  height: number,
-  isHorizontalFlip: boolean,
-  isVerticalFlip: boolean,
-): [number, number] {
-  return [
-    isHorizontalFlip ? width - x - 1 : x,
-    isVerticalFlip ? height - y - 1 : y,
-  ];
 }
 
 function sample(
