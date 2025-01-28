@@ -5,7 +5,7 @@ import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap from "./map";
 import { ProcessView } from "../../../memoryBrowser/mapper";
-import { screenCoordinates, localCoordinates } from "./transformations";
+import { screenCoordinates, spriteCoordinates } from "./transformations";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -482,7 +482,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const [xSprite, ySprite] = localCoordinates(
+        const [xSprite, ySprite] = spriteCoordinates(
           [xScreen, yScreen],
           [width, height],
           [withHorizontalFlip, withVerticalFlip],

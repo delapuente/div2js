@@ -1,5 +1,5 @@
 function screenCoordinates(
-  point: [number, number],
+  spritePoint: [number, number],
   dimensions: [number, number],
   flip: [boolean, boolean],
   [offsetX, offsetY]: [number, number],
@@ -10,7 +10,7 @@ function screenCoordinates(
   return movedPoint(
     rotatedPoint(
       scaledPoint(
-        movedPoint(flipSpriteCoordinates(point, dimensions, flip), [
+        movedPoint(flipSpriteCoordinates(spritePoint, dimensions, flip), [
           -offsetX,
           -offsetY,
         ]),
@@ -22,8 +22,8 @@ function screenCoordinates(
   );
 }
 
-function localCoordinates(
-  point: [number, number],
+function spriteCoordinates(
+  screenPoint: [number, number],
   dimensions: [number, number],
   flip: [boolean, boolean],
   origin: [number, number],
@@ -34,7 +34,10 @@ function localCoordinates(
   return flipSpriteCoordinates(
     movedPoint(
       scaledPoint(
-        rotatedPoint(movedPoint(point, [-positionX, -positionY]), -rotation),
+        rotatedPoint(
+          movedPoint(screenPoint, [-positionX, -positionY]),
+          -rotation,
+        ),
         1 / scale,
       ),
       origin,
@@ -81,7 +84,7 @@ function flipSpriteCoordinates(
 
 export {
   screenCoordinates,
-  localCoordinates,
+  spriteCoordinates,
   rotatedPoint,
   scaledPoint,
   movedPoint,
