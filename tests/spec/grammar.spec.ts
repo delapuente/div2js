@@ -54,7 +54,7 @@ describe("DIV2 parser", function () {
     "unary-expression.prg",
     "constant-expression.prg",
     "string-literal.prg",
-    //"type-operator.prg",
+    "type-operator.prg",
   ];
 
   programs.forEach(function (programTestCase) {
