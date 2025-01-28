@@ -866,28 +866,9 @@ shift_operator
   | '>>'
   ;
 
-logical_expression
-	: shift_expression
-	| logical_expression logical_operator shift_expression
-    {
-      $$ = {
-        type: "LogicalExpression",
-        operator: $2.toUpperCase(),
-        left: $1,
-        right: $3
-      };
-    }
-	;
-
-logical_operator
-	: '||',
-  | '&&',
-  | '^'
-	;
-
 relational_expression
-	: logical_expression
-	| relational_expression relational_operator logical_expression
+	: shift_expression
+	| relational_expression relational_operator shift_expression
     {
       $$ = {
         type: "RelationalExpression",
@@ -907,8 +888,27 @@ relational_operator
   | '!='
   ;
 
-assignment_expression
+logical_expression
 	: relational_expression
+	| logical_expression logical_operator relational_expression
+    {
+      $$ = {
+        type: "LogicalExpression",
+        operator: $2.toUpperCase(),
+        left: $1,
+        right: $3
+      };
+    }
+	;
+
+logical_operator
+	: '||',
+  | '&&',
+  | '^'
+	;
+
+assignment_expression
+	: logical_expression
 	| unary_expression assignment_operator assignment_expression
     {
       $$ = {
