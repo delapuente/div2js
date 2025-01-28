@@ -31,6 +31,10 @@
     return typeof value === 'boolean' ? value : !!(value & 0x1);
   }
 
+  function __or(valueA, valueB) {
+    return __bool(valueA) || __bool(valueB) ? 0x1 : 0x0;
+  }
+
   var __yieldEnd = new rt.Baton('end');
 
   return { /* Here come the process and memory maps */ };
