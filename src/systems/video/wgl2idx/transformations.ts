@@ -82,6 +82,19 @@ function flipSpriteCoordinates(
   ];
 }
 
+function boxIntersection(
+  [leftA, topA, rightA, bottomA]: [number, number, number, number],
+  [leftB, topB, rightB, bottomB]: [number, number, number, number],
+): [number, number, number, number] | null {
+  // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
+  const left = Math.max(Math.min(leftA, rightA), Math.min(leftB, rightB));
+  const top = Math.max(Math.min(topA, bottomA), Math.min(topB, bottomB));
+  const right = Math.min(Math.max(leftA, rightA), Math.max(leftB, rightB));
+  const bottom = Math.min(Math.max(topA, bottomA), Math.max(topB, bottomB));
+
+  return left < right && top < bottom ? [left, top, right, bottom] : null;
+}
+
 export {
   screenCoordinates,
   spriteCoordinates,
@@ -89,4 +102,5 @@ export {
   scaledPoint,
   movedPoint,
   flipSpriteCoordinates,
+  boxIntersection,
 };

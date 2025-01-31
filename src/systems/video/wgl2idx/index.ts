@@ -345,7 +345,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   putScreen(fpgId: number, mapId: number) {
     this._setActiveLayer("bg");
     // TODO: Validate fpgId and mapId.
-    const map = this._getMap(fpgId, mapId);
+    const map = this.getMap(fpgId, mapId);
     const { data, width, height } = map;
     const { width: screenWidth, height: screenHeight } = this._bgLayer;
     const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
@@ -384,7 +384,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   ): void {
     // TODO: Region.
     this._setActiveLayer("bg");
-    const map = this._getMap(fpgId, mapId);
+    const map = this.getMap(fpgId, mapId);
 
     const { data, width, height } = map;
     const { x: xOrigin, y: yOrigin } =
@@ -512,7 +512,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     return [xStart, yStart, xEnd, yEnd];
   }
 
-  _getMap(fpgId: number, mapId: number): DivMap {
+  getMap(fpgId: number, mapId: number): DivMap {
     // TODO: Validate fpgId and mapId.
     const map =
       fpgId === 0 && mapId >= this._noFpgMapIdOffset
@@ -698,7 +698,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     }
 
     const fpgId = process.local("file").value;
-    const map = this._getMap(fpgId, mapId);
+    const map = this.getMap(fpgId, mapId);
     const { data, width, height } = map;
     const { x: xOrigin, y: yOrigin } =
       map.controlPointCount > 0 ? map.controlPoint(0) : map.center;

@@ -150,6 +150,10 @@ class Runtime {
     return this._memoryManager.browser;
   }
 
+  get currentProcess() {
+    return this._scheduler.currentProcess;
+  }
+
   get aliveProcesses() {
     return this._scheduler.aliveProcesses;
   }
