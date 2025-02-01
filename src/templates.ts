@@ -315,21 +315,22 @@ export default {
 
   withProcessInitWrapper: function (sentences: any[]): ast.IfStatement {
     return new ast.IfStatement(
-      new ast.UnaryExpression(
+      new ast.BinaryExpression(
         new ast.MemberExpression(
           new ast.Identifier("exec"),
-          new ast.Identifier("initialized"),
+          new ast.Identifier("programIndex"),
         ),
-        "!",
+        new ast.Literal(0),
+        "===",
       ),
       sentences.concat(
         new ast.ExpressionStatement(
           new ast.AssignmentExpression(
             new ast.MemberExpression(
               new ast.Identifier("exec"),
-              new ast.Identifier("initialized"),
+              new ast.Identifier("programIndex"),
             ),
-            new ast.Literal(true),
+            new ast.Literal(1),
           ),
         ),
       ),

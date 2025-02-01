@@ -18,7 +18,7 @@ class ProcessInMemory implements Process {
     private _args: unknown[],
   ) {
     this.processId = processId;
-    this.programIndex = 1;
+    this.programIndex = 0;
     this.status = ProcessStatus.UNINITIALIZED;
     this.retv = new ReturnValuesQueue();
   }
@@ -57,15 +57,6 @@ class ProcessInMemory implements Process {
 
   run() {
     return this._runnable(this._memory, this, this._args);
-  }
-
-  // Deprecations
-  get initialized() {
-    return this.status === ProcessStatus.ALIVE;
-  }
-
-  set initialized(v: boolean) {
-    this.status = v ? ProcessStatus.ALIVE : ProcessStatus.UNINITIALIZED;
   }
 }
 
@@ -150,6 +141,7 @@ class Runtime {
       processView,
       args,
     );
+    process.status = ProcessStatus.ALIVE;
     this._scheduler.add(process);
   }
 
@@ -163,6 +155,7 @@ class Runtime {
       processView,
       [],
     );
+    process.status = ProcessStatus.ALIVE;
     this._scheduler.add(process);
   }
 

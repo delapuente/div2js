@@ -130,9 +130,9 @@
           {
             "type": "IfStatement",
             "test": {
-              "type": "UnaryExpression",
-              "operator": "!",
-              "argument": {
+              "type": "BinaryExpression",
+              "operator": "===",
+              "left": {
                 "type": "MemberExpression",
                 "computed": false,
                 "object": {
@@ -141,10 +141,14 @@
                 },
                 "property": {
                   "type": "Identifier",
-                  "name": "initialized"
+                  "name": "programIndex"
                 }
               },
-              "prefix": true
+              "right": {
+                "type": "Literal",
+                "value": 0,
+                "raw": "0"
+              }
             },
             "consequent": {
               "type": "BlockStatement",
@@ -211,13 +215,13 @@
                       },
                       "property": {
                         "type": "Identifier",
-                        "name": "initialized"
+                        "name": "programIndex"
                       }
                     },
                     "right": {
                       "type": "Literal",
-                      "value": true,
-                      "raw": "true"
+                      "value": 1,
+                      "raw": "1"
                     }
                   }
                 }
