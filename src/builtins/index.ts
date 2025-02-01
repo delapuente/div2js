@@ -92,7 +92,7 @@ function collision(processType: number, runtime: Runtime) {
 
   const currentProcess = runtime.currentProcess;
   const currentProcessView = runtime.getMemoryBrowser().process({
-    id: currentProcess.id,
+    id: currentProcess.processId,
   });
 
   const currentBoxX0 = currentProcessView.local("reserved.box_x0").value;
@@ -101,7 +101,9 @@ function collision(processType: number, runtime: Runtime) {
   const currentBoxY1 = currentProcessView.local("reserved.box_y1").value;
 
   const collidingProcess = aliveProcesses.find((process) => {
-    const processView = runtime.getMemoryBrowser().process({ id: process.id });
+    const processView = runtime
+      .getMemoryBrowser()
+      .process({ id: process.processId });
     if (processView.local("reserved.process_type").value !== processType) {
       return false;
     }
@@ -123,7 +125,7 @@ function collision(processType: number, runtime: Runtime) {
     return true;
   });
 
-  return collidingProcess ? collidingProcess.id : 0;
+  return collidingProcess ? collidingProcess.processId : 0;
 }
 
 export {

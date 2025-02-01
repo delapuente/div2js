@@ -678,11 +678,11 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     // TODO: Ensure more positive z comes first in the array.
     const zSortedProcesses = aliveProcesses.sort(
       (a, b) =>
-        browser.process({ id: b.id }).local("z").value -
-        browser.process({ id: a.id }).local("z").value,
+        browser.process({ id: b.processId }).local("z").value -
+        browser.process({ id: a.processId }).local("z").value,
     );
     zSortedProcesses.forEach((process) => {
-      const processView = browser.process({ id: process.id });
+      const processView = browser.process({ id: process.processId });
       const processBox = this._drawProcess(processView);
       processView.local("reserved.box_x0").value = processBox[0];
       processView.local("reserved.box_y0").value = processBox[1];

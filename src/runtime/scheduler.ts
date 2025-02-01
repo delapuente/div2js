@@ -9,13 +9,11 @@ enum ProcessStatus {
 }
 
 interface Process {
-  // TODO: This should not be here but get accessed through the process memory.
-  id: number;
   dead: boolean;
   pc: number;
   run(): Baton;
 
-  processId?: number;
+  processId: number;
   processType?: number;
   status?: ProcessStatus;
   programIndex?: number;

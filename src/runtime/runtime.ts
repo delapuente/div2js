@@ -61,14 +61,6 @@ class ProcessInMemory implements Process {
   }
 
   // Deprecations
-  get id() {
-    return this.processId;
-  }
-
-  set id(v: number) {
-    this.processId = v;
-  }
-
   get pc() {
     return this.programIndex;
   }
@@ -301,7 +293,7 @@ class Runtime {
 
   // TODO: Consider passing the id through the baton
   end() {
-    const currentProcessId = this._scheduler.currentProcess.id;
+    const currentProcessId = this._scheduler.currentProcess.processId;
     this._scheduler.deleteCurrent();
     this._memoryManager.freeProcess(currentProcessId);
   }

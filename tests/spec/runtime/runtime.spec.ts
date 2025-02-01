@@ -3,7 +3,12 @@ import { Runtime, System } from "../../../src/runtime/runtime";
 import { SymbolTable } from "../../../src/memoryBrowser/symbols";
 import { DIV_SYMBOLS } from "../../../src/memoryBrowser/definitions";
 import { MemoryManager } from "../../../src/runtime/memory";
-import { Baton, Process, Scheduler } from "../../../src/runtime/scheduler";
+import {
+  Baton,
+  Process,
+  ProcessStatus,
+  Scheduler,
+} from "../../../src/runtime/scheduler";
 
 describe("The Runtime class", () => {
   let scheduler: Scheduler<Process>;
@@ -49,8 +54,8 @@ describe("The Runtime class", () => {
 
   describe("call()", () => {
     const fakeProcess: Process = {
-      id: 0,
-      dead: false,
+      processId: 0,
+      status: ProcessStatus.ALIVE,
       pc: 0,
       run(): Baton {
         return new Baton("frame");
