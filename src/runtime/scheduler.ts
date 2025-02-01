@@ -1,11 +1,24 @@
 import { assert } from "chai";
 
+enum ProcessStatus {
+  UNINITIALIZED = 0,
+  DEAD = 1,
+  ALIVE = 2,
+  SLEPT = 3,
+  FROZEN = 4,
+}
+
 interface Process {
   // TODO: This should not be here but get accessed through the process memory.
   id: number;
   dead: boolean;
   pc: number;
   run(): Baton;
+
+  processId?: number;
+  processType?: number;
+  status?: ProcessStatus;
+  programIndex?: number;
 }
 
 /**
@@ -136,7 +149,7 @@ class Baton implements Record<any, any> {
 }
 
 function isAlive<P extends Process>(execution: P): boolean {
-  return !execution.dead;
+  return execution.status === ProcessStatus.ALIVE;
 }
 
-export { Scheduler, Baton, Process };
+export { Scheduler, Baton, Process, ProcessStatus };

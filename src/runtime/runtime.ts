@@ -1,50 +1,111 @@
-import { MemoryManager } from "./memory";
-import { Scheduler, Baton, Process } from "./scheduler";
-import { load_pal } from "../builtins";
+import { MemoryArray, MemoryManager } from "./memory";
+import { Scheduler, Baton, Process, ProcessStatus } from "./scheduler";
 import { DivError } from "../errors";
 import { VideoSystem } from "../systems/video/wgl2idx";
 import { Div2FileSystem } from "../systems/files/div2FileSystem";
-import { MemoryBrowser } from "../memoryBrowser/mapper";
+import { MemoryBrowser, ProcessView } from "../memoryBrowser/mapper";
 
 type SystemKind = "video" | "files";
-
-class ProcessImpl implements Process {
-  pc: number;
-  runnable: CallableFunction;
-  id: number;
-  base: number;
+class ProcessInMemory implements Process {
   retv: ReturnValuesQueue;
-  dead: boolean;
-  memory: any;
-  initialized: boolean;
-  // XXX: Should this be just a queue, like ReturnValuesQueue, so I can dellocate the space consumed by the parameters once the process is initialized?
-  args: number[];
+  private _pc: number;
 
-  constructor(runnable, base, memory, args = []) {
-    this.pc = 1;
-    this.runnable = runnable;
-    this.id = base;
-    this.base = base;
+  constructor(
+    processId: number,
+    private _runnable: CallableFunction,
+    private _memory: MemoryArray,
+    private _processView: ProcessView,
+    // XXX: This should be a pointer to a memory region with the actual args.
+    private _args: unknown[],
+  ) {
+    this.processId = processId;
+    this.programIndex = 1;
+    this.status = ProcessStatus.UNINITIALIZED;
     this.retv = new ReturnValuesQueue();
-    this.dead = false;
-    this.memory = memory;
-    this.initialized = false;
-    this.args = args;
+  }
+
+  get processId() {
+    return this._processView.local("reserved.process_id").value;
+  }
+
+  set processId(v: number) {
+    this._processView.local("reserved.process_id").value = v;
+  }
+
+  get processType() {
+    return this._processView.local("reserved.process_type").value;
+  }
+
+  set processType(v: number) {
+    this._processView.local("reserved.process_type").value = v;
+  }
+
+  get status() {
+    return this._processView.local("reserved.status").value;
+  }
+
+  set status(v: ProcessStatus) {
+    this._processView.local("reserved.status").value = v;
+  }
+
+  get programIndex() {
+    return this._processView.local("reserved.program_index").value;
+  }
+
+  set programIndex(v: number) {
+    this._processView.local("reserved.program_index").value = v;
   }
 
   run() {
-    return this.runnable(this.memory, this, this.args);
+    return this._runnable(this._memory, this, this._args);
+  }
+
+  // Deprecations
+  get base() {
+    return this.processId;
+  }
+
+  get id() {
+    return this.processId;
+  }
+
+  set id(v: number) {
+    this.processId = v;
+  }
+
+  get pc() {
+    return this.programIndex;
+  }
+
+  set pc(v: number) {
+    this.programIndex = v;
+  }
+
+  get dead() {
+    return this.status === ProcessStatus.DEAD;
+  }
+
+  set dead(v: boolean) {
+    this.status = v ? ProcessStatus.DEAD : ProcessStatus.ALIVE;
+  }
+
+  get initialized() {
+    return this.status === ProcessStatus.ALIVE;
+  }
+
+  set initialized(v: boolean) {
+    this.status = v ? ProcessStatus.ALIVE : ProcessStatus.UNINITIALIZED;
   }
 }
 
 class ReturnValuesQueue {
-  private _data: Array<any>;
+  private _data: Array<unknown>;
 
   constructor() {
     this._data = [];
   }
 
-  enqueue(value: any) {
+  enqueue(value: unknown) {
     this._data.push(value);
   }
 
@@ -110,14 +171,28 @@ class Runtime {
 
   addProcess(name: string, base: number, args: number[] = []) {
     const runnable = this._pmap["process_" + name];
-    const processEnvironment = new ProcessImpl(runnable, base, this._mem, args);
-    this._scheduler.add(processEnvironment);
+    const processView = this.getMemoryBrowser().process({ id: base });
+    const process = new ProcessInMemory(
+      base,
+      runnable,
+      this._mem,
+      processView,
+      args,
+    );
+    this._scheduler.add(process);
   }
 
   addProgram(base: number) {
     const runnable = this._pmap["program"];
-    const processEnvironment = new ProcessImpl(runnable, base, this._mem);
-    this._scheduler.add(processEnvironment);
+    const processView = this.getMemoryBrowser().process({ id: base });
+    const process = new ProcessInMemory(
+      base,
+      runnable,
+      this._mem,
+      processView,
+      [],
+    );
+    this._scheduler.add(process);
   }
 
   registerSystem(system: System, name: string) {
@@ -231,8 +306,8 @@ class Runtime {
   // TODO: Consider passing the id through the baton
   end() {
     const currentProcessId = this._scheduler.currentProcess.id;
-    this._memoryManager.freeProcess(currentProcessId);
     this._scheduler.deleteCurrent();
+    this._memoryManager.freeProcess(currentProcessId);
   }
 
   _runSystems() {
