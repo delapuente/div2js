@@ -176,7 +176,7 @@
                             },
                             "property": {
                               "type": "Identifier",
-                              "name": "base"
+                              "name": "processId"
                             }
                           },
                           "right": {

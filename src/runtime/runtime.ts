@@ -61,10 +61,6 @@ class ProcessInMemory implements Process {
   }
 
   // Deprecations
-  get base() {
-    return this.processId;
-  }
-
   get id() {
     return this.processId;
   }

@@ -70,7 +70,7 @@
                               },
                               "property": {
                                 "type": "Identifier",
-                                "name": "base"
+                                "name": "processId"
                               },
                               "computed": false
                             },
@@ -98,7 +98,7 @@
                               },
                               "property": {
                                 "type": "Identifier",
-                                "name": "base"
+                                "name": "processId"
                               },
                               "computed": false
                             },

@@ -210,7 +210,7 @@ export default {
 
   _localBase: new ast.MemberExpression(
     new ast.Identifier("exec"),
-    new ast.Identifier("base"),
+    new ast.Identifier("processId"),
     false,
   ),
 
