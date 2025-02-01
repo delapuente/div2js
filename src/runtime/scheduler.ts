@@ -9,13 +9,12 @@ enum ProcessStatus {
 }
 
 interface Process {
-  dead: boolean;
   pc: number;
   run(): Baton;
 
   processId: number;
   processType?: number;
-  status?: ProcessStatus;
+  status: ProcessStatus;
   programIndex?: number;
 }
 
@@ -49,7 +48,7 @@ class Scheduler<P extends Process> {
   }
 
   deleteCurrent() {
-    this.currentProcess.dead = true;
+    this.currentProcess.status = ProcessStatus.DEAD;
   }
 
   reset() {

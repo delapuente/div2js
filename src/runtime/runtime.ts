@@ -69,14 +69,6 @@ class ProcessInMemory implements Process {
     this.programIndex = v;
   }
 
-  get dead() {
-    return this.status === ProcessStatus.DEAD;
-  }
-
-  set dead(v: boolean) {
-    this.status = v ? ProcessStatus.DEAD : ProcessStatus.ALIVE;
-  }
-
   get initialized() {
     return this.status === ProcessStatus.ALIVE;
   }
