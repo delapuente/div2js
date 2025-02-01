@@ -8,7 +8,6 @@ import { MemoryBrowser, ProcessView } from "../memoryBrowser/mapper";
 type SystemKind = "video" | "files";
 class ProcessInMemory implements Process {
   retv: ReturnValuesQueue;
-  private _pc: number;
 
   constructor(
     processId: number,
@@ -61,14 +60,6 @@ class ProcessInMemory implements Process {
   }
 
   // Deprecations
-  get pc() {
-    return this.programIndex;
-  }
-
-  set pc(v: number) {
-    this.programIndex = v;
-  }
-
   get initialized() {
     return this.status === ProcessStatus.ALIVE;
   }

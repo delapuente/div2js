@@ -19,7 +19,7 @@
           },
           "property": {
             "type": "Identifier",
-            "name": "pc"
+            "name": "programIndex"
           }
         },
         "cases": [
@@ -63,7 +63,7 @@
                     },
                     "property": {
                       "type": "Identifier",
-                      "name": "pc"
+                      "name": "programIndex"
                     }
                   },
                   "right": {
@@ -114,7 +114,7 @@
                     },
                     "property": {
                       "type": "Identifier",
-                      "name": "pc"
+                      "name": "programIndex"
                     }
                   },
                   "right": {

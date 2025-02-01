@@ -56,7 +56,7 @@ describe("The Runtime class", () => {
     const fakeProcess: Process = {
       processId: 0,
       status: ProcessStatus.ALIVE,
-      pc: 0,
+      programIndex: 0,
       run(): Baton {
         return new Baton("frame");
       },

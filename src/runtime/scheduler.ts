@@ -9,13 +9,12 @@ enum ProcessStatus {
 }
 
 interface Process {
-  pc: number;
   run(): Baton;
 
   processId: number;
   processType?: number;
   status: ProcessStatus;
-  programIndex?: number;
+  programIndex: number;
 }
 
 /**
@@ -127,7 +126,7 @@ class Scheduler<P extends Process> {
   private _yield(baton: Baton): unknown {
     const { currentProcess } = this;
     if (typeof (baton as any).npc !== "undefined") {
-      currentProcess.pc = (baton as any).npc;
+      currentProcess.programIndex = (baton as any).npc;
     }
     return this._call("onyield", baton, currentProcess);
   }

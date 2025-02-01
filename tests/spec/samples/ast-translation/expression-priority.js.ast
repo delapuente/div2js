@@ -276,7 +276,7 @@
                     },
                     "property": {
                       "type": "Identifier",
-                      "name": "pc"
+                      "name": "programIndex"
                     }
                   },
                   "cases": [

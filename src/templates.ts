@@ -297,7 +297,7 @@ export default {
   get programCounter() {
     return new ast.MemberExpression(
       new ast.Identifier("exec"),
-      new ast.Identifier("pc"),
+      new ast.Identifier("programIndex"),
     );
   },
 
