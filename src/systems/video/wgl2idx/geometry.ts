@@ -1,3 +1,56 @@
+import { ProcessView } from "../../../memoryBrowser/mapper";
+import { Process } from "../../../runtime/scheduler";
+import { Component } from "../../../runtime/runtime";
+
+class GeometryComponent implements Component {
+  constructor(
+    public readonly process: Process,
+    private readonly _processView: ProcessView,
+  ) {}
+
+  get boundingBox() {
+    return new BoundingBox(
+      this._processView.local("reserved.box_x0").value,
+      this._processView.local("reserved.box_y0").value,
+      this._processView.local("reserved.box_x1").value,
+      this._processView.local("reserved.box_y1").value,
+    );
+  }
+}
+
+class BoundingBox {
+  constructor(
+    private readonly _x0: number,
+    private readonly _y0: number,
+    private readonly _x1: number,
+    private readonly _y1: number,
+  ) {}
+
+  getIntersection(other: BoundingBox): BoundingBox | null {
+    // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
+    const left = Math.max(
+      Math.min(this._x0, this._x1),
+      Math.min(other._x0, other._x1),
+    );
+    const top = Math.max(
+      Math.min(this._y0, this._y1),
+      Math.min(other._y0, other._y1),
+    );
+    const right = Math.min(
+      Math.max(this._x0, this._x1),
+      Math.max(other._x0, other._x1),
+    );
+    const bottom = Math.min(
+      Math.max(this._y0, this._y1),
+      Math.max(other._y0, other._y1),
+    );
+
+    return left < right && top < bottom
+      ? new BoundingBox(left, top, right, bottom)
+      : null;
+  }
+}
+
 function screenCoordinates(
   spritePoint: [number, number],
   dimensions: [number, number],
@@ -82,19 +135,6 @@ function flipSpriteCoordinates(
   ];
 }
 
-function boxIntersection(
-  [leftA, topA, rightA, bottomA]: [number, number, number, number],
-  [leftB, topB, rightB, bottomB]: [number, number, number, number],
-): [number, number, number, number] | null {
-  // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
-  const left = Math.max(Math.min(leftA, rightA), Math.min(leftB, rightB));
-  const top = Math.max(Math.min(topA, bottomA), Math.min(topB, bottomB));
-  const right = Math.min(Math.max(leftA, rightA), Math.max(leftB, rightB));
-  const bottom = Math.min(Math.max(topA, bottomA), Math.max(topB, bottomB));
-
-  return left < right && top < bottom ? [left, top, right, bottom] : null;
-}
-
 export {
   screenCoordinates,
   spriteCoordinates,
@@ -102,5 +142,5 @@ export {
   scaledPoint,
   movedPoint,
   flipSpriteCoordinates,
-  boxIntersection,
+  GeometryComponent,
 };

@@ -2,10 +2,7 @@ import Palette from "../systems/video/wgl2idx/palette";
 import Fpg from "../systems/video/wgl2idx/fpg";
 import Div2Map from "../systems/video/wgl2idx/map";
 import { Runtime } from "../runtime/runtime";
-import {
-  boxIntersection,
-  spriteCoordinates,
-} from "../systems/video/wgl2idx/transformations";
+import { GeometryComponent } from "../systems/video/wgl2idx/geometry";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
   runtime.getSystem("video").putPixel(x, y, colorIndex);
@@ -89,34 +86,26 @@ function xput(
 
 function collision(processType: number, runtime: Runtime) {
   const aliveProcesses = runtime.aliveProcesses;
+  const videoSystem = runtime.getSystem("video");
 
   const currentProcess = runtime.currentProcess;
-  const currentProcessView = runtime.getMemoryBrowser().process({
-    id: currentProcess.processId,
-  });
-
-  const currentBoxX0 = currentProcessView.local("reserved.box_x0").value;
-  const currentBoxY0 = currentProcessView.local("reserved.box_y0").value;
-  const currentBoxX1 = currentProcessView.local("reserved.box_x1").value;
-  const currentBoxY1 = currentProcessView.local("reserved.box_y1").value;
+  const currentProcessGeometry = videoSystem.getComponent(
+    currentProcess,
+    GeometryComponent,
+  );
+  const boundingBox = currentProcessGeometry.boundingBox;
 
   const collidingProcess = aliveProcesses.find((process) => {
-    const processView = runtime
-      .getMemoryBrowser()
-      .process({ id: process.processId });
-    if (processView.local("reserved.process_type").value !== processType) {
+    if (process.processType !== processType) {
       return false;
     }
 
-    const boxX0 = processView.local("reserved.box_x0").value;
-    const boxY0 = processView.local("reserved.box_y0").value;
-    const boxX1 = processView.local("reserved.box_x1").value;
-    const boxY1 = processView.local("reserved.box_y1").value;
-
-    const screenIntersection = boxIntersection(
-      [currentBoxX0, currentBoxY0, currentBoxX1, currentBoxY1],
-      [boxX0, boxY0, boxX1, boxY1],
+    const processGeometry = videoSystem.getComponent(
+      process,
+      GeometryComponent,
     );
+    const processBoundingBox = processGeometry.boundingBox;
+    const screenIntersection = boundingBox.getIntersection(processBoundingBox);
 
     if (screenIntersection === null) {
       return false;

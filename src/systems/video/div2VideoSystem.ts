@@ -1,8 +1,9 @@
+import { System } from "../../runtime/runtime";
 import Fpg from "./wgl2idx/fpg";
 import Map from "./wgl2idx/map";
 import Palette from "./wgl2idx/palette";
 
-interface Div2VideoSystem {
+interface Div2VideoSystem extends System {
   getMap(fpgId: number, mapId: number): Map;
   putPixel(x: number, y: number, colorIndex: number): void;
   putScreen(fpgId: number, mapId: number): number;

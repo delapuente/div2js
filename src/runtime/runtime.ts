@@ -14,7 +14,7 @@ class ProcessInMemory implements Process {
     private _runnable: CallableFunction,
     private _memory: MemoryArray,
     private _processView: ProcessView,
-    // XXX: This should be a pointer to a memory region with the actual args.
+    // TODO: This should be a pointer to a memory region with the actual args.
     private _args: unknown[],
   ) {
     this.processId = processId;
@@ -88,8 +88,16 @@ class Environment {
 }
 
 interface System {
-  initialize(): void;
+  initialize(memoryBrowser: MemoryBrowser): void;
+  getComponent?<T>(
+    process: Process,
+    componentType: new (...args: unknown[]) => T,
+  ): T;
   run?(runtime: Runtime): void;
+}
+
+interface Component {
+  process: Process;
 }
 
 type GetSystemReturnType<K> = K extends "video"
@@ -163,7 +171,7 @@ class Runtime {
     if (name && typeof this._systemMap[name] !== "undefined") {
       throw new Error("System already registered with name: " + name);
     }
-    system.initialize();
+    system.initialize(this.getMemoryBrowser());
     this._systems.push(system);
     this._systemMap[name] = system;
   }
@@ -318,4 +326,4 @@ class Runtime {
   }
 }
 
-export { Runtime, Baton, System };
+export { Runtime, Baton, System, Component };

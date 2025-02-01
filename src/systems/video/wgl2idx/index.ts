@@ -1,11 +1,16 @@
-import { Runtime, System } from "../../../runtime/runtime";
+import { Runtime } from "../../../runtime/runtime";
 import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap from "./map";
-import { ProcessView } from "../../../memoryBrowser/mapper";
-import { screenCoordinates, spriteCoordinates } from "./transformations";
+import { MemoryBrowser, ProcessView } from "../../../memoryBrowser/mapper";
+import {
+  GeometryComponent,
+  screenCoordinates,
+  spriteCoordinates,
+} from "./geometry";
+import { Process } from "../../../runtime/scheduler";
 
 // XXX: Just for enabling syntax highlighting for the shaders.
 function glsl(strings: TemplateStringsArray, ...values: unknown[]) {
@@ -157,7 +162,7 @@ type Color = [number, number, number];
  * Finally, the intensity values are interpolated from 0 to 255 to get the
  * final color.
  */
-class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
+class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
   //XXX: According to DIV2 `load_map()` documentation, in the "Importante" note.
   // This is because the maps belonging to FPGs can only have a code from 1 to
   // 999, and so the maps loaded with `load_map()` are assigned codes starting
@@ -166,21 +171,23 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
 
   readonly _transparentIndex: number = 0;
 
-  _screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
+  private _screenCorners = new Float32Array([
+    1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
+  ]);
 
-  _screenGeometryVertexCount: number = this._screenCorners.length / 2;
+  private _screenGeometryVertexCount: number = this._screenCorners.length / 2;
 
-  _gl: WebGL2RenderingContext;
+  private _gl: WebGL2RenderingContext;
 
-  _gpuProgram: WebGLProgram;
+  private _gpuProgram: WebGLProgram;
 
-  _framebuffer: Uint8Array;
+  private _framebuffer: Uint8Array;
 
   // TODO: Double check if it is possible to access the FPG data directly from
   // the DIV program. If so, we should imitate the DIV behavior and store the
   // FPG in the program memory. The system could keep indices to conveninet places
   // for quick access.
-  readonly _loadedFpgs: Map<number, Fpg>;
+  private readonly _loadedFpgs: Map<number, Fpg>;
 
   // TODO: Double check if it is possible to access the MAP data directly from
   // the DIV program. If so, we should imitate the DIV behavior and store the
@@ -190,7 +197,9 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
   // XXX: DIV2 behaviour is a bit strange here. Anything loaded with
   // `load_map()` belongs to the FPG 0, but the FPG 0 is also the first FPG
   // loaded with `load_fpg()`.
-  readonly _loadedMaps: Map<number, DivMap>;
+  private readonly _loadedMaps: Map<number, DivMap>;
+
+  private _memoryBrowser: MemoryBrowser;
 
   private _activeLayer: IndexedGraphic;
 
@@ -267,7 +276,7 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     return this._isPaletteLoaded;
   }
 
-  initialize() {
+  initialize(memoryBrowser: MemoryBrowser) {
     this._initShaders();
     this._loadScreenGeometry();
     this._configureScreenVao();
@@ -275,6 +284,20 @@ class WebGL2IndexedScreenVideoSystem implements System, Div2VideoSystem {
     this._configurePaletteTexture();
     const { width, height } = this._bgLayer;
     this.setViewportResolution(width, height);
+    this._memoryBrowser = memoryBrowser;
+  }
+
+  getComponent<T>(
+    process: Process,
+    componentType: new (...args: unknown[]) => T,
+  ): T {
+    if (componentType === GeometryComponent) {
+      const processView = this._memoryBrowser.process({
+        id: process.processId,
+      });
+      return new GeometryComponent(process, processView) as T;
+    }
+    throw new Error(`Component \`${componentType.name}\` unknown.`);
   }
 
   get framebuffer(): Uint8Array {
