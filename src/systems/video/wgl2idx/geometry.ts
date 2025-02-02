@@ -1,12 +1,26 @@
 import { ProcessView } from "../../../memoryBrowser/mapper";
 import { Process } from "../../../runtime/scheduler";
 import { Component } from "../../../runtime/runtime";
+import DivMap from "./map";
 
 class GeometryComponent implements Component {
   constructor(
     public readonly process: Process,
+    private readonly _getMap: (fpgId: number, mapId: number) => DivMap,
     private readonly _processView: ProcessView,
   ) {}
+
+  private get _fpgId() {
+    return this._processView.local("file").value;
+  }
+
+  private get _mapId() {
+    return this._processView.local("graph").value;
+  }
+
+  get angle() {
+    return this._processView.local("angle").value;
+  }
 
   get boundingBox() {
     return new BoundingBox(
@@ -16,33 +30,66 @@ class GeometryComponent implements Component {
       this._processView.local("reserved.box_y1").value,
     );
   }
+
+  get x() {
+    return this._processView.local("x").value;
+  }
+
+  get y() {
+    return this._processView.local("y").value;
+  }
+
+  get flipX() {
+    return !!(this._processView.local("flags").value & 1);
+  }
+
+  get flipY() {
+    return !!(this._processView.local("flags").value & 2);
+  }
+
+  get size() {
+    return this._processView.local("size").value;
+  }
+
+  mapCoordinates(x: number, y: number): [number, number] {
+    const { width, height, origin } = this._getMap(this._fpgId, this._mapId);
+    return mapCoordinates(
+      [x, y],
+      [width, height],
+      [this.flipX, this.flipY],
+      [origin.x, origin.y],
+      [this.x, this.y],
+      this.angle,
+      this.size,
+    );
+  }
 }
 
 class BoundingBox {
   constructor(
-    private readonly _x0: number,
-    private readonly _y0: number,
-    private readonly _x1: number,
-    private readonly _y1: number,
+    readonly x0: number,
+    readonly y0: number,
+    readonly x1: number,
+    readonly y1: number,
   ) {}
 
   getIntersection(other: BoundingBox): BoundingBox | null {
     // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
     const left = Math.max(
-      Math.min(this._x0, this._x1),
-      Math.min(other._x0, other._x1),
+      Math.min(this.x0, this.x1),
+      Math.min(other.x0, other.x1),
     );
     const top = Math.max(
-      Math.min(this._y0, this._y1),
-      Math.min(other._y0, other._y1),
+      Math.min(this.y0, this.y1),
+      Math.min(other.y0, other.y1),
     );
     const right = Math.min(
-      Math.max(this._x0, this._x1),
-      Math.max(other._x0, other._x1),
+      Math.max(this.x0, this.x1),
+      Math.max(other.x0, other.x1),
     );
     const bottom = Math.min(
-      Math.max(this._y0, this._y1),
-      Math.max(other._y0, other._y1),
+      Math.max(this.y0, this.y1),
+      Math.max(other.y0, other.y1),
     );
 
     return left < right && top < bottom
@@ -63,7 +110,7 @@ function screenCoordinates(
   return movedPoint(
     rotatedPoint(
       scaledPoint(
-        movedPoint(flipSpriteCoordinates(spritePoint, dimensions, flip), [
+        movedPoint(flipCoordinates(spritePoint, dimensions, flip), [
           -offsetX,
           -offsetY,
         ]),
@@ -75,7 +122,7 @@ function screenCoordinates(
   );
 }
 
-function spriteCoordinates(
+function mapCoordinates(
   screenPoint: [number, number],
   dimensions: [number, number],
   flip: [boolean, boolean],
@@ -84,7 +131,7 @@ function spriteCoordinates(
   rotation: number,
   scale: number,
 ): [number, number] {
-  return flipSpriteCoordinates(
+  return flipCoordinates(
     movedPoint(
       scaledPoint(
         rotatedPoint(
@@ -124,7 +171,7 @@ function movedPoint(
   return [xOrigin + xDistance, yOrigin + yDistance];
 }
 
-function flipSpriteCoordinates(
+function flipCoordinates(
   [x, y]: [number, number],
   [width, height]: [number, number],
   [isHorizontalFlip, isVerticalFlip]: [boolean, boolean],
@@ -137,10 +184,10 @@ function flipSpriteCoordinates(
 
 export {
   screenCoordinates,
-  spriteCoordinates,
+  mapCoordinates,
   rotatedPoint,
   scaledPoint,
   movedPoint,
-  flipSpriteCoordinates,
+  flipCoordinates,
   GeometryComponent,
 };

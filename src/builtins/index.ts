@@ -1,6 +1,6 @@
 import Palette from "../systems/video/wgl2idx/palette";
 import Fpg from "../systems/video/wgl2idx/fpg";
-import Div2Map from "../systems/video/wgl2idx/map";
+import Div2Map, { MapDataComponent } from "../systems/video/wgl2idx/map";
 import { Runtime } from "../runtime/runtime";
 import { GeometryComponent } from "../systems/video/wgl2idx/geometry";
 
@@ -89,6 +89,10 @@ function collision(processType: number, runtime: Runtime) {
   const videoSystem = runtime.getSystem("video");
 
   const currentProcess = runtime.currentProcess;
+  const currentProcessColorData = videoSystem.getComponent(
+    currentProcess,
+    MapDataComponent,
+  );
   const currentProcessGeometry = videoSystem.getComponent(
     currentProcess,
     GeometryComponent,
@@ -111,7 +115,30 @@ function collision(processType: number, runtime: Runtime) {
       return false;
     }
 
-    return true;
+    const processColorData = videoSystem.getComponent(
+      process,
+      MapDataComponent,
+    );
+
+    for (let x = screenIntersection.x0; x <= screenIntersection.x1; x++) {
+      for (let y = screenIntersection.y0; y <= screenIntersection.y1; y++) {
+        const currentColorIndex = currentProcessColorData.sample(
+          ...currentProcessGeometry.mapCoordinates(x, y),
+        );
+        const processColorIndex = processColorData.sample(
+          ...processGeometry.mapCoordinates(x, y),
+        );
+
+        if (
+          !videoSystem.isTransparent(currentColorIndex) &&
+          !videoSystem.isTransparent(processColorIndex)
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   });
 
   return collidingProcess ? collidingProcess.processId : 0;

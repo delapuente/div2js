@@ -3,12 +3,12 @@ import Fpg from "./fpg";
 import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
-import DivMap from "./map";
+import DivMap, { MapDataComponent } from "./map";
 import { MemoryBrowser, ProcessView } from "../../../memoryBrowser/mapper";
 import {
   GeometryComponent,
   screenCoordinates,
-  spriteCoordinates,
+  mapCoordinates,
 } from "./geometry";
 import { Process } from "../../../runtime/scheduler";
 
@@ -291,11 +291,22 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     process: Process,
     componentType: new (...args: unknown[]) => T,
   ): T {
+    const processView = this._memoryBrowser.process({
+      id: process.processId,
+    });
     if (componentType === GeometryComponent) {
-      const processView = this._memoryBrowser.process({
-        id: process.processId,
-      });
-      return new GeometryComponent(process, processView) as T;
+      return new GeometryComponent(
+        process,
+        (fpgId, mapId) => this.getMap(fpgId, mapId),
+        processView,
+      ) as T;
+    }
+    if (componentType === MapDataComponent) {
+      return new MapDataComponent(
+        process,
+        (fpgId, mapId) => this.getMap(fpgId, mapId),
+        processView,
+      ) as T;
     }
     throw new Error(`Component \`${componentType.name}\` unknown.`);
   }
@@ -410,8 +421,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     const map = this.getMap(fpgId, mapId);
 
     const { data, width, height } = map;
-    const { x: xOrigin, y: yOrigin } =
-      map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
+    const { x: xOrigin, y: yOrigin } = map.origin;
 
     this._xput(
       data,
@@ -505,7 +515,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     // Update the region.
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-        const [xSprite, ySprite] = spriteCoordinates(
+        const [xSprite, ySprite] = mapCoordinates(
           [xScreen, yScreen],
           [width, height],
           [withHorizontalFlip, withVerticalFlip],
@@ -516,7 +526,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
         );
 
         let color = sample(data, width, xSprite, ySprite) ?? 0;
-        const colorIsTransparent = this._isTransparent(color);
+        const colorIsTransparent = this.isTransparent(color);
 
         if (withTransparency) {
           const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
@@ -544,7 +554,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     return map;
   }
 
-  _isTransparent(colorIndex: number): boolean {
+  isTransparent(colorIndex: number): boolean {
     return colorIndex === this._transparentIndex;
   }
 
@@ -654,7 +664,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     const { buffer: bgBuffer } = this._bgLayer;
     const { buffer: fgBuffer } = this._fgLayer;
     const combined = fgBuffer.map((fgPixel, idx) =>
-      this._isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel,
+      this.isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel,
     );
     return combined;
   }

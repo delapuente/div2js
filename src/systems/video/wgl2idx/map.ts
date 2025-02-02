@@ -1,3 +1,6 @@
+import { ProcessView } from "../../../memoryBrowser/mapper";
+import { Component } from "../../../runtime/runtime";
+import { Process } from "../../../runtime/scheduler";
 import Palette from "./palette";
 
 class ControlPoint {
@@ -110,8 +113,30 @@ class DivMap {
     return this.controlPoints.length;
   }
 
+  get origin(): ControlPoint {
+    return this.controlPointCount > 0 ? this.controlPoint(0) : this.center;
+  }
+
   controlPoint(index: number): ControlPoint {
     return this.controlPoints[index];
+  }
+
+  sample(x: number, y: number): number | null {
+    const { data, width } = this;
+
+    // Invalid cases are signaled with null.
+    let idx: number;
+    if (
+      x < 0 ||
+      y < 0 ||
+      width <= 0 ||
+      x >= width ||
+      (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+      idx >= data.length
+    ) {
+      return null;
+    }
+    return data[idx];
   }
 }
 
@@ -138,5 +163,26 @@ class ByteReader {
   }
 }
 
-export { ControlPoint };
+class MapDataComponent implements Component {
+  constructor(
+    public readonly process: Process,
+    private readonly _getMap: (fpgId: number, mapId: number) => DivMap,
+    private readonly _processView: ProcessView,
+  ) {}
+
+  sample(x: number, y: number): number | null {
+    const map = this._getMap(this.file, this.graph);
+    return map.sample(x, y);
+  }
+
+  get file(): number {
+    return this._processView.local("file").value;
+  }
+
+  get graph(): number {
+    return this._processView.local("graph").value;
+  }
+}
+
+export { ControlPoint, MapDataComponent };
 export default DivMap;
