@@ -85,50 +85,39 @@ function xput(
 }
 
 function collision(processType: number, runtime: Runtime) {
-  const aliveProcesses = runtime.aliveProcesses;
+  const processes = runtime.aliveProcesses;
   const videoSystem = runtime.getSystem("video");
 
-  const currentProcess = runtime.currentProcess;
-  const currentProcessColorData = videoSystem.getComponent(
-    currentProcess,
-    MapDataComponent,
-  );
-  const currentProcessGeometry = videoSystem.getComponent(
-    currentProcess,
-    GeometryComponent,
-  );
-  const boundingBox = currentProcessGeometry.boundingBox;
+  const caller = runtime.currentProcess;
+  const callerMapData = videoSystem.getComponent(caller, MapDataComponent);
+  const callerGeometry = videoSystem.getComponent(caller, GeometryComponent);
+  const callerBoundingBox = callerGeometry.boundingBox;
 
-  const collidingProcess = aliveProcesses.find((process) => {
+  const collidingProcess = processes.find((process) => {
+    // Filter by type.
     if (process.processType !== processType) {
       return false;
     }
 
-    const processGeometry = videoSystem.getComponent(
-      process,
-      GeometryComponent,
-    );
-    const processBoundingBox = processGeometry.boundingBox;
-    const screenIntersection = boundingBox.getIntersection(processBoundingBox);
+    // Find out if the caller and the process are intersecting.
+    const geometry = videoSystem.getComponent(process, GeometryComponent);
+    const boundingBox = geometry.boundingBox;
+    const intersection = callerBoundingBox.getIntersection(boundingBox);
 
-    if (screenIntersection === null) {
+    if (intersection === null) {
       return false;
     }
 
-    const processColorData = videoSystem.getComponent(
-      process,
-      MapDataComponent,
-    );
-
-    for (let x = screenIntersection.x0; x <= screenIntersection.x1; x++) {
-      for (let y = screenIntersection.y0; y <= screenIntersection.y1; y++) {
-        const currentColorIndex = currentProcessColorData.sample(
-          ...currentProcessGeometry.mapCoordinates(x, y),
+    // If there is an intersection, check if there is an overlapping of non-transparent pixels.
+    const mapData = videoSystem.getComponent(process, MapDataComponent);
+    for (let x = intersection.x0; x <= intersection.x1; x++) {
+      for (let y = intersection.y0; y <= intersection.y1; y++) {
+        const currentColorIndex = callerMapData.sample(
+          ...callerGeometry.mapCoordinates(x, y),
         );
-        const processColorIndex = processColorData.sample(
-          ...processGeometry.mapCoordinates(x, y),
+        const processColorIndex = mapData.sample(
+          ...geometry.mapCoordinates(x, y),
         );
-
         if (
           currentColorIndex !== null &&
           !videoSystem.isTransparent(currentColorIndex) &&
@@ -140,6 +129,7 @@ function collision(processType: number, runtime: Runtime) {
       }
     }
 
+    // If there is not overlapping, there is no collision.
     return false;
   });
 
