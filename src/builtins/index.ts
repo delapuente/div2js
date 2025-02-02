@@ -130,7 +130,9 @@ function collision(processType: number, runtime: Runtime) {
         );
 
         if (
+          currentColorIndex !== null &&
           !videoSystem.isTransparent(currentColorIndex) &&
+          processColorIndex !== null &&
           !videoSystem.isTransparent(processColorIndex)
         ) {
           return true;
