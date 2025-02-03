@@ -132,7 +132,7 @@ describe("Workflow of transpiled programs", function () {
     });
   });
 
-  it("Process are reused ", function () {
+  it("Process are reused", function () {
     return loadPrg("process-reuse.prg").then(function (program) {
       return new Promise(function (fulfill) {
         program.onfinished = withDebugSession(function (session) {
@@ -155,8 +155,8 @@ describe("Workflow of transpiled programs", function () {
     function () {
       return loadPrg("concurrency-1-process.prg").then(function (program) {
         return new Promise(function (fulfill) {
-          const results = [] as any[];
-          const expected = [] as any[];
+          const results = [] as number[];
+          const expected = [] as number[];
           program.ondebug = autoResume(
             withDebugSession(function (session) {
               results.push(session.global("text_z").value);
@@ -208,6 +208,25 @@ describe("Memory state while running transpiled programs", function () {
         );
         program.onfinished = fulfill;
         program.start();
+      });
+    });
+  });
+});
+
+describe("Process relationships", function () {
+  describe("Calling a process from another", function () {
+    it("returns the process id", function () {
+      return loadPrg("call-process.prg").then(function (program) {
+        return new Promise(function (fulfill) {
+          program.onfinished = withDebugSession(function (session) {
+            const expectedId = session.process({ index: 1 }).id;
+            const processId = session.global("process_id").value;
+            expect(processId).to.be.above(0);
+            expect(processId).to.equal(expectedId);
+            fulfill(void 0);
+          });
+          program.start();
+        });
       });
     });
   });

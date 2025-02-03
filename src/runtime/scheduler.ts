@@ -131,10 +131,12 @@ class Scheduler<P extends Process> {
     return this._call("onyield", baton, currentProcess);
   }
 }
-class Baton implements Record<any, any> {
+class Baton implements Record<string, unknown> {
+  [x: string]: unknown;
+
   type: string;
 
-  constructor(type: string, data: Record<any, any> = {}) {
+  constructor(type: string, data: Record<string, unknown> = {}) {
     this.type = type;
     Object.keys(data).forEach(
       function (key) {

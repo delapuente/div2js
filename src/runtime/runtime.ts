@@ -72,6 +72,9 @@ class ReturnValuesQueue {
   }
 
   dequeue() {
+    if (this._data.length === 0) {
+      throw new Error("No return values to dequeue.");
+    }
     return this._data.shift();
   }
 }
@@ -234,9 +237,10 @@ class Runtime {
     this.ondebug();
   }
 
-  newProcess(processName: string, args: number[]) {
+  newProcess(processName: string, args: number[], process) {
     const id = this._memoryManager.allocateProcess();
     this.addProcess(processName, id, args);
+    process.retv.enqueue(id);
   }
 
   call(functionName: string, args: unknown[], process) {
@@ -291,7 +295,7 @@ class Runtime {
     });
   }
 
-  _handle(baton, originator: Process) {
+  _handle(baton: Baton, originator: Process) {
     const name = `_${baton.type}`;
     if (!(name in this)) {
       throw Error("Unknown execution message: " + baton.type);
@@ -303,10 +307,10 @@ class Runtime {
     return this.debug();
   }
 
-  _newProcess(baton) {
-    const name = baton.processName;
+  _newProcess(baton: Baton, originator: Process) {
+    const name = baton.processName as string;
     const args = (baton.args ?? []) as number[];
-    return this.newProcess(name, args);
+    return this.newProcess(name, args, originator);
   }
 
   _call(baton, process) {
