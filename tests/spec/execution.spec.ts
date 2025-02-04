@@ -251,3 +251,70 @@ describe("Math functions", function () {
     });
   });
 });
+
+describe("Inter-process interactions", function () {
+  describe("collision()", function () {
+    it("returns 0 when there is no collision", function () {
+      return loadPrg("no-intersection-no-collision.prg").then(
+        function (program) {
+          return new Promise(function (fulfill) {
+            program.onfinished = withDebugSession(function (session) {
+              expect(session.global("colliding_process_id").value).to.equal(0);
+              fulfill(void 0);
+            });
+            program.start();
+          });
+        },
+      );
+    });
+
+    it("returns the id of the colliding process when there is collision", function () {
+      return loadPrg("collision.prg").then(function (program) {
+        return new Promise(function (fulfill) {
+          program.onfinished = withDebugSession(function (session) {
+            const fullSquareId = session.global("full_square_id").value;
+            const collidingProcessId = session.global(
+              "colliding_process_id",
+            ).value;
+            expect(fullSquareId).to.be.above(0);
+            expect(collidingProcessId).to.equal(fullSquareId);
+            fulfill(void 0);
+          });
+          program.start();
+        });
+      });
+    });
+
+    it("exclude transparent regions", function () {
+      return loadPrg("transparent-no-collision.prg").then(function (program) {
+        return new Promise(function (fulfill) {
+          program.onfinished = withDebugSession(function (session) {
+            const emptySquareId = session.global("empty_square_id").value;
+            const collidingProcessId = session.global(
+              "colliding_process_id",
+            ).value;
+            expect(collidingProcessId).not.to.equal(emptySquareId);
+            expect(collidingProcessId).to.equal(0);
+            fulfill(void 0);
+          });
+          program.start();
+        });
+      });
+    });
+
+    it("exclude colliding with itself", function () {
+      return loadPrg("self-collision.prg").then(function (program) {
+        return new Promise(function (fulfill) {
+          program.onfinished = withDebugSession(function (session) {
+            const selfCollidingId = session.global(
+              "colliding_process_id",
+            ).value;
+            expect(selfCollidingId).to.equal(0);
+            fulfill(void 0);
+          });
+          program.start();
+        });
+      });
+    });
+  });
+});

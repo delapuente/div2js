@@ -99,6 +99,11 @@ function collision(processType: number, runtime: Runtime) {
       return false;
     }
 
+    // Ignore colliding with itself.
+    if (process.processId === caller.processId) {
+      return false;
+    }
+
     // Find out if the caller and the process are intersecting.
     const geometry = videoSystem.getComponent(process, GeometryComponent);
     const boundingBox = geometry.boundingBox;
