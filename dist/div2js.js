@@ -20508,7 +20508,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../systems/video/wgl2idx/palette */ "./src/systems/video/wgl2idx/palette.ts");
 /* harmony import */ var _systems_video_wgl2idx_fpg__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../systems/video/wgl2idx/fpg */ "./src/systems/video/wgl2idx/fpg.ts");
 /* harmony import */ var _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../systems/video/wgl2idx/map */ "./src/systems/video/wgl2idx/map.ts");
-/* harmony import */ var _systems_video_wgl2idx_transformations__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../systems/video/wgl2idx/transformations */ "./src/systems/video/wgl2idx/transformations.ts");
+/* harmony import */ var _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../systems/video/wgl2idx/geometry */ "./src/systems/video/wgl2idx/geometry.ts");
 
 
 
@@ -20570,31 +20570,46 @@ function xput(file, graph, x, y, angle, size, flags, region, runtime) {
         .xput(file, graph, x, y, angle, size, flags, region);
 }
 function collision(processType, runtime) {
-    const aliveProcesses = runtime.aliveProcesses;
-    const currentProcess = runtime.currentProcess;
-    const currentProcessView = runtime.getMemoryBrowser().process({
-        id: currentProcess.id,
-    });
-    const currentBoxX0 = currentProcessView.local("reserved.box_x0").value;
-    const currentBoxY0 = currentProcessView.local("reserved.box_y0").value;
-    const currentBoxX1 = currentProcessView.local("reserved.box_x1").value;
-    const currentBoxY1 = currentProcessView.local("reserved.box_y1").value;
-    const collidingProcess = aliveProcesses.find((process) => {
-        const processView = runtime.getMemoryBrowser().process({ id: process.id });
-        if (processView.local("reserved.process_type").value !== processType) {
+    const processes = runtime.aliveProcesses;
+    const videoSystem = runtime.getSystem("video");
+    const caller = runtime.currentProcess;
+    const callerMapData = videoSystem.getComponent(caller, _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent);
+    const callerGeometry = videoSystem.getComponent(caller, _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent);
+    const callerBoundingBox = callerGeometry.boundingBox;
+    const collidingProcess = processes.find((process) => {
+        // Filter by type.
+        if (process.processType !== processType) {
             return false;
         }
-        const boxX0 = processView.local("reserved.box_x0").value;
-        const boxY0 = processView.local("reserved.box_y0").value;
-        const boxX1 = processView.local("reserved.box_x1").value;
-        const boxY1 = processView.local("reserved.box_y1").value;
-        const screenIntersection = (0,_systems_video_wgl2idx_transformations__WEBPACK_IMPORTED_MODULE_3__.boxIntersection)([currentBoxX0, currentBoxY0, currentBoxX1, currentBoxY1], [boxX0, boxY0, boxX1, boxY1]);
-        if (screenIntersection === null) {
+        // Ignore colliding with itself.
+        if (process.processId === caller.processId) {
             return false;
         }
-        return true;
+        // Find out if the caller and the process are intersecting.
+        const geometry = videoSystem.getComponent(process, _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent);
+        const boundingBox = geometry.boundingBox;
+        const intersection = callerBoundingBox.getIntersection(boundingBox);
+        if (intersection === null) {
+            return false;
+        }
+        // If there is an intersection, check if there is an overlapping of non-transparent pixels.
+        const mapData = videoSystem.getComponent(process, _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent);
+        for (let x = intersection.x0; x <= intersection.x1; x++) {
+            for (let y = intersection.y0; y <= intersection.y1; y++) {
+                const currentColorIndex = callerMapData.sample(...callerGeometry.mapCoordinates(x, y));
+                const processColorIndex = mapData.sample(...geometry.mapCoordinates(x, y));
+                if (currentColorIndex !== null &&
+                    !videoSystem.isTransparent(currentColorIndex) &&
+                    processColorIndex !== null &&
+                    !videoSystem.isTransparent(processColorIndex)) {
+                    return true;
+                }
+            }
+        }
+        // If there is not overlapping, there is no collision.
+        return false;
     });
-    return collidingProcess ? collidingProcess.id : 0;
+    return collidingProcess ? collidingProcess.processId : 0;
 }
 
 
@@ -22776,20 +22791,45 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _errors__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../errors */ "./src/errors.ts");
 
 
-class ProcessImpl {
-    constructor(runnable, base, memory, args = []) {
-        this.pc = 1;
-        this.runnable = runnable;
-        this.id = base;
-        this.base = base;
+class ProcessInMemory {
+    constructor(processId, _runnable, _memory, _processView, 
+    // TODO: This should be a pointer to a memory region with the actual args.
+    _args) {
+        this._runnable = _runnable;
+        this._memory = _memory;
+        this._processView = _processView;
+        this._args = _args;
+        this.processId = processId;
+        this.programIndex = 0;
+        this.status = _scheduler__WEBPACK_IMPORTED_MODULE_0__.ProcessStatus.UNINITIALIZED;
         this.retv = new ReturnValuesQueue();
-        this.dead = false;
-        this.memory = memory;
-        this.initialized = false;
-        this.args = args;
+    }
+    get processId() {
+        return this._processView.local("reserved.process_id").value;
+    }
+    set processId(v) {
+        this._processView.local("reserved.process_id").value = v;
+    }
+    get processType() {
+        return this._processView.local("reserved.process_type").value;
+    }
+    set processType(v) {
+        this._processView.local("reserved.process_type").value = v;
+    }
+    get status() {
+        return this._processView.local("reserved.status").value;
+    }
+    set status(v) {
+        this._processView.local("reserved.status").value = v;
+    }
+    get programIndex() {
+        return this._processView.local("reserved.program_index").value;
+    }
+    set programIndex(v) {
+        this._processView.local("reserved.program_index").value = v;
     }
     run() {
-        return this.runnable(this.memory, this, this.args);
+        return this._runnable(this._memory, this, this._args);
     }
 }
 class ReturnValuesQueue {
@@ -22800,6 +22840,9 @@ class ReturnValuesQueue {
         this._data.push(value);
     }
     dequeue() {
+        if (this._data.length === 0) {
+            throw new Error("No return values to dequeue.");
+        }
         return this._data.shift();
     }
 }
@@ -22829,19 +22872,23 @@ class Runtime {
     }
     addProcess(name, base, args = []) {
         const runnable = this._pmap["process_" + name];
-        const processEnvironment = new ProcessImpl(runnable, base, this._mem, args);
-        this._scheduler.add(processEnvironment);
+        const processView = this.getMemoryBrowser().process({ id: base });
+        const process = new ProcessInMemory(base, runnable, this._mem, processView, args);
+        process.status = _scheduler__WEBPACK_IMPORTED_MODULE_0__.ProcessStatus.ALIVE;
+        this._scheduler.add(process);
     }
     addProgram(base) {
         const runnable = this._pmap["program"];
-        const processEnvironment = new ProcessImpl(runnable, base, this._mem);
-        this._scheduler.add(processEnvironment);
+        const processView = this.getMemoryBrowser().process({ id: base });
+        const process = new ProcessInMemory(base, runnable, this._mem, processView, []);
+        process.status = _scheduler__WEBPACK_IMPORTED_MODULE_0__.ProcessStatus.ALIVE;
+        this._scheduler.add(process);
     }
     registerSystem(system, name) {
         if (name && typeof this._systemMap[name] !== "undefined") {
             throw new Error("System already registered with name: " + name);
         }
-        system.initialize();
+        system.initialize(this.getMemoryBrowser());
         this._systems.push(system);
         this._systemMap[name] = system;
     }
@@ -22893,9 +22940,10 @@ class Runtime {
         this._scheduler.stop();
         this.ondebug();
     }
-    newProcess(processName, args) {
+    newProcess(processName, args, process) {
         const id = this._memoryManager.allocateProcess();
         this.addProcess(processName, id, args);
+        process.retv.enqueue(id);
     }
     call(functionName, args, process) {
         if (functionName in this._functions) {
@@ -22937,9 +22985,9 @@ class Runtime {
     frame() { }
     // TODO: Consider passing the id through the baton
     end() {
-        const currentProcessId = this._scheduler.currentProcess.id;
-        this._memoryManager.freeProcess(currentProcessId);
+        const currentProcessId = this._scheduler.currentProcess.processId;
         this._scheduler.deleteCurrent();
+        this._memoryManager.freeProcess(currentProcessId);
     }
     _runSystems() {
         // TODO: The runtime should read the input state first, then run the processes, then render.
@@ -22959,11 +23007,11 @@ class Runtime {
     _debug() {
         return this.debug();
     }
-    _newProcess(baton) {
+    _newProcess(baton, originator) {
         var _a;
         const name = baton.processName;
         const args = ((_a = baton.args) !== null && _a !== void 0 ? _a : []);
-        return this.newProcess(name, args);
+        return this.newProcess(name, args, originator);
     }
     _call(baton, process) {
         const functionName = baton.functionName;
@@ -22994,10 +23042,19 @@ class Runtime {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Baton: () => (/* binding */ Baton),
+/* harmony export */   ProcessStatus: () => (/* binding */ ProcessStatus),
 /* harmony export */   Scheduler: () => (/* binding */ Scheduler)
 /* harmony export */ });
 /* harmony import */ var chai__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! chai */ "./node_modules/chai/index.mjs");
 
+var ProcessStatus;
+(function (ProcessStatus) {
+    ProcessStatus[ProcessStatus["UNINITIALIZED"] = 0] = "UNINITIALIZED";
+    ProcessStatus[ProcessStatus["DEAD"] = 1] = "DEAD";
+    ProcessStatus[ProcessStatus["ALIVE"] = 2] = "ALIVE";
+    ProcessStatus[ProcessStatus["SLEPT"] = 3] = "SLEPT";
+    ProcessStatus[ProcessStatus["FROZEN"] = 4] = "FROZEN";
+})(ProcessStatus || (ProcessStatus = {}));
 /**
  * The scheduler encapsulates the responsibilty of executing processes. It does
  * not know about painting the screen, playing audio, or anything like that.
@@ -23016,7 +23073,7 @@ class Scheduler {
         this._processList.push(process);
     }
     deleteCurrent() {
-        this.currentProcess.dead = true;
+        this.currentProcess.status = ProcessStatus.DEAD;
     }
     reset() {
         this._processList = [];
@@ -23078,7 +23135,7 @@ class Scheduler {
     _yield(baton) {
         const { currentProcess } = this;
         if (typeof baton.npc !== "undefined") {
-            currentProcess.pc = baton.npc;
+            currentProcess.programIndex = baton.npc;
         }
         return this._call("onyield", baton, currentProcess);
     }
@@ -23092,7 +23149,7 @@ class Baton {
     }
 }
 function isAlive(execution) {
-    return !execution.dead;
+    return execution.status === ProcessStatus.ALIVE;
 }
 
 
@@ -23526,6 +23583,111 @@ class Fpg {
 
 /***/ }),
 
+/***/ "./src/systems/video/wgl2idx/geometry.ts":
+/*!***********************************************!*\
+  !*** ./src/systems/video/wgl2idx/geometry.ts ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   GeometryComponent: () => (/* binding */ GeometryComponent),
+/* harmony export */   flipCoordinates: () => (/* binding */ flipCoordinates),
+/* harmony export */   mapCoordinates: () => (/* binding */ mapCoordinates),
+/* harmony export */   movedPoint: () => (/* binding */ movedPoint),
+/* harmony export */   rotatedPoint: () => (/* binding */ rotatedPoint),
+/* harmony export */   scaledPoint: () => (/* binding */ scaledPoint),
+/* harmony export */   screenCoordinates: () => (/* binding */ screenCoordinates)
+/* harmony export */ });
+class GeometryComponent {
+    constructor(process, _getMap, _processView) {
+        this.process = process;
+        this._getMap = _getMap;
+        this._processView = _processView;
+    }
+    get _fpgId() {
+        return this._processView.local("file").value;
+    }
+    get _mapId() {
+        return this._processView.local("graph").value;
+    }
+    get angle() {
+        return this._processView.local("angle").value;
+    }
+    get boundingBox() {
+        return new BoundingBox(this._processView.local("reserved.box_x0").value, this._processView.local("reserved.box_y0").value, this._processView.local("reserved.box_x1").value, this._processView.local("reserved.box_y1").value);
+    }
+    get x() {
+        return this._processView.local("x").value;
+    }
+    get y() {
+        return this._processView.local("y").value;
+    }
+    get flipX() {
+        return !!(this._processView.local("flags").value & 1);
+    }
+    get flipY() {
+        return !!(this._processView.local("flags").value & 2);
+    }
+    get size() {
+        return this._processView.local("size").value;
+    }
+    mapCoordinates(x, y) {
+        const { width, height, origin } = this._getMap(this._fpgId, this._mapId);
+        return mapCoordinates([x, y], [width, height], [this.flipX, this.flipY], [origin.x, origin.y], [this.x, this.y], this.angle, this.size);
+    }
+}
+class BoundingBox {
+    constructor(x0, y0, x1, y1) {
+        this.x0 = x0;
+        this.y0 = y0;
+        this.x1 = x1;
+        this.y1 = y1;
+    }
+    getIntersection(other) {
+        // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
+        const left = Math.max(Math.min(this.x0, this.x1), Math.min(other.x0, other.x1));
+        const top = Math.max(Math.min(this.y0, this.y1), Math.min(other.y0, other.y1));
+        const right = Math.min(Math.max(this.x0, this.x1), Math.max(other.x0, other.x1));
+        const bottom = Math.min(Math.max(this.y0, this.y1), Math.max(other.y0, other.y1));
+        return left < right && top < bottom
+            ? new BoundingBox(left, top, right, bottom)
+            : null;
+    }
+}
+function screenCoordinates(spritePoint, dimensions, flip, [offsetX, offsetY], position, rotation, scale) {
+    return movedPoint(rotatedPoint(scaledPoint(movedPoint(flipCoordinates(spritePoint, dimensions, flip), [
+        -offsetX,
+        -offsetY,
+    ]), scale), rotation), position);
+}
+function mapCoordinates(screenPoint, dimensions, flip, origin, [positionX, positionY], rotation, scale) {
+    return flipCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint(screenPoint, [-positionX, -positionY]), -rotation), 1 / scale), origin), dimensions, flip);
+}
+function rotatedPoint([x, y], angle) {
+    return [
+        Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
+        Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
+    ];
+}
+function scaledPoint([x, y], scaleFactor) {
+    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
+}
+function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
+    return [xOrigin + xDistance, yOrigin + yDistance];
+}
+function flipCoordinates([x, y], [width, height], [isHorizontalFlip, isVerticalFlip]) {
+    return [
+        isHorizontalFlip ? width - x - 1 : x,
+        isVerticalFlip ? height - y - 1 : y,
+    ];
+}
+
+
+
+/***/ }),
+
 /***/ "./src/systems/video/wgl2idx/index.ts":
 /*!********************************************!*\
   !*** ./src/systems/video/wgl2idx/index.ts ***!
@@ -23539,7 +23701,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _indexedGraphic__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./indexedGraphic */ "./src/systems/video/wgl2idx/indexedGraphic.ts");
 /* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./palette */ "./src/systems/video/wgl2idx/palette.ts");
-/* harmony import */ var _transformations__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./transformations */ "./src/systems/video/wgl2idx/transformations.ts");
+/* harmony import */ var _map__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./map */ "./src/systems/video/wgl2idx/map.ts");
+/* harmony import */ var _geometry__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./geometry */ "./src/systems/video/wgl2idx/geometry.ts");
+
 
 
 
@@ -23680,7 +23844,9 @@ class WebGL2IndexedScreenVideoSystem {
         // from 1000.
         this._noFpgMapIdOffset = 1000;
         this._transparentIndex = 0;
-        this._screenCorners = new Float32Array([1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1]);
+        this._screenCorners = new Float32Array([
+            1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
+        ]);
         this._screenGeometryVertexCount = this._screenCorners.length / 2;
         // TODO: Regardless of the above, it would be a good idea to separate the
         // duty of managing FPGs, MAPs, PALs, and other resources from the video
@@ -23743,7 +23909,7 @@ class WebGL2IndexedScreenVideoSystem {
     isPaletteLoaded() {
         return this._isPaletteLoaded;
     }
-    initialize() {
+    initialize(memoryBrowser) {
         this._initShaders();
         this._loadScreenGeometry();
         this._configureScreenVao();
@@ -23751,6 +23917,19 @@ class WebGL2IndexedScreenVideoSystem {
         this._configurePaletteTexture();
         const { width, height } = this._bgLayer;
         this.setViewportResolution(width, height);
+        this._memoryBrowser = memoryBrowser;
+    }
+    getComponent(process, componentType) {
+        const processView = this._memoryBrowser.process({
+            id: process.processId,
+        });
+        if (componentType === _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent) {
+            return new _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent(process, (fpgId, mapId) => this.getMap(fpgId, mapId), processView);
+        }
+        if (componentType === _map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent) {
+            return new _map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent(process, (fpgId, mapId) => this.getMap(fpgId, mapId), processView);
+        }
+        throw new Error(`Component \`${componentType.name}\` unknown.`);
     }
     get framebuffer() {
         // XXX: The framebuffer is flipped in the Y axis. The DIV engine uses the
@@ -23814,7 +23993,7 @@ class WebGL2IndexedScreenVideoSystem {
         this._setActiveLayer("bg");
         const map = this.getMap(fpgId, mapId);
         const { data, width, height } = map;
-        const { x: xOrigin, y: yOrigin } = map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
+        const { x: xOrigin, y: yOrigin } = map.origin;
         this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region);
     }
     _xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region, ignoreTransparency = false) {
@@ -23831,10 +24010,10 @@ class WebGL2IndexedScreenVideoSystem {
         const withTransparency = (flags & 4) !== 0;
         // Calculate the screen region to update.
         // T stands for top, L for left, B for bottom, and R for right.
-        const [xTL, yTL] = (0,_transformations__WEBPACK_IMPORTED_MODULE_2__.screenCoordinates)([0, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xTR, yTR] = (0,_transformations__WEBPACK_IMPORTED_MODULE_2__.screenCoordinates)([width, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xBL, yBL] = (0,_transformations__WEBPACK_IMPORTED_MODULE_2__.screenCoordinates)([0, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xBR, yBR] = (0,_transformations__WEBPACK_IMPORTED_MODULE_2__.screenCoordinates)([width, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+        const [xTL, yTL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([0, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+        const [xTR, yTR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([width, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+        const [xBL, yBL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([0, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+        const [xBR, yBR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([width, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
         const { width: layerWidth, height: layerHeight } = this._activeLayer;
         const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
         const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
@@ -23843,9 +24022,9 @@ class WebGL2IndexedScreenVideoSystem {
         // Update the region.
         for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
             for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-                const [xSprite, ySprite] = (0,_transformations__WEBPACK_IMPORTED_MODULE_2__.spriteCoordinates)([xScreen, yScreen], [width, height], [withHorizontalFlip, withVerticalFlip], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+                const [xSprite, ySprite] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.mapCoordinates)([xScreen, yScreen], [width, height], [withHorizontalFlip, withVerticalFlip], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
                 let color = (_a = sample(data, width, xSprite, ySprite)) !== null && _a !== void 0 ? _a : 0;
-                const colorIsTransparent = this._isTransparent(color);
+                const colorIsTransparent = this.isTransparent(color);
                 if (withTransparency) {
                     const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
                     color =
@@ -23867,7 +24046,7 @@ class WebGL2IndexedScreenVideoSystem {
             : this._loadedFpgs.get(fpgId).map(mapId);
         return map;
     }
-    _isTransparent(colorIndex) {
+    isTransparent(colorIndex) {
         return colorIndex === this._transparentIndex;
     }
     _mixColors(colorAIndex, colorBIndex) {
@@ -23954,7 +24133,7 @@ class WebGL2IndexedScreenVideoSystem {
     _combineLayers() {
         const { buffer: bgBuffer } = this._bgLayer;
         const { buffer: fgBuffer } = this._fgLayer;
-        const combined = fgBuffer.map((fgPixel, idx) => this._isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel);
+        const combined = fgBuffer.map((fgPixel, idx) => this.isTransparent(fgPixel) ? bgBuffer[idx] : fgPixel);
         return combined;
     }
     _sendPalette() {
@@ -23982,10 +24161,10 @@ class WebGL2IndexedScreenVideoSystem {
         const browser = runtime.getMemoryBrowser();
         const aliveProcesses = runtime.aliveProcesses;
         // TODO: Ensure more positive z comes first in the array.
-        const zSortedProcesses = aliveProcesses.sort((a, b) => browser.process({ id: b.id }).local("z").value -
-            browser.process({ id: a.id }).local("z").value);
+        const zSortedProcesses = aliveProcesses.sort((a, b) => browser.process({ id: b.processId }).local("z").value -
+            browser.process({ id: a.processId }).local("z").value);
         zSortedProcesses.forEach((process) => {
-            const processView = browser.process({ id: process.id });
+            const processView = browser.process({ id: process.processId });
             const processBox = this._drawProcess(processView);
             processView.local("reserved.box_x0").value = processBox[0];
             processView.local("reserved.box_y0").value = processBox[1];
@@ -24091,6 +24270,7 @@ class IndexedGraphic {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   ControlPoint: () => (/* binding */ ControlPoint),
+/* harmony export */   MapDataComponent: () => (/* binding */ MapDataComponent),
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var _palette__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./palette */ "./src/systems/video/wgl2idx/palette.ts");
@@ -24165,8 +24345,25 @@ class DivMap {
     get controlPointCount() {
         return this.controlPoints.length;
     }
+    get origin() {
+        return this.controlPointCount > 0 ? this.controlPoint(0) : this.center;
+    }
     controlPoint(index) {
         return this.controlPoints[index];
+    }
+    sample(x, y) {
+        const { data, width } = this;
+        // Invalid cases are signaled with null.
+        let idx;
+        if (x < 0 ||
+            y < 0 ||
+            width <= 0 ||
+            x >= width ||
+            (idx = y * width + x) < 0 || // XXX: Notice the assignment. Not proud of this but shorter.
+            idx >= data.length) {
+            return null;
+        }
+        return data[idx];
     }
 }
 class ByteReader {
@@ -24184,6 +24381,23 @@ class ByteReader {
     }
     readAscii(offset, length) {
         return String.fromCharCode(...this.buffer.subarray(offset, offset + length));
+    }
+}
+class MapDataComponent {
+    constructor(process, _getMap, _processView) {
+        this.process = process;
+        this._getMap = _getMap;
+        this._processView = _processView;
+    }
+    sample(x, y) {
+        const map = this._getMap(this.file, this.graph);
+        return map.sample(x, y);
+    }
+    get file() {
+        return this._processView.local("file").value;
+    }
+    get graph() {
+        return this._processView.local("graph").value;
     }
 }
 
@@ -24223,63 +24437,6 @@ class Palette {
     }
 }
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Palette);
-
-
-/***/ }),
-
-/***/ "./src/systems/video/wgl2idx/transformations.ts":
-/*!******************************************************!*\
-  !*** ./src/systems/video/wgl2idx/transformations.ts ***!
-  \******************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   boxIntersection: () => (/* binding */ boxIntersection),
-/* harmony export */   flipSpriteCoordinates: () => (/* binding */ flipSpriteCoordinates),
-/* harmony export */   movedPoint: () => (/* binding */ movedPoint),
-/* harmony export */   rotatedPoint: () => (/* binding */ rotatedPoint),
-/* harmony export */   scaledPoint: () => (/* binding */ scaledPoint),
-/* harmony export */   screenCoordinates: () => (/* binding */ screenCoordinates),
-/* harmony export */   spriteCoordinates: () => (/* binding */ spriteCoordinates)
-/* harmony export */ });
-function screenCoordinates(spritePoint, dimensions, flip, [offsetX, offsetY], position, rotation, scale) {
-    return movedPoint(rotatedPoint(scaledPoint(movedPoint(flipSpriteCoordinates(spritePoint, dimensions, flip), [
-        -offsetX,
-        -offsetY,
-    ]), scale), rotation), position);
-}
-function spriteCoordinates(screenPoint, dimensions, flip, origin, [positionX, positionY], rotation, scale) {
-    return flipSpriteCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint(screenPoint, [-positionX, -positionY]), -rotation), 1 / scale), origin), dimensions, flip);
-}
-function rotatedPoint([x, y], angle) {
-    return [
-        Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
-        Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
-    ];
-}
-function scaledPoint([x, y], scaleFactor) {
-    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
-}
-function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
-    return [xOrigin + xDistance, yOrigin + yDistance];
-}
-function flipSpriteCoordinates([x, y], [width, height], [isHorizontalFlip, isVerticalFlip]) {
-    return [
-        isHorizontalFlip ? width - x - 1 : x,
-        isVerticalFlip ? height - y - 1 : y,
-    ];
-}
-function boxIntersection([leftA, topA, rightA, bottomA], [leftB, topB, rightB, bottomB]) {
-    // XXX: https://pbr-book.org/3ed-2018/Geometry_and_Transformations/Bounding_Boxes#:~:text=The%20intersection%20of%20two%20bounding,minimum%20of%20their%20maximum%20coordinates.
-    const left = Math.max(Math.min(leftA, rightA), Math.min(leftB, rightB));
-    const top = Math.max(Math.min(topA, bottomA), Math.min(topB, bottomB));
-    const right = Math.min(Math.max(leftA, rightA), Math.max(leftB, rightB));
-    const bottom = Math.min(Math.max(topA, bottomA), Math.max(topB, bottomB));
-    return left < right && top < bottom ? [left, top, right, bottom] : null;
-}
-
 
 
 /***/ }),
@@ -24466,7 +24623,7 @@ __webpack_require__.r(__webpack_exports__);
         // sequence to deal with names being a sring, or an array of strings.
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier([].concat(names).join("_").toLowerCase());
     },
-    _localBase: new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("base"), false),
+    _localBase: new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("processId"), false),
     privateOffsetIdentifier: new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("__P_SEGMENT_OFFSET"),
     newRange: function (min, max) {
         return this.callWith("__range", [min, max]);
@@ -24516,13 +24673,13 @@ __webpack_require__.r(__webpack_exports__);
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.ReturnStatement(this.callWith("__yieldReturn", expression));
     },
     get programCounter() {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("pc"));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("programIndex"));
     },
     get dequeueReturnValue() {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.CallExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("retv")), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("dequeue")));
     },
     withProcessInitWrapper: function (sentences) {
-        return new _ast__WEBPACK_IMPORTED_MODULE_0__.IfStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.UnaryExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("initialized")), "!"), sentences.concat(new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("initialized")), new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(true)))));
+        return new _ast__WEBPACK_IMPORTED_MODULE_0__.IfStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.BinaryExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("programIndex")), new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(0), "==="), sentences.concat(new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.MemberExpression(new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("exec"), new _ast__WEBPACK_IMPORTED_MODULE_0__.Identifier("programIndex")), new _ast__WEBPACK_IMPORTED_MODULE_0__.Literal(1)))));
     },
     initializeProcessType: function (processType) {
         return new _ast__WEBPACK_IMPORTED_MODULE_0__.ExpressionStatement(new _ast__WEBPACK_IMPORTED_MODULE_0__.AssignmentExpression(this.memoryLocal(["reserved"], ["reserved", "process_type"]), _ast__WEBPACK_IMPORTED_MODULE_0__.Literal["for"](processType)));
