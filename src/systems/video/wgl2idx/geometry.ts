@@ -31,12 +31,39 @@ class GeometryComponent implements Component {
     );
   }
 
+  set boundingBox(boundingBox: BoundingBox) {
+    this._processView.local("reserved.box_x0").value = boundingBox.x0;
+    this._processView.local("reserved.box_y0").value = boundingBox.y0;
+    this._processView.local("reserved.box_x1").value = boundingBox.x1;
+    this._processView.local("reserved.box_y1").value = boundingBox.y1;
+  }
+
   get x() {
     return this._processView.local("x").value;
   }
 
   get y() {
     return this._processView.local("y").value;
+  }
+
+  get z() {
+    return this._processView.local("z").value;
+  }
+
+  get originX() {
+    return this._getMap(this._fpgId, this._mapId).origin.x;
+  }
+
+  get originY() {
+    return this._getMap(this._fpgId, this._mapId).origin.y;
+  }
+
+  get width() {
+    return this._getMap(this._fpgId, this._mapId).width;
+  }
+
+  get height() {
+    return this._getMap(this._fpgId, this._mapId).height;
   }
 
   get flipX() {
@@ -52,16 +79,8 @@ class GeometryComponent implements Component {
   }
 
   mapCoordinates(x: number, y: number): [number, number] {
-    const { width, height, origin } = this._getMap(this._fpgId, this._mapId);
-    return mapCoordinates(
-      [x, y],
-      [width, height],
-      [this.flipX, this.flipY],
-      [origin.x, origin.y],
-      [this.x, this.y],
-      this.angle,
-      this.size,
-    );
+    const transform = GeometryData.fromGeometryComponent(this);
+    return mapCoordinates([x, y], transform);
   }
 }
 
@@ -98,52 +117,67 @@ class BoundingBox {
   }
 }
 
+class GeometryData {
+  constructor(
+    readonly origin: [number, number],
+    readonly dimensions: [number, number],
+    readonly position: [number, number],
+    readonly rotation: number,
+    readonly scaleFactor: number,
+    readonly flip: [boolean, boolean],
+  ) {}
+
+  static fromGeometryComponent(geometry: GeometryComponent): GeometryData {
+    return new GeometryData(
+      [geometry.originX, geometry.originY],
+      [geometry.width, geometry.height],
+      [geometry.x, geometry.y],
+      (geometry.angle * Math.PI) / 180000,
+      geometry.size / 100,
+      [geometry.flipX, geometry.flipY],
+    );
+  }
+}
+
 function screenCoordinates(
   spritePoint: [number, number],
-  dimensions: [number, number],
-  flip: [boolean, boolean],
-  [offsetX, offsetY]: [number, number],
-  position: [number, number],
-  rotation: number,
-  scale: number,
+  transform: GeometryData,
 ): [number, number] {
   return movedPoint(
     rotatedPoint(
       scaledPoint(
-        movedPoint(flipCoordinates(spritePoint, dimensions, flip), [
-          -offsetX,
-          -offsetY,
-        ]),
-        scale,
+        movedPoint(
+          flipCoordinates(spritePoint, transform.dimensions, transform.flip),
+          [-transform.origin[0], -transform.origin[1]],
+        ),
+        transform.scaleFactor,
       ),
-      rotation,
+      transform.rotation,
     ),
-    position,
+    transform.position,
   );
 }
 
 function mapCoordinates(
   screenPoint: [number, number],
-  dimensions: [number, number],
-  flip: [boolean, boolean],
-  origin: [number, number],
-  [positionX, positionY]: [number, number],
-  rotation: number,
-  scale: number,
+  transform: GeometryData,
 ): [number, number] {
   return flipCoordinates(
     movedPoint(
       scaledPoint(
         rotatedPoint(
-          movedPoint(screenPoint, [-positionX, -positionY]),
-          -rotation,
+          movedPoint(screenPoint, [
+            -transform.position[0],
+            -transform.position[1],
+          ]),
+          -transform.rotation,
         ),
-        1 / scale,
+        1 / transform.scaleFactor,
       ),
-      origin,
+      transform.origin,
     ),
-    dimensions,
-    flip,
+    transform.dimensions,
+    transform.flip,
   );
 }
 
@@ -190,4 +224,6 @@ export {
   movedPoint,
   flipCoordinates,
   GeometryComponent,
+  GeometryData,
+  BoundingBox,
 };

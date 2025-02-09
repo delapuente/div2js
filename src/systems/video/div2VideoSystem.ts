@@ -1,5 +1,6 @@
 import { System } from "../../runtime/runtime";
 import Fpg from "./wgl2idx/fpg";
+import { GeometryData } from "./wgl2idx/geometry";
 import Map from "./wgl2idx/map";
 import Palette from "./wgl2idx/palette";
 
@@ -17,17 +18,9 @@ interface Div2VideoSystem extends System {
   loadMap(map: Map): number;
   putPixelData(
     data: Uint8Array,
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    xOrigin: number,
-    yOrigin: number,
-    angle: number,
-    size: number,
-    flags: number,
-    region: number,
-  ): void;
+    transform: GeometryData,
+    alphaBlend: boolean,
+  ): [number, number, number, number];
   screenWidth: number;
   screenHeight: number;
   framebuffer: Uint8Array;

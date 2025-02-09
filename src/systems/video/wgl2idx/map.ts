@@ -175,12 +175,20 @@ class MapDataComponent implements Component {
     return map.sample(x, y);
   }
 
+  get data(): Uint8Array {
+    return this._getMap(this.file, this.graph).data;
+  }
+
   get file(): number {
     return this._processView.local("file").value;
   }
 
   get graph(): number {
     return this._processView.local("graph").value;
+  }
+
+  get alphaBlend(): boolean {
+    return !!(this._processView.local("flags").value & 4);
   }
 }
 

@@ -2,7 +2,10 @@ import Palette from "../systems/video/wgl2idx/palette";
 import Fpg from "../systems/video/wgl2idx/fpg";
 import Div2Map, { MapDataComponent } from "../systems/video/wgl2idx/map";
 import { Runtime } from "../runtime/runtime";
-import { GeometryComponent } from "../systems/video/wgl2idx/geometry";
+import {
+  GeometryComponent,
+  GeometryData,
+} from "../systems/video/wgl2idx/geometry";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
   const videoSystem = runtime.getSystem("video");
@@ -22,22 +25,19 @@ function put_screen(file: number, graph: number, runtime: Runtime) {
     Math.round(width / 2),
     Math.round(height / 2),
   ];
+  const transform = new GeometryData(
+    [xSpriteOrigin, ySpriteOrigin],
+    [width, height],
+    [x, y],
+    0,
+    1,
+    [false, false],
+  );
 
   videoSystem.setActiveLayer("bg");
+  videoSystem.setActiveRegion(0);
   videoSystem.disableTransparency();
-  videoSystem.putPixelData(
-    data,
-    width,
-    height,
-    x,
-    y,
-    xSpriteOrigin,
-    ySpriteOrigin,
-    0,
-    100,
-    0,
-    0,
-  );
+  videoSystem.putPixelData(data, transform, false);
 
   return 0;
 }
@@ -113,23 +113,20 @@ function xput(
   const map = videoSystem.getMap(file, graph);
   const { data, width, height } = map;
   const { x: xOrigin, y: yOrigin } = map.origin;
+  const alphaBlend = !!(flags & 4);
+  const transform = new GeometryData(
+    [xOrigin, yOrigin],
+    [width, height],
+    [x, y],
+    (angle * Math.PI) / 180000,
+    size / 100,
+    [!!(flags & 1), !!(flags & 2)],
+  );
 
   videoSystem.setActiveLayer("bg");
   videoSystem.setActiveRegion(region);
   videoSystem.enableTransparency();
-  return videoSystem.putPixelData(
-    data,
-    width,
-    height,
-    x,
-    y,
-    xOrigin,
-    yOrigin,
-    angle,
-    size,
-    flags,
-    region,
-  );
+  return videoSystem.putPixelData(data, transform, alphaBlend);
 }
 
 function collision(processType: number, runtime: Runtime) {

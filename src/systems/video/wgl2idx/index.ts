@@ -4,11 +4,13 @@ import IndexedGraphic from "./indexedGraphic";
 import Palette from "./palette";
 import { Div2VideoSystem } from "../div2VideoSystem";
 import DivMap, { MapDataComponent } from "./map";
-import { MemoryBrowser, ProcessView } from "../../../memoryBrowser/mapper";
+import { MemoryBrowser } from "../../../memoryBrowser/mapper";
 import {
   GeometryComponent,
   screenCoordinates,
   mapCoordinates,
+  GeometryData,
+  BoundingBox,
 } from "./geometry";
 import { Process } from "../../../runtime/scheduler";
 
@@ -393,69 +395,30 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
 
   putPixelData(
     data: Uint8Array,
-    width: number,
-    height: number,
-    x: number,
-    y: number,
-    xOrigin: number,
-    yOrigin: number,
-    angle: number,
-    size: number,
-    flags: number,
+    transform: GeometryData,
+    alphaBlend: boolean,
   ): [number, number, number, number] {
     // TODO: Regions.
     if (this._activeRegion !== 0) {
       console.warn("Regions are not supported yet.");
     }
 
-    // Calculate transformation parameters.
-    const rotation = (angle * Math.PI) / 180000;
-    const scaleFactor = size / 100;
-    const withHorizontalFlip = (flags & 1) !== 0;
-    const withVerticalFlip = (flags & 2) !== 0;
-    const withTransparency = (flags & 4) !== 0;
-
     // Calculate the screen region to update.
     // T stands for top, L for left, B for bottom, and R for right.
-    const [xTL, yTL] = screenCoordinates(
-      [0, 0],
-      [width, height],
+    const [width, height] = transform.dimensions;
+    const boundaryTransform = new GeometryData(
+      transform.origin,
+      transform.dimensions,
+      transform.position,
+      transform.rotation,
+      transform.scaleFactor,
       [false, false],
-      [xOrigin, yOrigin],
-      [x, y],
-      rotation,
-      scaleFactor,
     );
 
-    const [xTR, yTR] = screenCoordinates(
-      [width, 0],
-      [width, height],
-      [false, false],
-      [xOrigin, yOrigin],
-      [x, y],
-      rotation,
-      scaleFactor,
-    );
-
-    const [xBL, yBL] = screenCoordinates(
-      [0, height],
-      [width, height],
-      [false, false],
-      [xOrigin, yOrigin],
-      [x, y],
-      rotation,
-      scaleFactor,
-    );
-
-    const [xBR, yBR] = screenCoordinates(
-      [width, height],
-      [width, height],
-      [false, false],
-      [xOrigin, yOrigin],
-      [x, y],
-      rotation,
-      scaleFactor,
-    );
+    const [xTL, yTL] = screenCoordinates([0, 0], boundaryTransform);
+    const [xTR, yTR] = screenCoordinates([width, 0], boundaryTransform);
+    const [xBL, yBL] = screenCoordinates([0, height], boundaryTransform);
+    const [xBR, yBR] = screenCoordinates([width, height], boundaryTransform);
 
     const { width: layerWidth, height: layerHeight } = this._activeLayer;
     const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
@@ -468,18 +431,13 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
         const [xSprite, ySprite] = mapCoordinates(
           [xScreen, yScreen],
-          [width, height],
-          [withHorizontalFlip, withVerticalFlip],
-          [xOrigin, yOrigin],
-          [x, y],
-          rotation,
-          scaleFactor,
+          transform,
         );
 
         let color = sample(data, width, xSprite, ySprite) ?? 0;
         const colorIsTransparent = this.isTransparent(color);
 
-        if (withTransparency) {
+        if (alphaBlend) {
           const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
           color =
             !this._ignoreTransparency && colorIsTransparent
@@ -657,58 +615,33 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
 
   _drawProcesses(runtime: Runtime) {
     this._fgLayer.clear();
-    const browser = runtime.getMemoryBrowser();
     const aliveProcesses = runtime.aliveProcesses;
     // TODO: Ensure more positive z comes first in the array.
     const zSortedProcesses = aliveProcesses.sort(
       (a, b) =>
-        browser.process({ id: b.processId }).local("z").value -
-        browser.process({ id: a.processId }).local("z").value,
+        this.getComponent(a, GeometryComponent).z -
+        this.getComponent(b, GeometryComponent).z,
     );
     zSortedProcesses.forEach((process) => {
-      const processView = browser.process({ id: process.processId });
-      const processBox = this._drawProcess(processView);
-      processView.local("reserved.box_x0").value = processBox[0];
-      processView.local("reserved.box_y0").value = processBox[1];
-      processView.local("reserved.box_x1").value = processBox[2];
-      processView.local("reserved.box_y1").value = processBox[3];
+      const processBox = new BoundingBox(...this._drawProcess(process));
+      const geometry = this.getComponent(process, GeometryComponent);
+      geometry.boundingBox = processBox;
     });
   }
 
-  _drawProcess(process: ProcessView): [number, number, number, number] {
-    const mapId = process.local("graph").value;
-    if (mapId === 0) {
+  _drawProcess(process: Process): [number, number, number, number] {
+    const mapData = this.getComponent(process, MapDataComponent);
+    if (mapData.graph === 0) {
       return [0, 0, 0, 0];
     }
 
-    const fpgId = process.local("file").value;
-    const map = this.getMap(fpgId, mapId);
-    const { data, width, height } = map;
-    const { x: xOrigin, y: yOrigin } =
-      map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
-
-    const x = process.local("x").value;
-    const y = process.local("y").value;
-    const angle = process.local("angle").value;
-    const size = process.local("size").value;
-    const flags = process.local("flags").value;
-    const region = process.local("region").value;
+    const geometry = this.getComponent(process, GeometryComponent);
+    const transform = GeometryData.fromGeometryComponent(geometry);
 
     this.setActiveLayer("fg");
-    this.setActiveRegion(region);
+    this.setActiveRegion(0); // TODO: It is stored in the process, but fromw what component should this come from?
     this.enableTransparency();
-    return this.putPixelData(
-      data,
-      width,
-      height,
-      x,
-      y,
-      xOrigin,
-      yOrigin,
-      angle,
-      size,
-      flags,
-    );
+    return this.putPixelData(mapData.data, transform, mapData.alphaBlend);
   }
 
   setActiveLayer(layer: "bg" | "fg") {
