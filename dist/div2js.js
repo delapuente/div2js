@@ -20514,11 +20514,27 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function put_pixel(x, y, colorIndex, runtime) {
-    runtime.getSystem("video").putPixel(x, y, colorIndex);
+    const videoSystem = runtime.getSystem("video");
+    videoSystem.setActiveLayer("bg");
+    videoSystem.putPixel(x, y, colorIndex);
     return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 function put_screen(file, graph, runtime) {
-    return runtime.getSystem("video").putScreen(file, graph);
+    const videoSystem = runtime.getSystem("video");
+    const map = videoSystem.getMap(file, graph);
+    const { data, width, height } = map;
+    const { screenWidth, screenHeight } = videoSystem;
+    const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
+    const [xSpriteOrigin, ySpriteOrigin] = [
+        Math.round(width / 2),
+        Math.round(height / 2),
+    ];
+    const transform = new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryData(new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(xSpriteOrigin, ySpriteOrigin), new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Dimensions(width, height), new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(x, y), 0, 1, [false, false]);
+    videoSystem.setActiveLayer("bg");
+    videoSystem.setActiveRegion(0);
+    videoSystem.disableTransparency();
+    videoSystem.putPixelData(data, transform, false);
+    return 0;
 }
 function rand(min, max) {
     const result = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -20562,12 +20578,19 @@ function load_map(mapPath, runtime) {
     });
 }
 function put(file, graph, x, y, runtime) {
-    return runtime.getSystem("video").xput(file, graph, x, y, 0, 100, 0, 0);
+    return xput(file, graph, x, y, 0, 100, 0, 0, runtime);
 }
 function xput(file, graph, x, y, angle, size, flags, region, runtime) {
-    return runtime
-        .getSystem("video")
-        .xput(file, graph, x, y, angle, size, flags, region);
+    const videoSystem = runtime.getSystem("video");
+    const map = videoSystem.getMap(file, graph);
+    const { data, width, height } = map;
+    const { x: xOrigin, y: yOrigin } = map.origin;
+    const alphaBlend = !!(flags & 4);
+    const transform = new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryData(new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(xOrigin, yOrigin), new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Dimensions(width, height), new _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(x, y), (angle * Math.PI) / 180000, size / 100, [!!(flags & 1), !!(flags & 2)]);
+    videoSystem.setActiveLayer("bg");
+    videoSystem.setActiveRegion(region);
+    videoSystem.enableTransparency();
+    return videoSystem.putPixelData(data, transform, alphaBlend);
 }
 function collision(processType, runtime) {
     const processes = runtime.aliveProcesses;
@@ -23592,14 +23615,48 @@ class Fpg {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   BoundingBox: () => (/* binding */ BoundingBox),
+/* harmony export */   Dimensions: () => (/* binding */ Dimensions),
 /* harmony export */   GeometryComponent: () => (/* binding */ GeometryComponent),
-/* harmony export */   flipCoordinates: () => (/* binding */ flipCoordinates),
+/* harmony export */   GeometryData: () => (/* binding */ GeometryData),
+/* harmony export */   Point2D: () => (/* binding */ Point2D),
 /* harmony export */   mapCoordinates: () => (/* binding */ mapCoordinates),
-/* harmony export */   movedPoint: () => (/* binding */ movedPoint),
-/* harmony export */   rotatedPoint: () => (/* binding */ rotatedPoint),
-/* harmony export */   scaledPoint: () => (/* binding */ scaledPoint),
 /* harmony export */   screenCoordinates: () => (/* binding */ screenCoordinates)
 /* harmony export */ });
+class Dimensions extends Array {
+    constructor(width, height) {
+        super(width, height);
+    }
+    get width() {
+        return this[0];
+    }
+    get height() {
+        return this[1];
+    }
+}
+class Point2D extends Array {
+    constructor(x, y) {
+        super(x, y);
+    }
+    get x() {
+        return this[0];
+    }
+    get y() {
+        return this[1];
+    }
+    translate(x, y) {
+        return new Point2D(this.x + x, this.y + y);
+    }
+    rotate(angle) {
+        return new Point2D(Math.round(Math.cos(angle) * this.x + Math.sin(angle) * this.y), Math.round(-Math.sin(angle) * this.x + Math.cos(angle) * this.y));
+    }
+    scale(factor) {
+        return new Point2D(Math.floor(this.x * factor), Math.floor(this.y * factor));
+    }
+    flip([flipX, flipY], dimensions) {
+        return new Point2D(flipX ? dimensions.width - this.x - 1 : this.x, flipY ? dimensions.height - this.y - 1 : this.y);
+    }
+}
 class GeometryComponent {
     constructor(process, _getMap, _processView) {
         this.process = process;
@@ -23618,11 +23675,32 @@ class GeometryComponent {
     get boundingBox() {
         return new BoundingBox(this._processView.local("reserved.box_x0").value, this._processView.local("reserved.box_y0").value, this._processView.local("reserved.box_x1").value, this._processView.local("reserved.box_y1").value);
     }
+    set boundingBox(boundingBox) {
+        this._processView.local("reserved.box_x0").value = boundingBox.x0;
+        this._processView.local("reserved.box_y0").value = boundingBox.y0;
+        this._processView.local("reserved.box_x1").value = boundingBox.x1;
+        this._processView.local("reserved.box_y1").value = boundingBox.y1;
+    }
     get x() {
         return this._processView.local("x").value;
     }
     get y() {
         return this._processView.local("y").value;
+    }
+    get z() {
+        return this._processView.local("z").value;
+    }
+    get originX() {
+        return this._getMap(this._fpgId, this._mapId).origin.x;
+    }
+    get originY() {
+        return this._getMap(this._fpgId, this._mapId).origin.y;
+    }
+    get width() {
+        return this._getMap(this._fpgId, this._mapId).width;
+    }
+    get height() {
+        return this._getMap(this._fpgId, this._mapId).height;
     }
     get flipX() {
         return !!(this._processView.local("flags").value & 1);
@@ -23634,8 +23712,8 @@ class GeometryComponent {
         return this._processView.local("size").value;
     }
     mapCoordinates(x, y) {
-        const { width, height, origin } = this._getMap(this._fpgId, this._mapId);
-        return mapCoordinates([x, y], [width, height], [this.flipX, this.flipY], [origin.x, origin.y], [this.x, this.y], this.angle, this.size);
+        const transform = GeometryData.fromGeometryComponent(this);
+        return mapCoordinates(new Point2D(x, y), transform);
     }
 }
 class BoundingBox {
@@ -23656,32 +23734,34 @@ class BoundingBox {
             : null;
     }
 }
-function screenCoordinates(spritePoint, dimensions, flip, [offsetX, offsetY], position, rotation, scale) {
-    return movedPoint(rotatedPoint(scaledPoint(movedPoint(flipCoordinates(spritePoint, dimensions, flip), [
-        -offsetX,
-        -offsetY,
-    ]), scale), rotation), position);
+class GeometryData {
+    constructor(origin, dimensions, position, rotation, scaleFactor, flip) {
+        this.origin = origin;
+        this.dimensions = dimensions;
+        this.position = position;
+        this.rotation = rotation;
+        this.scaleFactor = scaleFactor;
+        this.flip = flip;
+    }
+    static fromGeometryComponent(geometry) {
+        return new GeometryData(new Point2D(geometry.originX, geometry.originY), new Dimensions(geometry.width, geometry.height), new Point2D(geometry.x, geometry.y), (geometry.angle * Math.PI) / 180000, geometry.size / 100, [geometry.flipX, geometry.flipY]);
+    }
 }
-function mapCoordinates(screenPoint, dimensions, flip, origin, [positionX, positionY], rotation, scale) {
-    return flipCoordinates(movedPoint(scaledPoint(rotatedPoint(movedPoint(screenPoint, [-positionX, -positionY]), -rotation), 1 / scale), origin), dimensions, flip);
+function screenCoordinates(spritePoint, transform) {
+    return spritePoint
+        .flip(transform.flip, transform.dimensions)
+        .translate(-transform.origin.x, -transform.origin.y)
+        .scale(transform.scaleFactor)
+        .rotate(transform.rotation)
+        .translate(transform.position.x, transform.position.y);
 }
-function rotatedPoint([x, y], angle) {
-    return [
-        Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
-        Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
-    ];
-}
-function scaledPoint([x, y], scaleFactor) {
-    return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
-}
-function movedPoint([xOrigin, yOrigin], [xDistance, yDistance]) {
-    return [xOrigin + xDistance, yOrigin + yDistance];
-}
-function flipCoordinates([x, y], [width, height], [isHorizontalFlip, isVerticalFlip]) {
-    return [
-        isHorizontalFlip ? width - x - 1 : x,
-        isVerticalFlip ? height - y - 1 : y,
-    ];
+function mapCoordinates(screenPoint, transform) {
+    return screenPoint
+        .translate(-transform.position.x, -transform.position.y)
+        .rotate(-transform.rotation)
+        .scale(1 / transform.scaleFactor)
+        .translate(transform.origin.x, transform.origin.y)
+        .flip(transform.flip, transform.dimensions);
 }
 
 
@@ -23848,6 +23928,7 @@ class WebGL2IndexedScreenVideoSystem {
             1, 1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
         ]);
         this._screenGeometryVertexCount = this._screenCorners.length / 2;
+        this._activeRegion = 0;
         // TODO: Regardless of the above, it would be a good idea to separate the
         // duty of managing FPGs, MAPs, PALs, and other resources from the video
         // system, into a Resource Manager.
@@ -23895,6 +23976,7 @@ class WebGL2IndexedScreenVideoSystem {
             52, 0, 62, 63, 0, 63, 63, 13, 63, 63, 27, 63, 63, 41, 63, 63, 55, 63,
         ]));
         this._isPaletteLoaded = false;
+        this._ignoreTransparency = false;
         // XXX: The preserveDrawingBuffer option is necessary for the tests to work.
         // It should be possible to make it dependant on the type of build (dev, or prod).
         // Or, we could invoke the debug handler in the same event loop cycle to avoid
@@ -23905,6 +23987,9 @@ class WebGL2IndexedScreenVideoSystem {
         this._loadedMaps = new Map();
         this._framebuffer = new Uint8Array(_bgLayer.width * _bgLayer.height * 4);
         this._activeLayer = _bgLayer;
+    }
+    setActiveRegion(region) {
+        this._activeRegion = region;
     }
     isPaletteLoaded() {
         return this._isPaletteLoaded;
@@ -23960,6 +24045,12 @@ class WebGL2IndexedScreenVideoSystem {
         this.palette = palette;
         this._isPaletteLoaded = true;
     }
+    enableTransparency() {
+        this._ignoreTransparency = false;
+    }
+    disableTransparency() {
+        this._ignoreTransparency = true;
+    }
     loadFpg(fpg) {
         const fpgId = this._nextFpgId();
         this._loadedFpgs.set(fpgId, fpg);
@@ -23971,49 +24062,22 @@ class WebGL2IndexedScreenVideoSystem {
         return mapId;
     }
     putPixel(x, y, colorIndex) {
-        this._setActiveLayer("bg");
         this._activeLayer.putPixel(x, y, colorIndex);
     }
-    putScreen(fpgId, mapId) {
-        this._setActiveLayer("bg");
-        // TODO: Validate fpgId and mapId.
-        const map = this.getMap(fpgId, mapId);
-        const { data, width, height } = map;
-        const { width: screenWidth, height: screenHeight } = this._bgLayer;
-        const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
-        const [xSpriteOrigin, ySpriteOrigin] = [
-            Math.round(width / 2),
-            Math.round(height / 2),
-        ];
-        this._xput(data, width, height, x, y, xSpriteOrigin, ySpriteOrigin, 0, 100, 0, 0, true);
-        return 0;
-    }
-    xput(fpgId, mapId, x, y, angle, size, flags, region) {
-        // TODO: Region.
-        this._setActiveLayer("bg");
-        const map = this.getMap(fpgId, mapId);
-        const { data, width, height } = map;
-        const { x: xOrigin, y: yOrigin } = map.origin;
-        this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region);
-    }
-    _xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region, ignoreTransparency = false) {
+    putPixelData(data, transform, alphaBlend) {
         var _a;
         // TODO: Regions.
-        if (region !== 0) {
+        if (this._activeRegion !== 0) {
             console.warn("Regions are not supported yet.");
         }
-        // Calculate transformation parameters.
-        const rotation = (angle * Math.PI) / 180000;
-        const scaleFactor = size / 100;
-        const withHorizontalFlip = (flags & 1) !== 0;
-        const withVerticalFlip = (flags & 2) !== 0;
-        const withTransparency = (flags & 4) !== 0;
         // Calculate the screen region to update.
         // T stands for top, L for left, B for bottom, and R for right.
-        const [xTL, yTL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([0, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xTR, yTR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([width, 0], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xBL, yBL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([0, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
-        const [xBR, yBR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)([width, height], [width, height], [false, false], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+        const [width, height] = transform.dimensions;
+        const cornerTransform = new _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryData(transform.origin, transform.dimensions, transform.position, transform.rotation, transform.scaleFactor, [false, false]);
+        const [xTL, yTL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)(new _geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(0, 0), cornerTransform);
+        const [xTR, yTR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)(new _geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(width, 0), cornerTransform);
+        const [xBL, yBL] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)(new _geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(0, height), cornerTransform);
+        const [xBR, yBR] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.screenCoordinates)(new _geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(width, height), cornerTransform);
         const { width: layerWidth, height: layerHeight } = this._activeLayer;
         const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
         const yStart = Math.max(0, Math.min(yTL, yTR, yBL, yBR));
@@ -24022,17 +24086,17 @@ class WebGL2IndexedScreenVideoSystem {
         // Update the region.
         for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
             for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
-                const [xSprite, ySprite] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.mapCoordinates)([xScreen, yScreen], [width, height], [withHorizontalFlip, withVerticalFlip], [xOrigin, yOrigin], [x, y], rotation, scaleFactor);
+                const [xSprite, ySprite] = (0,_geometry__WEBPACK_IMPORTED_MODULE_3__.mapCoordinates)(new _geometry__WEBPACK_IMPORTED_MODULE_3__.Point2D(xScreen, yScreen), transform);
                 let color = (_a = sample(data, width, xSprite, ySprite)) !== null && _a !== void 0 ? _a : 0;
                 const colorIsTransparent = this.isTransparent(color);
-                if (withTransparency) {
+                if (alphaBlend) {
                     const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
                     color =
-                        !ignoreTransparency && colorIsTransparent
+                        !this._ignoreTransparency && colorIsTransparent
                             ? currentColor
                             : this._mixColors(currentColor, color);
                 }
-                if (ignoreTransparency || !colorIsTransparent) {
+                if (this._ignoreTransparency || !colorIsTransparent) {
                     this._activeLayer.putPixel(xScreen, yScreen, color);
                 }
             }
@@ -24158,39 +24222,29 @@ class WebGL2IndexedScreenVideoSystem {
     }
     _drawProcesses(runtime) {
         this._fgLayer.clear();
-        const browser = runtime.getMemoryBrowser();
         const aliveProcesses = runtime.aliveProcesses;
         // TODO: Ensure more positive z comes first in the array.
-        const zSortedProcesses = aliveProcesses.sort((a, b) => browser.process({ id: b.processId }).local("z").value -
-            browser.process({ id: a.processId }).local("z").value);
+        const zSortedProcesses = aliveProcesses.sort((a, b) => this.getComponent(a, _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent).z -
+            this.getComponent(b, _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent).z);
         zSortedProcesses.forEach((process) => {
-            const processView = browser.process({ id: process.processId });
-            const processBox = this._drawProcess(processView);
-            processView.local("reserved.box_x0").value = processBox[0];
-            processView.local("reserved.box_y0").value = processBox[1];
-            processView.local("reserved.box_x1").value = processBox[2];
-            processView.local("reserved.box_y1").value = processBox[3];
+            const processBox = new _geometry__WEBPACK_IMPORTED_MODULE_3__.BoundingBox(...this._drawProcess(process));
+            const geometry = this.getComponent(process, _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent);
+            geometry.boundingBox = processBox;
         });
     }
     _drawProcess(process) {
-        const mapId = process.local("graph").value;
-        if (mapId === 0) {
+        const mapData = this.getComponent(process, _map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent);
+        if (mapData.graph === 0) {
             return [0, 0, 0, 0];
         }
-        const fpgId = process.local("file").value;
-        const map = this.getMap(fpgId, mapId);
-        const { data, width, height } = map;
-        const { x: xOrigin, y: yOrigin } = map.controlPointCount > 0 ? map.controlPoint(0) : map.center;
-        const x = process.local("x").value;
-        const y = process.local("y").value;
-        const angle = process.local("angle").value;
-        const size = process.local("size").value;
-        const flags = process.local("flags").value;
-        const region = process.local("region").value;
-        this._setActiveLayer("fg");
-        return this._xput(data, width, height, x, y, xOrigin, yOrigin, angle, size, flags, region, false);
+        const geometry = this.getComponent(process, _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent);
+        const transform = _geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryData.fromGeometryComponent(geometry);
+        this.setActiveLayer("fg");
+        this.setActiveRegion(0); // TODO: It is stored in the process, but fromw what component should this come from?
+        this.enableTransparency();
+        return this.putPixelData(mapData.data, transform, mapData.alphaBlend);
     }
-    _setActiveLayer(layer) {
+    setActiveLayer(layer) {
         this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
     }
 }
@@ -24393,11 +24447,17 @@ class MapDataComponent {
         const map = this._getMap(this.file, this.graph);
         return map.sample(x, y);
     }
+    get data() {
+        return this._getMap(this.file, this.graph).data;
+    }
     get file() {
         return this._processView.local("file").value;
     }
     get graph() {
         return this._processView.local("graph").value;
+    }
+    get alphaBlend() {
+        return !!(this._processView.local("flags").value & 4);
     }
 }
 
