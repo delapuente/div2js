@@ -5,12 +5,41 @@ import { Runtime } from "../runtime/runtime";
 import { GeometryComponent } from "../systems/video/wgl2idx/geometry";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
-  runtime.getSystem("video").putPixel(x, y, colorIndex);
+  const videoSystem = runtime.getSystem("video");
+  videoSystem.setActiveLayer("bg");
+  videoSystem.putPixel(x, y, colorIndex);
   return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 
 function put_screen(file: number, graph: number, runtime: Runtime) {
-  return runtime.getSystem("video").putScreen(file, graph);
+  const videoSystem = runtime.getSystem("video");
+
+  const map = videoSystem.getMap(file, graph);
+  const { data, width, height } = map;
+  const { screenWidth, screenHeight } = videoSystem;
+  const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
+  const [xSpriteOrigin, ySpriteOrigin] = [
+    Math.round(width / 2),
+    Math.round(height / 2),
+  ];
+
+  videoSystem.setActiveLayer("bg");
+  videoSystem._xput(
+    data,
+    width,
+    height,
+    x,
+    y,
+    xSpriteOrigin,
+    ySpriteOrigin,
+    0,
+    100,
+    0,
+    0,
+    true,
+  );
+
+  return 0;
 }
 
 function rand(min: number, max: number) {

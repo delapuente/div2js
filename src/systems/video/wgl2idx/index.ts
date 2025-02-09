@@ -372,38 +372,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
   }
 
   putPixel(x: number, y: number, colorIndex: number): void {
-    this._setActiveLayer("bg");
     this._activeLayer.putPixel(x, y, colorIndex);
-  }
-
-  putScreen(fpgId: number, mapId: number) {
-    this._setActiveLayer("bg");
-    // TODO: Validate fpgId and mapId.
-    const map = this.getMap(fpgId, mapId);
-    const { data, width, height } = map;
-    const { width: screenWidth, height: screenHeight } = this._bgLayer;
-    const [x, y] = [Math.round(screenWidth / 2), Math.round(screenHeight / 2)];
-    const [xSpriteOrigin, ySpriteOrigin] = [
-      Math.round(width / 2),
-      Math.round(height / 2),
-    ];
-
-    this._xput(
-      data,
-      width,
-      height,
-      x,
-      y,
-      xSpriteOrigin,
-      ySpriteOrigin,
-      0,
-      100,
-      0,
-      0,
-      true,
-    );
-
-    return 0;
   }
 
   xput(
@@ -417,7 +386,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     region: number,
   ): void {
     // TODO: Region.
-    this._setActiveLayer("bg");
+    this.setActiveLayer("bg");
     const map = this.getMap(fpgId, mapId);
 
     const { data, width, height } = map;
@@ -743,7 +712,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     const flags = process.local("flags").value;
     const region = process.local("region").value;
 
-    this._setActiveLayer("fg");
+    this.setActiveLayer("fg");
     return this._xput(
       data,
       width,
@@ -760,7 +729,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     );
   }
 
-  _setActiveLayer(layer: "bg" | "fg") {
+  setActiveLayer(layer: "bg" | "fg") {
     this._activeLayer = layer === "bg" ? this._bgLayer : this._fgLayer;
   }
 }

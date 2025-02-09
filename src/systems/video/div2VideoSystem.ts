@@ -7,8 +7,8 @@ interface Div2VideoSystem extends System {
   isTransparent(colorIndex: number): boolean;
   getMap(fpgId: number, mapId: number): Map;
   putPixel(x: number, y: number, colorIndex: number): void;
-  putScreen(fpgId: number, mapId: number): number;
   setPalette(palette: Palette): void;
+  setActiveLayer(layer: "bg" | "fg"): void;
   isPaletteLoaded(): boolean;
   loadFpg(fpg: Fpg): number;
   loadMap(map: Map): number;
@@ -21,6 +21,20 @@ interface Div2VideoSystem extends System {
     size: number,
     flags: number,
     region: number,
+  ): void;
+  _xput(
+    data: Uint8Array,
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+    xOrigin: number,
+    yOrigin: number,
+    angle: number,
+    size: number,
+    flags: number,
+    region: number,
+    ignoreTransparency: boolean,
   ): void;
   screenWidth: number;
   screenHeight: number;
