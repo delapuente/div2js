@@ -11,6 +11,7 @@ interface Div2VideoSystem extends System {
   putPixel(x: number, y: number, colorIndex: number): void;
   setPalette(palette: Palette): void;
   setActiveLayer(layer: "bg" | "fg"): void;
+  setActiveRegion(region: number): void;
   isPaletteLoaded(): boolean;
   loadFpg(fpg: Fpg): number;
   loadMap(map: Map): number;

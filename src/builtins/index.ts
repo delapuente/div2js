@@ -94,27 +94,7 @@ function put(
   y: number,
   runtime: Runtime,
 ) {
-  const videoSystem = runtime.getSystem("video");
-
-  const map = videoSystem.getMap(file, graph);
-  const { data, width, height } = map;
-  const { x: xOrigin, y: yOrigin } = map.origin;
-
-  videoSystem.setActiveLayer("bg");
-  videoSystem.enableTransparency();
-  return videoSystem.putPixelData(
-    data,
-    width,
-    height,
-    x,
-    y,
-    xOrigin,
-    yOrigin,
-    0,
-    100,
-    0,
-    0,
-  );
+  return xput(file, graph, x, y, 0, 100, 0, 0, runtime);
 }
 
 function xput(
@@ -135,6 +115,7 @@ function xput(
   const { x: xOrigin, y: yOrigin } = map.origin;
 
   videoSystem.setActiveLayer("bg");
+  videoSystem.setActiveRegion(region);
   videoSystem.enableTransparency();
   return videoSystem.putPixelData(
     data,

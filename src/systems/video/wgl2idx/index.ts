@@ -203,6 +203,8 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
 
   private _activeLayer: IndexedGraphic;
 
+  private _activeRegion: number = 0;
+
   // TODO: Regardless of the above, it would be a good idea to separate the
   // duty of managing FPGs, MAPs, PALs, and other resources from the video
   // system, into a Resource Manager.
@@ -253,9 +255,9 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     ]),
   );
 
-  _isPaletteLoaded: boolean = false;
+  private _isPaletteLoaded: boolean = false;
 
-  _ignoreTransparency: boolean = false;
+  private _ignoreTransparency: boolean = false;
 
   constructor(
     canvas,
@@ -272,6 +274,10 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     this._loadedMaps = new Map();
     this._framebuffer = new Uint8Array(_bgLayer.width * _bgLayer.height * 4);
     this._activeLayer = _bgLayer;
+  }
+
+  setActiveRegion(region: number): void {
+    this._activeRegion = region;
   }
 
   isPaletteLoaded(): boolean {
@@ -396,10 +402,9 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     angle: number,
     size: number,
     flags: number,
-    region: number,
   ): [number, number, number, number] {
     // TODO: Regions.
-    if (region !== 0) {
+    if (this._activeRegion !== 0) {
       console.warn("Regions are not supported yet.");
     }
 
@@ -690,6 +695,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     const region = process.local("region").value;
 
     this.setActiveLayer("fg");
+    this.setActiveRegion(region);
     this.enableTransparency();
     return this.putPixelData(
       data,
@@ -702,7 +708,6 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
       angle,
       size,
       flags,
-      region,
     );
   }
 
