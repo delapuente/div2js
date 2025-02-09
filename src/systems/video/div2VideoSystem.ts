@@ -4,6 +4,8 @@ import Map from "./wgl2idx/map";
 import Palette from "./wgl2idx/palette";
 
 interface Div2VideoSystem extends System {
+  enableTransparency(): void;
+  disableTransparency(): void;
   isTransparent(colorIndex: number): boolean;
   getMap(fpgId: number, mapId: number): Map;
   putPixel(x: number, y: number, colorIndex: number): void;
@@ -12,17 +14,7 @@ interface Div2VideoSystem extends System {
   isPaletteLoaded(): boolean;
   loadFpg(fpg: Fpg): number;
   loadMap(map: Map): number;
-  xput(
-    fpgId: number,
-    mapId: number,
-    x: number,
-    y: number,
-    angle: number,
-    size: number,
-    flags: number,
-    region: number,
-  ): void;
-  _xput(
+  putPixelData(
     data: Uint8Array,
     width: number,
     height: number,
@@ -34,7 +26,6 @@ interface Div2VideoSystem extends System {
     size: number,
     flags: number,
     region: number,
-    ignoreTransparency: boolean,
   ): void;
   screenWidth: number;
   screenHeight: number;

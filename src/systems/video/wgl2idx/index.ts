@@ -255,6 +255,8 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
 
   _isPaletteLoaded: boolean = false;
 
+  _ignoreTransparency: boolean = false;
+
   constructor(
     canvas,
     private readonly _bgLayer: IndexedGraphic = getDefaultScreen(),
@@ -359,6 +361,14 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     this._isPaletteLoaded = true;
   }
 
+  enableTransparency() {
+    this._ignoreTransparency = false;
+  }
+
+  disableTransparency() {
+    this._ignoreTransparency = true;
+  }
+
   loadFpg(fpg: Fpg) {
     const fpgId = this._nextFpgId();
     this._loadedFpgs.set(fpgId, fpg);
@@ -375,39 +385,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     this._activeLayer.putPixel(x, y, colorIndex);
   }
 
-  xput(
-    fpgId: number,
-    mapId: number,
-    x: number,
-    y: number,
-    angle: number,
-    size: number,
-    flags: number,
-    region: number,
-  ): void {
-    // TODO: Region.
-    this.setActiveLayer("bg");
-    const map = this.getMap(fpgId, mapId);
-
-    const { data, width, height } = map;
-    const { x: xOrigin, y: yOrigin } = map.origin;
-
-    this._xput(
-      data,
-      width,
-      height,
-      x,
-      y,
-      xOrigin,
-      yOrigin,
-      angle,
-      size,
-      flags,
-      region,
-    );
-  }
-
-  _xput(
+  putPixelData(
     data: Uint8Array,
     width: number,
     height: number,
@@ -419,7 +397,6 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     size: number,
     flags: number,
     region: number,
-    ignoreTransparency: boolean = false,
   ): [number, number, number, number] {
     // TODO: Regions.
     if (region !== 0) {
@@ -500,12 +477,12 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
         if (withTransparency) {
           const currentColor = this._activeLayer.getPixel(xScreen, yScreen);
           color =
-            !ignoreTransparency && colorIsTransparent
+            !this._ignoreTransparency && colorIsTransparent
               ? currentColor
               : this._mixColors(currentColor, color);
         }
 
-        if (ignoreTransparency || !colorIsTransparent) {
+        if (this._ignoreTransparency || !colorIsTransparent) {
           this._activeLayer.putPixel(xScreen, yScreen, color);
         }
       }
@@ -713,7 +690,8 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     const region = process.local("region").value;
 
     this.setActiveLayer("fg");
-    return this._xput(
+    this.enableTransparency();
+    return this.putPixelData(
       data,
       width,
       height,
@@ -725,7 +703,6 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
       size,
       flags,
       region,
-      false,
     );
   }
 

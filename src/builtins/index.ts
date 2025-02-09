@@ -24,7 +24,8 @@ function put_screen(file: number, graph: number, runtime: Runtime) {
   ];
 
   videoSystem.setActiveLayer("bg");
-  videoSystem._xput(
+  videoSystem.disableTransparency();
+  videoSystem.putPixelData(
     data,
     width,
     height,
@@ -36,7 +37,6 @@ function put_screen(file: number, graph: number, runtime: Runtime) {
     100,
     0,
     0,
-    true,
   );
 
   return 0;
@@ -94,7 +94,27 @@ function put(
   y: number,
   runtime: Runtime,
 ) {
-  return runtime.getSystem("video").xput(file, graph, x, y, 0, 100, 0, 0);
+  const videoSystem = runtime.getSystem("video");
+
+  const map = videoSystem.getMap(file, graph);
+  const { data, width, height } = map;
+  const { x: xOrigin, y: yOrigin } = map.origin;
+
+  videoSystem.setActiveLayer("bg");
+  videoSystem.enableTransparency();
+  return videoSystem.putPixelData(
+    data,
+    width,
+    height,
+    x,
+    y,
+    xOrigin,
+    yOrigin,
+    0,
+    100,
+    0,
+    0,
+  );
 }
 
 function xput(
@@ -108,9 +128,27 @@ function xput(
   region: number,
   runtime: Runtime,
 ) {
-  return runtime
-    .getSystem("video")
-    .xput(file, graph, x, y, angle, size, flags, region);
+  const videoSystem = runtime.getSystem("video");
+
+  const map = videoSystem.getMap(file, graph);
+  const { data, width, height } = map;
+  const { x: xOrigin, y: yOrigin } = map.origin;
+
+  videoSystem.setActiveLayer("bg");
+  videoSystem.enableTransparency();
+  return videoSystem.putPixelData(
+    data,
+    width,
+    height,
+    x,
+    y,
+    xOrigin,
+    yOrigin,
+    angle,
+    size,
+    flags,
+    region,
+  );
 }
 
 function collision(processType: number, runtime: Runtime) {
