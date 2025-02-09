@@ -11,6 +11,7 @@ import {
   mapCoordinates,
   GeometryData,
   BoundingBox,
+  Point2D,
 } from "./geometry";
 import { Process } from "../../../runtime/scheduler";
 
@@ -406,7 +407,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     // Calculate the screen region to update.
     // T stands for top, L for left, B for bottom, and R for right.
     const [width, height] = transform.dimensions;
-    const boundaryTransform = new GeometryData(
+    const cornerTransform = new GeometryData(
       transform.origin,
       transform.dimensions,
       transform.position,
@@ -415,10 +416,19 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
       [false, false],
     );
 
-    const [xTL, yTL] = screenCoordinates([0, 0], boundaryTransform);
-    const [xTR, yTR] = screenCoordinates([width, 0], boundaryTransform);
-    const [xBL, yBL] = screenCoordinates([0, height], boundaryTransform);
-    const [xBR, yBR] = screenCoordinates([width, height], boundaryTransform);
+    const [xTL, yTL] = screenCoordinates(new Point2D(0, 0), cornerTransform);
+    const [xTR, yTR] = screenCoordinates(
+      new Point2D(width, 0),
+      cornerTransform,
+    );
+    const [xBL, yBL] = screenCoordinates(
+      new Point2D(0, height),
+      cornerTransform,
+    );
+    const [xBR, yBR] = screenCoordinates(
+      new Point2D(width, height),
+      cornerTransform,
+    );
 
     const { width: layerWidth, height: layerHeight } = this._activeLayer;
     const xStart = Math.max(0, Math.min(xTL, xTR, xBL, xBR));
@@ -430,7 +440,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     for (let yScreen = yStart; yScreen < yEnd; yScreen += 1) {
       for (let xScreen = xStart; xScreen < xEnd; xScreen += 1) {
         const [xSprite, ySprite] = mapCoordinates(
-          [xScreen, yScreen],
+          new Point2D(xScreen, yScreen),
           transform,
         );
 

@@ -3,6 +3,69 @@ import { Process } from "../../../runtime/scheduler";
 import { Component } from "../../../runtime/runtime";
 import DivMap from "./map";
 
+type _NumberPairArray = [number, number];
+
+class Dimensions extends Array<number> implements _NumberPairArray {
+  0: number;
+  1: number;
+  length: 2;
+
+  constructor(width: number, height: number) {
+    super(width, height);
+  }
+
+  get width() {
+    return this[0];
+  }
+
+  get height() {
+    return this[1];
+  }
+}
+
+class Point2D extends Array<number> implements _NumberPairArray {
+  0: number;
+  1: number;
+  length: 2;
+
+  constructor(x: number, y: number) {
+    super(x, y);
+  }
+
+  get x() {
+    return this[0];
+  }
+
+  get y() {
+    return this[1];
+  }
+
+  translate(x: number, y: number): Point2D {
+    return new Point2D(this.x + x, this.y + y);
+  }
+
+  rotate(angle: number): Point2D {
+    return new Point2D(
+      Math.round(Math.cos(angle) * this.x + Math.sin(angle) * this.y),
+      Math.round(-Math.sin(angle) * this.x + Math.cos(angle) * this.y),
+    );
+  }
+
+  scale(factor: number): Point2D {
+    return new Point2D(
+      Math.floor(this.x * factor),
+      Math.floor(this.y * factor),
+    );
+  }
+
+  flip([flipX, flipY]: [boolean, boolean], dimensions: Dimensions): Point2D {
+    return new Point2D(
+      flipX ? dimensions.width - this.x - 1 : this.x,
+      flipY ? dimensions.height - this.y - 1 : this.y,
+    );
+  }
+}
+
 class GeometryComponent implements Component {
   constructor(
     public readonly process: Process,
@@ -80,7 +143,7 @@ class GeometryComponent implements Component {
 
   mapCoordinates(x: number, y: number): [number, number] {
     const transform = GeometryData.fromGeometryComponent(this);
-    return mapCoordinates([x, y], transform);
+    return mapCoordinates(new Point2D(x, y), transform);
   }
 }
 
@@ -119,9 +182,9 @@ class BoundingBox {
 
 class GeometryData {
   constructor(
-    readonly origin: [number, number],
-    readonly dimensions: [number, number],
-    readonly position: [number, number],
+    readonly origin: Point2D,
+    readonly dimensions: Dimensions,
+    readonly position: Point2D,
     readonly rotation: number,
     readonly scaleFactor: number,
     readonly flip: [boolean, boolean],
@@ -129,9 +192,9 @@ class GeometryData {
 
   static fromGeometryComponent(geometry: GeometryComponent): GeometryData {
     return new GeometryData(
-      [geometry.originX, geometry.originY],
-      [geometry.width, geometry.height],
-      [geometry.x, geometry.y],
+      new Point2D(geometry.originX, geometry.originY),
+      new Dimensions(geometry.width, geometry.height),
+      new Point2D(geometry.x, geometry.y),
       (geometry.angle * Math.PI) / 180000,
       geometry.size / 100,
       [geometry.flipX, geometry.flipY],
@@ -140,90 +203,35 @@ class GeometryData {
 }
 
 function screenCoordinates(
-  spritePoint: [number, number],
+  spritePoint: Point2D,
   transform: GeometryData,
-): [number, number] {
-  return movedPoint(
-    rotatedPoint(
-      scaledPoint(
-        movedPoint(
-          flipCoordinates(spritePoint, transform.dimensions, transform.flip),
-          [-transform.origin[0], -transform.origin[1]],
-        ),
-        transform.scaleFactor,
-      ),
-      transform.rotation,
-    ),
-    transform.position,
-  );
+): Point2D {
+  return spritePoint
+    .flip(transform.flip, transform.dimensions)
+    .translate(-transform.origin.x, -transform.origin.y)
+    .scale(transform.scaleFactor)
+    .rotate(transform.rotation)
+    .translate(transform.position.x, transform.position.y);
 }
 
 function mapCoordinates(
-  screenPoint: [number, number],
+  screenPoint: Point2D,
   transform: GeometryData,
-): [number, number] {
-  return flipCoordinates(
-    movedPoint(
-      scaledPoint(
-        rotatedPoint(
-          movedPoint(screenPoint, [
-            -transform.position[0],
-            -transform.position[1],
-          ]),
-          -transform.rotation,
-        ),
-        1 / transform.scaleFactor,
-      ),
-      transform.origin,
-    ),
-    transform.dimensions,
-    transform.flip,
-  );
-}
-
-function rotatedPoint(
-  [x, y]: [number, number],
-  angle: number,
-): [number, number] {
-  return [
-    Math.round(Math.cos(angle) * x + Math.sin(angle) * y),
-    Math.round(-Math.sin(angle) * x + Math.cos(angle) * y),
-  ];
-}
-
-function scaledPoint(
-  [x, y]: [number, number],
-  scaleFactor: number,
-): [number, number] {
-  return [Math.floor(x * scaleFactor), Math.floor(y * scaleFactor)];
-}
-
-function movedPoint(
-  [xOrigin, yOrigin]: [number, number],
-  [xDistance, yDistance]: [number, number],
-): [number, number] {
-  return [xOrigin + xDistance, yOrigin + yDistance];
-}
-
-function flipCoordinates(
-  [x, y]: [number, number],
-  [width, height]: [number, number],
-  [isHorizontalFlip, isVerticalFlip]: [boolean, boolean],
-): [number, number] {
-  return [
-    isHorizontalFlip ? width - x - 1 : x,
-    isVerticalFlip ? height - y - 1 : y,
-  ];
+): Point2D {
+  return screenPoint
+    .translate(-transform.position.x, -transform.position.y)
+    .rotate(-transform.rotation)
+    .scale(1 / transform.scaleFactor)
+    .translate(transform.origin.x, transform.origin.y)
+    .flip(transform.flip, transform.dimensions);
 }
 
 export {
   screenCoordinates,
   mapCoordinates,
-  rotatedPoint,
-  scaledPoint,
-  movedPoint,
-  flipCoordinates,
   GeometryComponent,
   GeometryData,
   BoundingBox,
+  Point2D,
+  Dimensions,
 };

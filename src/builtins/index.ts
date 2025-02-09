@@ -3,8 +3,10 @@ import Fpg from "../systems/video/wgl2idx/fpg";
 import Div2Map, { MapDataComponent } from "../systems/video/wgl2idx/map";
 import { Runtime } from "../runtime/runtime";
 import {
+  Dimensions,
   GeometryComponent,
   GeometryData,
+  Point2D,
 } from "../systems/video/wgl2idx/geometry";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
@@ -26,9 +28,9 @@ function put_screen(file: number, graph: number, runtime: Runtime) {
     Math.round(height / 2),
   ];
   const transform = new GeometryData(
-    [xSpriteOrigin, ySpriteOrigin],
-    [width, height],
-    [x, y],
+    new Point2D(xSpriteOrigin, ySpriteOrigin),
+    new Dimensions(width, height),
+    new Point2D(x, y),
     0,
     1,
     [false, false],
@@ -115,9 +117,9 @@ function xput(
   const { x: xOrigin, y: yOrigin } = map.origin;
   const alphaBlend = !!(flags & 4);
   const transform = new GeometryData(
-    [xOrigin, yOrigin],
-    [width, height],
-    [x, y],
+    new Point2D(xOrigin, yOrigin),
+    new Dimensions(width, height),
+    new Point2D(x, y),
     (angle * Math.PI) / 180000,
     size / 100,
     [!!(flags & 1), !!(flags & 2)],
