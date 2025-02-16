@@ -1,0 +1,11 @@
+import { Runtime } from "../runtime/runtime";
+declare function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime): number;
+declare function put_screen(file: number, graph: number, runtime: Runtime): number;
+declare function rand(min: number, max: number): number;
+declare function load_pal(palettePath: string, runtime: Runtime): Promise<number>;
+declare function load_fpg(fpgPath: string, runtime: Runtime): Promise<number>;
+declare function load_map(mapPath: string, runtime: Runtime): Promise<number>;
+declare function put(file: number, graph: number, x: number, y: number, runtime: Runtime): [number, number, number, number];
+declare function xput(file: number, graph: number, x: number, y: number, angle: number, size: number, flags: number, region: number, runtime: Runtime): [number, number, number, number];
+declare function collision(processType: number, runtime: Runtime): number;
+export { put_pixel, put_screen, rand, load_pal, load_fpg, load_map, put, xput, collision, };

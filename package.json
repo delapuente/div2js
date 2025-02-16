@@ -2,6 +2,8 @@
   "name": "div2js",
   "version": "0.0.1",
   "description": "A DIV2 transpiler for the modern web",
+  "main": "dist/div2js.js",
+  "types": "dist/types/div2js.d.ts",
   "scripts": {
     "build": "npm run embed-wrapper && webpack --progress",
     "demos": "npm run embed-wrapper && webpack serve",

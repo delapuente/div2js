@@ -32,7 +32,12 @@ module.exports = {
       {
         test: /\.(ts|js)$/,
         exclude: /node_modules/,
-        use: "ts-loader",
+        use: {
+          loader: "ts-loader",
+          options: {
+            transpileOnly: false,
+          },
+        },
       },
     ],
   },
