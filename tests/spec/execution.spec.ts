@@ -3,9 +3,9 @@
 
 import * as sinon from "sinon";
 import { expect } from "chai";
-import { load, withDebugSession, autoResume } from "./helpers";
+import { link, withDebugSession, autoResume } from "./helpers";
 
-const loadPrg = (programName) => load(samplePath(programName));
+const loadPrg = (programName) => link(samplePath(programName));
 
 function samplePath(name) {
   return "/base/tests/spec/samples/execution/" + name;

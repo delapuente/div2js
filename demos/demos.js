@@ -5,15 +5,15 @@ const runButton = document.querySelector("#run");
 const shortcutsTip = document.querySelector("#shortcuts");
 
 runButton.onclick = run;
-reloadButton.onclick = load;
-programSelector.onchange = load;
+reloadButton.onclick = loadAndRun;
+programSelector.onchange = loadAndRun;
 demoSource.onkeypress = (event) => {
   if (event.ctrlKey && event.key === "Enter") {
     run();
   }
 };
 
-function load() {
+function loadAndRun() {
   reloadButton.disabled = true;
   runButton.disabled = true;
 
@@ -43,7 +43,7 @@ function run() {
   const binary = div2.compile(source);
   const canvas = document.querySelector("#div-screen");
   div2
-    .load(binary, { rootUrl: "", canvas })
+    .link(binary, { rootUrl: "", canvas })
     .then((program) => {
       reloadButton.disabled = false;
       runButton.disabled = false;

@@ -1,8 +1,8 @@
 import { expect } from "chai";
-import { load, withDebugSession } from "./helpers";
+import { link, withDebugSession } from "./helpers";
 import pixelmatch from "pixelmatch";
 
-const loadPrg = (programName: string) => load(samplePath(programName));
+const loadPrg = (programName: string) => link(samplePath(programName));
 
 function samplePath(name: string) {
   return `/base/tests/spec/samples/execution/${name}`;

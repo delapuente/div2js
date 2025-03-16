@@ -2,10 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 
 import { expect } from "chai";
-import { load } from "./helpers";
+import { link } from "./helpers";
 import { NameIsNotNewError } from "../../src/div2checker";
 
-const loadPrg = (programName) => load(samplePath(programName));
+const loadPrg = (programName) => link(samplePath(programName));
 
 function samplePath(name) {
   return "/base/tests/spec/samples/semantics/" + name;

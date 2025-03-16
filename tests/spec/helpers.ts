@@ -1,5 +1,5 @@
 import * as compiler from "../../src/compiler";
-import * as loader from "../../src/loader";
+import * as linker from "../../src/linker";
 import * as dbgr from "../../src/debugger";
 
 function get(path) {
@@ -11,14 +11,14 @@ function get(path) {
   });
 }
 
-function load(programUrl) {
+function link(programUrl) {
   return get(programUrl)
     .then(function (src) {
       return compiler.compile(src);
     })
     .then(function (obj) {
       const canvas = _ensureCanvas();
-      return loader.load(obj, { rootUrl: "/base/demos/", canvas });
+      return linker.link(obj, { rootUrl: "/base/demos/", canvas });
     });
 }
 
@@ -83,4 +83,4 @@ class RuntimeMock {
   }
 }
 
-export { load, withDebugSession, autoResume, RuntimeMock };
+export { link, withDebugSession, autoResume, RuntimeMock };

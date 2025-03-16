@@ -9,7 +9,10 @@ interface LinkerOptions {
   rootUrl: string;
 }
 
-function load(objText: string, options: LinkerOptions): Promise<runtime.Runtime> {
+function link(
+  objText: string,
+  options: LinkerOptions,
+): Promise<runtime.Runtime> {
   // tslint:disable-next-line:no-eval
   const unit = eval(objText)(runtime, systems);
   const processMap = unit.pmap;
@@ -17,9 +20,11 @@ function load(objText: string, options: LinkerOptions): Promise<runtime.Runtime>
   const memoryManager = new MemoryManager(memoryMap);
   const scheduler = new Scheduler();
   const program = new runtime.Runtime(processMap, memoryManager, scheduler);
-  
+
   // TODO: think of providing a way to register and configure systems, and functions.
-  program.registerInputSystem(new systems.DefaultInput(320, 200, options.canvas));
+  program.registerInputSystem(
+    new systems.DefaultInput(320, 200, options.canvas),
+  );
   program.registerVideoSystem(new systems.DefaultRender(options.canvas));
   program.registerFileSystem(new systems.DefaultFileSystem(options.rootUrl));
   registerFunctions(program, builtins);
@@ -33,4 +38,4 @@ function registerFunctions(program, builtins) {
   }
 }
 
-export { load };
+export { link };

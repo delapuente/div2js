@@ -1,5 +1,5 @@
 import * as dbgr from "../../src/debugger";
-declare function load(programUrl: any): Promise<import("../../src/runtime/runtime").Runtime>;
+declare function link(programUrl: any): Promise<import("../../src/runtime/runtime").Runtime>;
 declare function withDebugSession(callback: (session: dbgr.DebugSession) => void): () => void;
 declare function autoResume(callback: any): () => void;
 declare class MemoryBrowserMock {
@@ -14,4 +14,4 @@ declare class RuntimeMock {
     constructor();
     getMemoryBrowser(): MemoryBrowserMock;
 }
-export { load, withDebugSession, autoResume, RuntimeMock };
+export { link, withDebugSession, autoResume, RuntimeMock };
