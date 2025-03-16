@@ -8,11 +8,7 @@ export default class WebInputSystem implements Div2InputSystem, System {
   private _right: boolean = false;
   private _middle: boolean = false;
 
-  constructor(
-    private readonly _width: number,
-    private readonly _height: number,
-    private readonly _canvas: HTMLCanvasElement,
-  ) {}
+  constructor(private readonly _canvas: HTMLCanvasElement) {}
 
   initialize() {
     // Listen to mouse move events.
@@ -30,8 +26,8 @@ export default class WebInputSystem implements Div2InputSystem, System {
   }
 
   private _onMouseMove(x: number, y: number) {
-    this._mouseX = Math.floor((x / this._canvas.width) * this._width);
-    this._mouseY = Math.floor((y / this._canvas.height) * this._height);
+    this._mouseX = x;
+    this._mouseY = y;
   }
 
   private _onMouseDown(button: number) {
@@ -62,7 +58,7 @@ export default class WebInputSystem implements Div2InputSystem, System {
     }
   }
 
-  run(runtime: Runtime) {
+  onStepStart(runtime: Runtime) {
     runtime.getMemoryBrowser().global("mouse.x").value = this._mouseX;
     runtime.getMemoryBrowser().global("mouse.y").value = this._mouseY;
     runtime.getMemoryBrowser().global("mouse.left").value = this._left ? 1 : 0;

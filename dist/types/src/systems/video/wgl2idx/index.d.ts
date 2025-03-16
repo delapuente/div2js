@@ -84,7 +84,7 @@ declare class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     get framebuffer(): Uint8Array;
     get screenWidth(): number;
     get screenHeight(): number;
-    run(runtime: Runtime): void;
+    onStepEnd(runtime: Runtime): void;
     setViewportResolution(width: any, height: any): void;
     setPalette(palette: Palette): void;
     enableTransparency(): void;

@@ -14,7 +14,8 @@ declare class Environment {
 interface System {
     initialize(memoryBrowser: MemoryBrowser): void;
     getComponent?<T>(process: Process, componentType: new (...args: unknown[]) => T): T;
-    run?(runtime: Runtime): void;
+    onStepStart?(runtime: Runtime): void;
+    onStepEnd?(runtime: Runtime): void;
 }
 interface Component {
     process: Process;
@@ -56,7 +57,9 @@ declare class Runtime {
     call(functionName: string, args: unknown[], process: any): void;
     frame(): void;
     end(): void;
-    _runSystems(): void;
+    get _systems(): System[];
+    _onStepStart(): void;
+    _onStepEnd(): void;
     _handle(baton: Baton, originator: Process): any;
     _debug(): void;
     _newProcess(baton: Baton, originator: Process): void;

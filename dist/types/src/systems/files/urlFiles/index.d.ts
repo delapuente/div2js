@@ -6,7 +6,6 @@ export default class UrlFileSystem implements Div2FileSystem {
     private _rootUrl;
     constructor(_rootUrl: string);
     initialize(): void;
-    run(): void;
     loadMap(path: string): Promise<MAPFile>;
     loadPal(path: string): Promise<PALFile>;
     loadFpg(path: string): Promise<FPGFile>;

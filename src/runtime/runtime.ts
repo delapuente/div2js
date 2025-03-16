@@ -95,7 +95,8 @@ interface System {
     process: Process,
     componentType: new (...args: unknown[]) => T,
   ): T;
-  run?(runtime: Runtime): void;
+  onStepStart?(runtime: Runtime): void;
+  onStepEnd?(runtime: Runtime): void;
 }
 
 interface Component {
@@ -233,7 +234,8 @@ class Runtime {
   start() {
     // TODO: Should check for running or paused.
     this._scheduler.onyield = this._handle.bind(this);
-    this._scheduler.onupdate = this._runSystems.bind(this);
+    this._scheduler.onstepstart = this._onStepStart.bind(this);
+    this._scheduler.onstepend = this._onStepEnd.bind(this);
     this._scheduler.reset();
     this._memoryManager.reset();
     const id = this._memoryManager.allocateProcess();
@@ -295,15 +297,24 @@ class Runtime {
     this._memoryManager.freeProcess(currentProcessId);
   }
 
-  _runSystems() {
-    // TODO: The runtime should read the input state first, then run the processes, then render.
-    [this._videoSystem, this._fileSystem, this._inputSystem].forEach(
-      (system) => {
-        if (typeof system.run === "function") {
-          system.run(this);
-        }
-      },
-    );
+  get _systems() {
+    return [this._fileSystem, this._inputSystem, this._videoSystem];
+  }
+
+  _onStepStart() {
+    this._systems.forEach((system) => {
+      if (typeof system.onStepStart === "function") {
+        system.onStepStart(this);
+      }
+    });
+  }
+
+  _onStepEnd() {
+    this._systems.forEach((system) => {
+      if (typeof system.onStepEnd === "function") {
+        system.onStepEnd(this);
+      }
+    });
   }
 
   _handle(baton: Baton, originator: Process) {

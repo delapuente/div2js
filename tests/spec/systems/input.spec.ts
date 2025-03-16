@@ -7,8 +7,6 @@ import { Runtime } from "../../../src/runtime/runtime";
 describe("The WebInputSystem class", () => {
   const CANVAS_WIDTH = 1280;
   const CANVAS_HEIGHT = 960;
-  const RESOLUTION_WIDTH = CANVAS_WIDTH / 2;
-  const RESOLUTION_HEIGHT = CANVAS_HEIGHT / 2;
 
   let canvas: HTMLCanvasElement;
   let runtime: Runtime;
@@ -21,7 +19,7 @@ describe("The WebInputSystem class", () => {
     ) as unknown as HTMLCanvasElement;
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
-    webInput = new WebInputSystem(RESOLUTION_WIDTH, RESOLUTION_HEIGHT, canvas);
+    webInput = new WebInputSystem(canvas);
     webInput.initialize();
   });
 
@@ -39,13 +37,13 @@ describe("The WebInputSystem class", () => {
     });
     canvas.dispatchEvent(mouseMoveEvent);
 
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.x").value).to.equal(
-      RESOLUTION_WIDTH / 2,
+      CANVAS_WIDTH / 2,
     );
     expect(runtime.getMemoryBrowser().global("mouse.y").value).to.equal(
-      RESOLUTION_HEIGHT / 2,
+      CANVAS_HEIGHT / 2,
     );
   });
 
@@ -56,7 +54,7 @@ describe("The WebInputSystem class", () => {
       button: 0,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.left").value).to.equal(1);
   });
@@ -68,7 +66,7 @@ describe("The WebInputSystem class", () => {
       button: 1,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.middle").value).to.equal(1);
   });
@@ -80,7 +78,7 @@ describe("The WebInputSystem class", () => {
       button: 2,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.right").value).to.equal(1);
   });
@@ -90,14 +88,14 @@ describe("The WebInputSystem class", () => {
       button: 0,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
     expect(runtime.getMemoryBrowser().global("mouse.left").value).to.equal(1);
 
     const mouseUpEvent = new window.MouseEvent("mouseup", {
       button: 0,
     });
     canvas.dispatchEvent(mouseUpEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.left").value).to.equal(0);
   });
@@ -107,14 +105,14 @@ describe("The WebInputSystem class", () => {
       button: 1,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
     expect(runtime.getMemoryBrowser().global("mouse.middle").value).to.equal(1);
 
     const mouseUpEvent = new window.MouseEvent("mouseup", {
       button: 1,
     });
     canvas.dispatchEvent(mouseUpEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.middle").value).to.equal(0);
   });
@@ -124,14 +122,14 @@ describe("The WebInputSystem class", () => {
       button: 2,
     });
     canvas.dispatchEvent(mouseDownEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
     expect(runtime.getMemoryBrowser().global("mouse.right").value).to.equal(1);
 
     const mouseUpEvent = new window.MouseEvent("mouseup", {
       button: 2,
     });
     canvas.dispatchEvent(mouseUpEvent);
-    webInput.run(runtime);
+    webInput.onStepStart(runtime);
 
     expect(runtime.getMemoryBrowser().global("mouse.right").value).to.equal(0);
   });

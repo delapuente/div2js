@@ -10,9 +10,6 @@ export default class UrlFileSystem implements Div2FileSystem {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   initialize() {}
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  run() {}
-
   loadMap(path: string): Promise<MAPFile> {
     const pathWithinDefaultDir = this.defaultDirPath(path);
     return _loadMap(this._convertToUrl(pathWithinDefaultDir)).catch(() =>

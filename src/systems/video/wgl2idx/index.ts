@@ -349,7 +349,7 @@ class WebGL2IndexedScreenVideoSystem implements Div2VideoSystem {
     return this._bgLayer.height;
   }
 
-  run(runtime: Runtime) {
+  onStepEnd(runtime: Runtime) {
     this._drawProcesses(runtime);
 
     this._sendPalette();

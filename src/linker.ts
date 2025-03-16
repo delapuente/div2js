@@ -22,11 +22,9 @@ function link(
   const program = new runtime.Runtime(processMap, memoryManager, scheduler);
 
   // TODO: think of providing a way to register and configure systems, and functions.
-  program.registerInputSystem(
-    new systems.DefaultInput(320, 200, options.canvas),
-  );
-  program.registerVideoSystem(new systems.DefaultRender(options.canvas));
   program.registerFileSystem(new systems.DefaultFileSystem(options.rootUrl));
+  program.registerInputSystem(new systems.DefaultInput(options.canvas));
+  program.registerVideoSystem(new systems.DefaultRender(options.canvas));
   registerFunctions(program, builtins);
   return Promise.resolve(program);
 }

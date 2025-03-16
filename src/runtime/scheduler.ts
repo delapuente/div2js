@@ -26,7 +26,8 @@ interface Process {
 class Scheduler<P extends Process> {
   onfinished?: CallableFunction;
   onyield?: CallableFunction;
-  onupdate?: CallableFunction;
+  onstepstart?: CallableFunction;
+  onstepend?: CallableFunction;
 
   get currentProcess(): P {
     return this._processList[this._current];
@@ -105,6 +106,7 @@ class Scheduler<P extends Process> {
       return this._end();
     }
 
+    this._call("onstepstart");
     while (this._current < this._processList.length) {
       const process = this.currentProcess;
       const baton = process.run();
@@ -116,7 +118,7 @@ class Scheduler<P extends Process> {
 
       this._current++;
     }
-    this._call("onupdate");
+    this._call("onstepend");
 
     this._removeDeadProcess();
     this._startOver();
