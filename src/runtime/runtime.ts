@@ -5,7 +5,6 @@ import { VideoSystem } from "../systems/video/wgl2idx";
 import { Div2FileSystem } from "../systems/files/div2FileSystem";
 import { MemoryBrowser, ProcessView } from "../memoryBrowser/mapper";
 
-type SystemKind = "video" | "files" | "input";
 class ProcessInMemory implements Process {
   retv: ReturnValuesQueue;
 
@@ -102,14 +101,6 @@ interface System {
 interface Component {
   process: Process;
 }
-
-type GetSystemReturnType<K> = K extends "video"
-  ? VideoSystem
-  : K extends "files"
-    ? Div2FileSystem
-    : K extends "input"
-      ? System
-      : never;
 
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
