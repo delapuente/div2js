@@ -5,7 +5,7 @@ import { VideoSystem } from "../systems/video/wgl2idx";
 import { Div2FileSystem } from "../systems/files/div2FileSystem";
 import { MemoryBrowser, ProcessView } from "../memoryBrowser/mapper";
 
-type SystemKind = "video" | "files";
+type SystemKind = "video" | "files" | "input";
 class ProcessInMemory implements Process {
   retv: ReturnValuesQueue;
 
@@ -107,7 +107,9 @@ type GetSystemReturnType<K> = K extends "video"
   ? VideoSystem
   : K extends "files"
     ? Div2FileSystem
-    : never;
+    : K extends "input"
+      ? System
+      : never;
 
 // TODO: Runtime should be passed with a light version of the memory map,
 // enough to be able of allocating the needed memory.
@@ -115,8 +117,10 @@ class Runtime {
   onerror?: (error: DivError) => void;
   ondebug?: CallableFunction;
   _onfinished?: CallableFunction;
+  _videoSystem: VideoSystem | null = null;
+  _fileSystem: Div2FileSystem | null = null;
+  _inputSystem: System | null = null;
   _systems: System[];
-  _systemMap: { video?: VideoSystem; files?: Div2FileSystem };
   _functions: { [key: string]: CallableFunction };
   _memoryManager: MemoryManager;
   public environment: Environment;
@@ -133,7 +137,6 @@ class Runtime {
     this.ondebug = null;
     this._onfinished = null;
     this._systems = [];
-    this._systemMap = {};
     this._functions = {};
     this._memoryManager = memoryManager;
     this.environment = new Environment();
@@ -170,13 +173,16 @@ class Runtime {
     this._scheduler.add(process);
   }
 
-  registerSystem(system: System, name: string) {
-    if (name && typeof this._systemMap[name] !== "undefined") {
-      throw new Error("System already registered with name: " + name);
-    }
+  registerSystem(system: System, name: SystemKind) {
     system.initialize(this.getMemoryBrowser());
+    if (name === "video") {
+      this.registerVideoSystem(system as VideoSystem);
+    } else if (name === "files") {
+      this.registerFileSystem(system as unknown as Div2FileSystem);
+    } else if (name === "input") {
+      this.registerInputSystem(system);
+    }
     this._systems.push(system);
-    this._systemMap[name] = system;
   }
 
   registerFunction(fn: CallableFunction, name: string) {
@@ -186,14 +192,49 @@ class Runtime {
     this._functions[name] = fn;
   }
 
+  registerVideoSystem(system: VideoSystem) {
+    if (this._videoSystem) {
+      throw new Error("Video system already registered.");
+    }
+    this._videoSystem = system;
+  }
+
+  getVideoSystem(): VideoSystem {
+    return this._videoSystem;
+  }
+
+  registerFileSystem(system: Div2FileSystem) {
+    if (this._fileSystem) {
+      throw new Error("File system already registered.");
+    }
+    this._fileSystem = system;
+  }
+
+  getFileSystem(): Div2FileSystem {
+    return this._fileSystem;
+  }
+
+  registerInputSystem(system: System) {
+    if (this._inputSystem) {
+      throw new Error("Input system already registered.");
+    }
+    this._inputSystem = system;
+  }
+
+  getInputSystem(): System {
+    return this._inputSystem;
+  }
+
   getSystem<T extends SystemKind>(name: T): GetSystemReturnType<T> {
     if (name === "video") {
-      return this._systemMap[name] as GetSystemReturnType<T>;
+      return this._videoSystem as GetSystemReturnType<T>;
     }
     if (name === "files") {
-      return this._systemMap[name] as GetSystemReturnType<T>;
+      return this._fileSystem as GetSystemReturnType<T>;
     }
-    return this._systemMap[name] as GetSystemReturnType<T>;
+    if (name === "input") {
+      return this._inputSystem as GetSystemReturnType<T>;
+    }
   }
 
   getMemoryBrowser(): MemoryBrowser {

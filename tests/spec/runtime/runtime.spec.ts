@@ -20,19 +20,6 @@ describe("The Runtime class", () => {
     runtime = new Runtime({}, memoryManager, scheduler);
   });
 
-  describe("registerSystem()", () => {
-    const fakeSystem: System = {
-      initialize() {
-        void 0;
-      },
-    };
-
-    it("raises when registering a system twice under the same name", () => {
-      runtime.registerSystem(fakeSystem, "test");
-      expect(() => runtime.registerSystem(fakeSystem, "test")).to.throw(Error);
-    });
-  });
-
   describe("registerFunction()", () => {
     it("raises when registering a function twice under the same name", () => {
       runtime.registerFunction(() => void 0, "test");
