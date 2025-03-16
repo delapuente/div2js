@@ -1,14 +1,10 @@
 import { PALFile } from "./pal";
 import { FPGFile } from "./fpg";
 import { MAPFile } from "./map";
-import { System } from "../../../runtime/runtime";
 import { Div2FileSystem } from "../div2FileSystem";
-interface UrlFileSystemOptions {
-    readonly rootUrl: string;
-}
-export default class UrlFileSystem implements System, Div2FileSystem {
-    options: UrlFileSystemOptions;
-    constructor(options: UrlFileSystemOptions);
+export default class UrlFileSystem implements Div2FileSystem {
+    private _rootUrl;
+    constructor(_rootUrl: string);
     initialize(): void;
     run(): void;
     loadMap(path: string): Promise<MAPFile>;
@@ -20,4 +16,3 @@ export default class UrlFileSystem implements System, Div2FileSystem {
     _convertToUrl(url: string): string;
     _join(...paths: string[]): string;
 }
-export {};

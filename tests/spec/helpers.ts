@@ -17,8 +17,23 @@ function load(programUrl) {
       return compiler.compile(src);
     })
     .then(function (obj) {
-      return loader.load(obj, { rootUrl: "/base/demos/" });
+      const canvas = _ensureCanvas();
+      return loader.load(obj, { rootUrl: "/base/demos/", canvas });
     });
+}
+
+function _ensureCanvas(): HTMLCanvasElement {
+  if (!window || !window.document) {
+    throw new Error("This test requires a browser environment.");
+  }
+  if (!document.querySelector("#div-screen")) {
+    const canvas = document.createElement("CANVAS");
+    canvas.id = "div-screen";
+    canvas.style.imageRendering = "pixelated";
+    canvas.style.cursor = "none";
+    document.body.appendChild(canvas);
+  }
+  return document.querySelector("#div-screen") as HTMLCanvasElement;
 }
 
 function withDebugSession(callback: (session: dbgr.DebugSession) => void) {

@@ -5,7 +5,7 @@ describe("The URLFileSystem class", () => {
   let fileSystem: UrlFileSystem;
 
   beforeEach(() => {
-    fileSystem = new UrlFileSystem({ rootUrl: "/base/demos" });
+    fileSystem = new UrlFileSystem("/base/demos");
     fileSystem.initialize();
   });
 

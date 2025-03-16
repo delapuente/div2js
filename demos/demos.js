@@ -41,8 +41,9 @@ function run() {
     return;
   }
   const binary = div2.compile(source);
+  const canvas = document.querySelector("#div-screen");
   div2
-    .load(binary, { rootUrl: "" })
+    .load(binary, { rootUrl: "", canvas })
     .then((program) => {
       reloadButton.disabled = false;
       runButton.disabled = false;

@@ -2,15 +2,10 @@ import { PALFile } from "./pal";
 import { DivError } from "../../../errors";
 import { FPGFile } from "./fpg";
 import { MAPFile } from "./map";
-import { System } from "../../../runtime/runtime";
 import { Div2FileSystem } from "../div2FileSystem";
 
-interface UrlFileSystemOptions {
-  readonly rootUrl: string;
-}
-
-export default class UrlFileSystem implements System, Div2FileSystem {
-  constructor(public options: UrlFileSystemOptions) {}
+export default class UrlFileSystem implements Div2FileSystem {
+  constructor(private _rootUrl: string) {}
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   initialize() {}
@@ -63,10 +58,10 @@ export default class UrlFileSystem implements System, Div2FileSystem {
   }
 
   _convertToUrl(url: string): string {
-    if (!this.options.rootUrl) {
+    if (!this._rootUrl) {
       return url;
     }
-    return this._join(this.options.rootUrl, url);
+    return this._join(this._rootUrl, url);
   }
 
   _join(...paths: string[]): string {
