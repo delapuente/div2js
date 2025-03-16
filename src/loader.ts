@@ -4,7 +4,7 @@ import * as builtins from "./builtins";
 import { MemoryManager } from "./runtime/memory";
 import { Scheduler } from "./runtime/scheduler";
 
-function load(objText, options): Promise<runtime.Runtime> {
+function load(objText: string, options): Promise<runtime.Runtime> {
   // tslint:disable-next-line:no-eval
   const unit = eval(objText)(runtime, systems);
   const processMap = unit.pmap;
@@ -21,7 +21,7 @@ function load(objText, options): Promise<runtime.Runtime> {
   return Promise.resolve(program);
 }
 
-function registerRenderSystem(program) {
+function registerRenderSystem(program: runtime.Runtime) {
   // TODO: The screen should be passed as an option
   if (window && window.document) {
     if (!document.querySelector("#div-screen")) {
@@ -33,17 +33,16 @@ function registerRenderSystem(program) {
     }
     // TODO: Move this to its own system registering and rethink the interdependencies.
     const canvas = document.querySelector("#div-screen") as HTMLCanvasElement;
-    program.registerSystem(new systems.DefaultInput(320, 200, canvas), "input");
-    program.registerSystem(new systems.DefaultRender(canvas), "video");
+    program.registerInputSystem(new systems.DefaultInput(320, 200, canvas));
+    program.registerVideoSystem(new systems.DefaultRender(canvas));
   }
 }
 
-function registerFileSystem(program, rootUrl) {
-  program.registerSystem(
+function registerFileSystem(program: runtime.Runtime, rootUrl: string) {
+  program.registerFileSystem(
     new systems.DefaultFileSystem({
       rootUrl,
     }),
-    "files",
   );
 }
 

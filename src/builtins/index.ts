@@ -10,14 +10,14 @@ import {
 } from "../systems/video/wgl2idx/geometry";
 
 function put_pixel(x: number, y: number, colorIndex: number, runtime: Runtime) {
-  const videoSystem = runtime.getSystem("video");
+  const videoSystem = runtime.getVideoSystem();
   videoSystem.setActiveLayer("bg");
   videoSystem.putPixel(x, y, colorIndex);
   return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 
 function put_screen(file: number, graph: number, runtime: Runtime) {
-  const videoSystem = runtime.getSystem("video");
+  const videoSystem = runtime.getVideoSystem();
 
   const map = videoSystem.getMap(file, graph);
   const { data, width, height } = map;
@@ -51,20 +51,20 @@ function rand(min: number, max: number) {
 
 function load_pal(palettePath: string, runtime: Runtime): Promise<number> {
   return runtime
-    .getSystem("files")
+    .getFileSystem()
     .loadPal(palettePath)
     .then((palFile) => {
-      runtime.getSystem("video").setPalette(Palette.fromBuffer(palFile.buffer));
+      runtime.getVideoSystem().setPalette(Palette.fromBuffer(palFile.buffer));
       return 1;
     });
 }
 
 function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
   return runtime
-    .getSystem("files")
+    .getFileSystem()
     .loadFpg(fpgPath)
     .then((fpgFile) => {
-      const videoSystem = runtime.getSystem("video");
+      const videoSystem = runtime.getVideoSystem();
       const fpg = Fpg.fromBuffer(fpgFile.buffer);
       const fpgId = videoSystem.loadFpg(fpg);
       if (!videoSystem.isPaletteLoaded()) {
@@ -76,10 +76,10 @@ function load_fpg(fpgPath: string, runtime: Runtime): Promise<number> {
 
 function load_map(mapPath: string, runtime: Runtime): Promise<number> {
   return runtime
-    .getSystem("files")
+    .getFileSystem()
     .loadMap(mapPath)
     .then((mapFile) => {
-      const videoSystem = runtime.getSystem("video");
+      const videoSystem = runtime.getVideoSystem();
       const map = Div2Map.fromBuffer(mapFile.buffer);
       const mapId = videoSystem.loadMap(map);
       if (!videoSystem.isPaletteLoaded()) {
@@ -110,7 +110,7 @@ function xput(
   region: number,
   runtime: Runtime,
 ) {
-  const videoSystem = runtime.getSystem("video");
+  const videoSystem = runtime.getVideoSystem();
 
   const map = videoSystem.getMap(file, graph);
   const { data, width, height } = map;
@@ -133,7 +133,7 @@ function xput(
 
 function collision(processType: number, runtime: Runtime) {
   const processes = runtime.aliveProcesses;
-  const videoSystem = runtime.getSystem("video");
+  const videoSystem = runtime.getVideoSystem();
 
   const caller = runtime.currentProcess;
   const callerMapData = videoSystem.getComponent(caller, MapDataComponent);

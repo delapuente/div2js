@@ -120,7 +120,6 @@ class Runtime {
   _videoSystem: VideoSystem | null = null;
   _fileSystem: Div2FileSystem | null = null;
   _inputSystem: System | null = null;
-  _systems: System[];
   _functions: { [key: string]: CallableFunction };
   _memoryManager: MemoryManager;
   public environment: Environment;
@@ -136,7 +135,6 @@ class Runtime {
     this.onerror = null;
     this.ondebug = null;
     this._onfinished = null;
-    this._systems = [];
     this._functions = {};
     this._memoryManager = memoryManager;
     this.environment = new Environment();
@@ -173,18 +171,6 @@ class Runtime {
     this._scheduler.add(process);
   }
 
-  registerSystem(system: System, name: SystemKind) {
-    system.initialize(this.getMemoryBrowser());
-    if (name === "video") {
-      this.registerVideoSystem(system as VideoSystem);
-    } else if (name === "files") {
-      this.registerFileSystem(system as unknown as Div2FileSystem);
-    } else if (name === "input") {
-      this.registerInputSystem(system);
-    }
-    this._systems.push(system);
-  }
-
   registerFunction(fn: CallableFunction, name: string) {
     if (name && typeof this._functions[name] !== "undefined") {
       throw new Error("Function already registered with name: " + name);
@@ -197,6 +183,7 @@ class Runtime {
       throw new Error("Video system already registered.");
     }
     this._videoSystem = system;
+    this._videoSystem.initialize(this.getMemoryBrowser());
   }
 
   getVideoSystem(): VideoSystem {
@@ -208,6 +195,7 @@ class Runtime {
       throw new Error("File system already registered.");
     }
     this._fileSystem = system;
+    this._fileSystem.initialize(this.getMemoryBrowser());
   }
 
   getFileSystem(): Div2FileSystem {
@@ -219,22 +207,11 @@ class Runtime {
       throw new Error("Input system already registered.");
     }
     this._inputSystem = system;
+    this._inputSystem.initialize(this.getMemoryBrowser());
   }
 
   getInputSystem(): System {
     return this._inputSystem;
-  }
-
-  getSystem<T extends SystemKind>(name: T): GetSystemReturnType<T> {
-    if (name === "video") {
-      return this._videoSystem as GetSystemReturnType<T>;
-    }
-    if (name === "files") {
-      return this._fileSystem as GetSystemReturnType<T>;
-    }
-    if (name === "input") {
-      return this._inputSystem as GetSystemReturnType<T>;
-    }
   }
 
   getMemoryBrowser(): MemoryBrowser {
@@ -329,11 +306,13 @@ class Runtime {
 
   _runSystems() {
     // TODO: The runtime should read the input state first, then run the processes, then render.
-    this._systems.forEach((system) => {
-      if (typeof system.run === "function") {
-        system.run(this);
-      }
-    });
+    [this._videoSystem, this._fileSystem, this._inputSystem].forEach(
+      (system) => {
+        if (typeof system.run === "function") {
+          system.run(this);
+        }
+      },
+    );
   }
 
   _handle(baton: Baton, originator: Process) {

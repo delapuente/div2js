@@ -42,10 +42,10 @@ function debug(runtime: Runtime) {
   return new DebugSession(
     runtime.getMemoryBrowser(),
     {
-      width: runtime.getSystem("video").screenWidth,
-      height: runtime.getSystem("video").screenHeight,
+      width: runtime.getVideoSystem().screenWidth,
+      height: runtime.getVideoSystem().screenHeight,
     },
-    runtime.getSystem("video").framebuffer,
+    runtime.getVideoSystem().framebuffer,
   );
 }
 
