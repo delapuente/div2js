@@ -21,7 +21,8 @@ interface Process {
 declare class Scheduler<P extends Process> {
     onfinished?: CallableFunction;
     onyield?: CallableFunction;
-    onupdate?: CallableFunction;
+    onstepstart?: CallableFunction;
+    onstepend?: CallableFunction;
     get currentProcess(): P;
     get aliveProcesses(): Array<P>;
     private _processList;

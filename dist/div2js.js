@@ -20514,13 +20514,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 function put_pixel(x, y, colorIndex, runtime) {
-    const videoSystem = runtime.getSystem("video");
+    const videoSystem = runtime.getVideoSystem();
     videoSystem.setActiveLayer("bg");
     videoSystem.putPixel(x, y, colorIndex);
     return x; // XXX: put_pixel returns the x value. Checked empirically.
 }
 function put_screen(file, graph, runtime) {
-    const videoSystem = runtime.getSystem("video");
+    const videoSystem = runtime.getVideoSystem();
     const map = videoSystem.getMap(file, graph);
     const { data, width, height } = map;
     const { screenWidth, screenHeight } = videoSystem;
@@ -20542,19 +20542,19 @@ function rand(min, max) {
 }
 function load_pal(palettePath, runtime) {
     return runtime
-        .getSystem("files")
+        .getFileSystem()
         .loadPal(palettePath)
         .then((palFile) => {
-        runtime.getSystem("video").setPalette(_systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__["default"].fromBuffer(palFile.buffer));
+        runtime.getVideoSystem().setPalette(_systems_video_wgl2idx_palette__WEBPACK_IMPORTED_MODULE_0__["default"].fromBuffer(palFile.buffer));
         return 1;
     });
 }
 function load_fpg(fpgPath, runtime) {
     return runtime
-        .getSystem("files")
+        .getFileSystem()
         .loadFpg(fpgPath)
         .then((fpgFile) => {
-        const videoSystem = runtime.getSystem("video");
+        const videoSystem = runtime.getVideoSystem();
         const fpg = _systems_video_wgl2idx_fpg__WEBPACK_IMPORTED_MODULE_1__["default"].fromBuffer(fpgFile.buffer);
         const fpgId = videoSystem.loadFpg(fpg);
         if (!videoSystem.isPaletteLoaded()) {
@@ -20565,10 +20565,10 @@ function load_fpg(fpgPath, runtime) {
 }
 function load_map(mapPath, runtime) {
     return runtime
-        .getSystem("files")
+        .getFileSystem()
         .loadMap(mapPath)
         .then((mapFile) => {
-        const videoSystem = runtime.getSystem("video");
+        const videoSystem = runtime.getVideoSystem();
         const map = _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__["default"].fromBuffer(mapFile.buffer);
         const mapId = videoSystem.loadMap(map);
         if (!videoSystem.isPaletteLoaded()) {
@@ -20581,7 +20581,7 @@ function put(file, graph, x, y, runtime) {
     return xput(file, graph, x, y, 0, 100, 0, 0, runtime);
 }
 function xput(file, graph, x, y, angle, size, flags, region, runtime) {
-    const videoSystem = runtime.getSystem("video");
+    const videoSystem = runtime.getVideoSystem();
     const map = videoSystem.getMap(file, graph);
     const { data, width, height } = map;
     const { x: xOrigin, y: yOrigin } = map.origin;
@@ -20594,7 +20594,7 @@ function xput(file, graph, x, y, angle, size, flags, region, runtime) {
 }
 function collision(processType, runtime) {
     const processes = runtime.aliveProcesses;
-    const videoSystem = runtime.getSystem("video");
+    const videoSystem = runtime.getVideoSystem();
     const caller = runtime.currentProcess;
     const callerMapData = videoSystem.getComponent(caller, _systems_video_wgl2idx_map__WEBPACK_IMPORTED_MODULE_2__.MapDataComponent);
     const callerGeometry = videoSystem.getComponent(caller, _systems_video_wgl2idx_geometry__WEBPACK_IMPORTED_MODULE_3__.GeometryComponent);
@@ -21272,13 +21272,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   compile: () => (/* binding */ compile),
 /* harmony export */   decodePrg: () => (/* binding */ decodePrg),
-/* harmony export */   load: () => (/* binding */ load),
+/* harmony export */   link: () => (/* binding */ link),
+/* harmony export */   load: () => (/* binding */ link),
 /* harmony export */   parser: () => (/* reexport default from dynamic */ _div2lang__WEBPACK_IMPORTED_MODULE_0___default.a),
 /* harmony export */   translator: () => (/* reexport module object */ _div2trans__WEBPACK_IMPORTED_MODULE_2__)
 /* harmony export */ });
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./div2lang */ "./src/div2lang.js");
 /* harmony import */ var _div2lang__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_div2lang__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./loader */ "./src/loader.ts");
+/* harmony import */ var _linker__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./linker */ "./src/linker.ts");
 /* harmony import */ var _div2trans__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./div2trans */ "./src/div2trans.ts");
 /* harmony import */ var _compiler__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./compiler */ "./src/compiler.ts");
 /* harmony import */ var _prg__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./prg */ "./src/prg.ts");
@@ -21290,7 +21291,7 @@ __webpack_require__.r(__webpack_exports__);
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy) || {};
 (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().yy).parseError = (_div2lang__WEBPACK_IMPORTED_MODULE_0___default().parseError);
 const compile = _compiler__WEBPACK_IMPORTED_MODULE_3__.compile;
-const load = _loader__WEBPACK_IMPORTED_MODULE_1__.load;
+const link = _linker__WEBPACK_IMPORTED_MODULE_1__.link;
 function decodePrg(buffer) {
     return _prg__WEBPACK_IMPORTED_MODULE_4__.PRGFile.fromArrayBuffer(buffer).text;
 }
@@ -21764,16 +21765,16 @@ function _getErrorMessage(errorCode) {
 
 /***/ }),
 
-/***/ "./src/loader.ts":
+/***/ "./src/linker.ts":
 /*!***********************!*\
-  !*** ./src/loader.ts ***!
+  !*** ./src/linker.ts ***!
   \***********************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   load: () => (/* binding */ load)
+/* harmony export */   link: () => (/* binding */ link)
 /* harmony export */ });
 /* harmony import */ var _runtime_runtime__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./runtime/runtime */ "./src/runtime/runtime.ts");
 /* harmony import */ var _systems_systems__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./systems/systems */ "./src/systems/systems.ts");
@@ -21785,7 +21786,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-function load(objText, options) {
+function link(objText, options) {
     // tslint:disable-next-line:no-eval
     const unit = eval(objText)(_runtime_runtime__WEBPACK_IMPORTED_MODULE_0__, _systems_systems__WEBPACK_IMPORTED_MODULE_1__);
     const processMap = unit.pmap;
@@ -21793,34 +21794,12 @@ function load(objText, options) {
     const memoryManager = new _runtime_memory__WEBPACK_IMPORTED_MODULE_3__.MemoryManager(memoryMap);
     const scheduler = new _runtime_scheduler__WEBPACK_IMPORTED_MODULE_4__.Scheduler();
     const program = new _runtime_runtime__WEBPACK_IMPORTED_MODULE_0__.Runtime(processMap, memoryManager, scheduler);
-    // TODO: Let's think how to register new systems in a configurable way
-    registerRenderSystem(program);
-    // TODO: Let's also think how to configure the systems in a configurable way
-    registerFileSystem(program, options.rootUrl);
-    // TODO: Let's also think how to add new functions in a configurable way
+    // TODO: think of providing a way to register and configure systems, and functions.
+    program.registerFileSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultFileSystem(options.rootUrl));
+    program.registerInputSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultInput(options.canvas));
+    program.registerVideoSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultRender(options.canvas));
     registerFunctions(program, _builtins__WEBPACK_IMPORTED_MODULE_2__);
     return Promise.resolve(program);
-}
-function registerRenderSystem(program) {
-    // TODO: The screen should be passed as an option
-    if (window && window.document) {
-        if (!document.querySelector("#div-screen")) {
-            const canvas = document.createElement("CANVAS");
-            canvas.id = "div-screen";
-            canvas.style.imageRendering = "pixelated";
-            canvas.style.cursor = "none";
-            document.body.appendChild(canvas);
-        }
-        // TODO: Move this to its own system registering and rethink the interdependencies.
-        const canvas = document.querySelector("#div-screen");
-        program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultInput(320, 200, canvas), "input");
-        program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultRender(canvas), "video");
-    }
-}
-function registerFileSystem(program, rootUrl) {
-    program.registerSystem(new _systems_systems__WEBPACK_IMPORTED_MODULE_1__.DefaultFileSystem({
-        rootUrl,
-    }), "files");
 }
 function registerFunctions(program, builtins) {
     const functions = Object.keys(builtins);
@@ -22881,11 +22860,12 @@ class Environment {
 // enough to be able of allocating the needed memory.
 class Runtime {
     constructor(processMap, memoryManager, scheduler) {
+        this._videoSystem = null;
+        this._fileSystem = null;
+        this._inputSystem = null;
         this.onerror = null;
         this.ondebug = null;
         this._onfinished = null;
-        this._systems = [];
-        this._systemMap = {};
         this._functions = {};
         this._memoryManager = memoryManager;
         this.environment = new Environment();
@@ -22907,28 +22887,41 @@ class Runtime {
         process.status = _scheduler__WEBPACK_IMPORTED_MODULE_0__.ProcessStatus.ALIVE;
         this._scheduler.add(process);
     }
-    registerSystem(system, name) {
-        if (name && typeof this._systemMap[name] !== "undefined") {
-            throw new Error("System already registered with name: " + name);
-        }
-        system.initialize(this.getMemoryBrowser());
-        this._systems.push(system);
-        this._systemMap[name] = system;
-    }
     registerFunction(fn, name) {
         if (name && typeof this._functions[name] !== "undefined") {
             throw new Error("Function already registered with name: " + name);
         }
         this._functions[name] = fn;
     }
-    getSystem(name) {
-        if (name === "video") {
-            return this._systemMap[name];
+    registerVideoSystem(system) {
+        if (this._videoSystem) {
+            throw new Error("Video system already registered.");
         }
-        if (name === "files") {
-            return this._systemMap[name];
+        this._videoSystem = system;
+        this._videoSystem.initialize(this.getMemoryBrowser());
+    }
+    getVideoSystem() {
+        return this._videoSystem;
+    }
+    registerFileSystem(system) {
+        if (this._fileSystem) {
+            throw new Error("File system already registered.");
         }
-        return this._systemMap[name];
+        this._fileSystem = system;
+        this._fileSystem.initialize(this.getMemoryBrowser());
+    }
+    getFileSystem() {
+        return this._fileSystem;
+    }
+    registerInputSystem(system) {
+        if (this._inputSystem) {
+            throw new Error("Input system already registered.");
+        }
+        this._inputSystem = system;
+        this._inputSystem.initialize(this.getMemoryBrowser());
+    }
+    getInputSystem() {
+        return this._inputSystem;
     }
     getMemoryBrowser() {
         return this._memoryManager.browser;
@@ -22952,7 +22945,8 @@ class Runtime {
     start() {
         // TODO: Should check for running or paused.
         this._scheduler.onyield = this._handle.bind(this);
-        this._scheduler.onupdate = this._runSystems.bind(this);
+        this._scheduler.onstepstart = this._onStepStart.bind(this);
+        this._scheduler.onstepend = this._onStepEnd.bind(this);
         this._scheduler.reset();
         this._memoryManager.reset();
         const id = this._memoryManager.allocateProcess();
@@ -23012,11 +23006,20 @@ class Runtime {
         this._scheduler.deleteCurrent();
         this._memoryManager.freeProcess(currentProcessId);
     }
-    _runSystems() {
-        // TODO: The runtime should read the input state first, then run the processes, then render.
+    get _systems() {
+        return [this._fileSystem, this._inputSystem, this._videoSystem];
+    }
+    _onStepStart() {
         this._systems.forEach((system) => {
-            if (typeof system.run === "function") {
-                system.run(this);
+            if (typeof system.onStepStart === "function") {
+                system.onStepStart(this);
+            }
+        });
+    }
+    _onStepEnd() {
+        this._systems.forEach((system) => {
+            if (typeof system.onStepEnd === "function") {
+                system.onStepEnd(this);
             }
         });
     }
@@ -23141,6 +23144,7 @@ class Scheduler {
         if (this._processList.length === 0) {
             return this._end();
         }
+        this._call("onstepstart");
         while (this._current < this._processList.length) {
             const process = this.currentProcess;
             const baton = process.run();
@@ -23150,7 +23154,7 @@ class Scheduler {
             }
             this._current++;
         }
-        this._call("onupdate");
+        this._call("onstepend");
         this._removeDeadProcess();
         this._startOver();
         this._scheduleStep();
@@ -23247,13 +23251,11 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 class UrlFileSystem {
-    constructor(options) {
-        this.options = options;
+    constructor(_rootUrl) {
+        this._rootUrl = _rootUrl;
     }
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     initialize() { }
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    run() { }
     loadMap(path) {
         const pathWithinDefaultDir = this.defaultDirPath(path);
         return _loadMap(this._convertToUrl(pathWithinDefaultDir)).catch(() => _loadMap(this._convertToUrl(path)));
@@ -23287,10 +23289,10 @@ class UrlFileSystem {
         return path.split(".").at(-1);
     }
     _convertToUrl(url) {
-        if (!this.options.rootUrl) {
+        if (!this._rootUrl) {
             return url;
         }
-        return this._join(this.options.rootUrl, url);
+        return this._join(this._rootUrl, url);
     }
     _join(...paths) {
         return paths.reduce((acc, path) => {
@@ -23450,9 +23452,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ WebInputSystem)
 /* harmony export */ });
 class WebInputSystem {
-    constructor(_width, _height, _canvas) {
-        this._width = _width;
-        this._height = _height;
+    constructor(_canvas) {
         this._canvas = _canvas;
         this._mouseX = 0;
         this._mouseY = 0;
@@ -23475,8 +23475,8 @@ class WebInputSystem {
         });
     }
     _onMouseMove(x, y) {
-        this._mouseX = Math.floor((x / this._canvas.width) * this._width);
-        this._mouseY = Math.floor((y / this._canvas.height) * this._height);
+        this._mouseX = x;
+        this._mouseY = y;
     }
     _onMouseDown(button) {
         switch (button) {
@@ -23504,7 +23504,7 @@ class WebInputSystem {
                 break;
         }
     }
-    run(runtime) {
+    onStepStart(runtime) {
         runtime.getMemoryBrowser().global("mouse.x").value = this._mouseX;
         runtime.getMemoryBrowser().global("mouse.y").value = this._mouseY;
         runtime.getMemoryBrowser().global("mouse.left").value = this._left ? 1 : 0;
@@ -24028,7 +24028,7 @@ class WebGL2IndexedScreenVideoSystem {
     get screenHeight() {
         return this._bgLayer.height;
     }
-    run(runtime) {
+    onStepEnd(runtime) {
         this._drawProcesses(runtime);
         this._sendPalette();
         this._sendFrameBuffer();

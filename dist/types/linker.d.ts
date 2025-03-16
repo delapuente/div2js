@@ -3,5 +3,5 @@ interface LinkerOptions {
     canvas: HTMLCanvasElement;
     rootUrl: string;
 }
-declare function load(objText: string, options: LinkerOptions): Promise<runtime.Runtime>;
-export { load };
+declare function link(objText: string, options: LinkerOptions): Promise<runtime.Runtime>;
+export { link };
